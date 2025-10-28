@@ -8,35 +8,19 @@ export default function SettingsModal({ isOpen, onClose }) {
 
   useEffect(() => {
     if (isOpen) {
-      // No cargar credenciales (ya no se guardan)
-      // Solo limpiar el formulario
+      // Limpiar formulario al abrir
       setIolUser('')
       setIolPass('')
       setIsSaved(false)
-      
-      // Verificar si hay sesión activa
-      const sessionToken = localStorage.getItem('iol-session-token')
-      if (sessionToken) {
-        // Opcional: verificar si la sesión sigue válida
-        fetch('http://localhost:4000/api/iol/session', {
-          headers: { 'x-session-token': sessionToken }
-        })
-        .then(res => res.json())
-        .then(data => {
-          if (!data.valid) {
-            localStorage.removeItem('iol-session-token')
-          }
-        })
-        .catch(console.error)
-      }
     }
   }, [isOpen])
 
   const handleSave = async () => {
     if (iolUser.trim() && iolPass.trim()) {
       try {
-        // Login en el backend para crear sesión
-        const response = await fetch('http://localhost:4000/api/iol/login', {
+        // Solo probar credenciales
+        const base = import.meta.env.PROD ? '' : 'http://localhost:4000'
+        const response = await fetch(`${base}/api/iol/test-credentials`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -48,18 +32,13 @@ export default function SettingsModal({ isOpen, onClose }) {
         const result = await response.json()
         
         if (response.ok && result.success) {
-          // Guardar solo el session token (no las credenciales)
-          localStorage.setItem('iol-session-token', result.sessionToken)
-          localStorage.removeItem('iol-user') // Limpiar credenciales viejas si existen
-          localStorage.removeItem('iol-pass')
-          
           setIsSaved(true)
           setTimeout(() => {
             setIsSaved(false)
             onClose()
           }, 1500)
         } else {
-          alert(`❌ Error: ${result.error || 'No se pudo crear la sesión'}`)
+          alert(`❌ Error: ${result.error || 'Credenciales inválidas'}`)
         }
       } catch (error) {
         alert(`❌ Error de conexión: ${error.message}`)
@@ -68,23 +47,7 @@ export default function SettingsModal({ isOpen, onClose }) {
   }
 
   const handleClear = async () => {
-    if (confirm('¿Estás seguro de eliminar las credenciales guardadas?')) {
-      // Logout del backend
-      const sessionToken = localStorage.getItem('iol-session-token')
-      if (sessionToken) {
-        try {
-          await fetch('http://localhost:4000/api/iol/logout', {
-            method: 'POST',
-            headers: { 'x-session-token': sessionToken }
-          })
-        } catch (error) {
-          console.error('Error al cerrar sesión:', error)
-        }
-      }
-      
-      localStorage.removeItem('iol-session-token')
-      localStorage.removeItem('iol-user') // Por si quedan credenciales viejas
-      localStorage.removeItem('iol-pass')
+    if (confirm('¿Estás seguro de limpiar el formulario?')) {
       setIolUser('')
       setIolPass('')
     }
@@ -97,7 +60,8 @@ export default function SettingsModal({ isOpen, onClose }) {
     }
 
     try {
-      const response = await fetch('http://localhost:4000/api/iol/test-credentials', {
+      const base = import.meta.env.PROD ? '' : 'http://localhost:4000'
+      const response = await fetch(`${base}/api/iol/test-credentials`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -148,9 +112,10 @@ export default function SettingsModal({ isOpen, onClose }) {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               <div className="text-sm text-blue-300">
-                <p className="font-semibold mb-1">Credenciales de InvertirOnline</p>
+                <p className="font-semibold mb-1">Configuración para Vercel</p>
                 <p className="text-blue-200">
-                  Tus credenciales se guardan <strong>localmente en tu navegador</strong> y nunca se envían a ningún servidor externo excepto al API de IOL para autenticación.
+                  Las credenciales deben configurarse como <strong>variables de entorno</strong> en tu proyecto de Vercel.
+                  Esta pantalla solo permite probar que las credenciales funcionen.
                 </p>
               </div>
             </div>
@@ -217,7 +182,7 @@ export default function SettingsModal({ isOpen, onClose }) {
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
-              Credenciales guardadas exitosamente
+              Credenciales validadas exitosamente
             </div>
           )}
 
@@ -226,13 +191,13 @@ export default function SettingsModal({ isOpen, onClose }) {
               onClick={handleClear}
               className="flex-1 px-4 py-2 bg-red-500/20 hover:bg-red-500 text-red-400 hover:text-white rounded-lg font-semibold transition-colors"
             >
-              Eliminar
+              Limpiar
             </button>
             <button
               onClick={handleSave}
               className="flex-1 px-4 py-2 bg-cyan-500 hover:bg-cyan-600 text-white rounded-lg font-semibold transition-colors"
             >
-              Guardar
+              Probar
             </button>
           </div>
         </div>
