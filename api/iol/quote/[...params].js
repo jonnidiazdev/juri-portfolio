@@ -1,12 +1,13 @@
 import axios from 'axios'
 import https from 'https'
+import { extractCredentials } from '../../_utils/jwt.js'
 
 // Configuración HTTPS para IOL
 const httpsAgent = new https.Agent({
   rejectUnauthorized: false
 })
 
-// Cache simple de tokens (funciona mientras la función está caliente)
+// Cache simple de tokens IOL (funciona mientras la función está caliente)
 const tokenCache = new Map()
 
 async function getIOLToken(username, password) {
@@ -60,29 +61,44 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' })
   }
 
-  const { tipo, simbolo } = req.query
+  const { params } = req.query
+  const sessionToken = req.headers['x-session-token']
+  
+  if (!params || params.length < 2) {
+    return res.status(400).json({ error: 'Parámetros tipo y símbolo requeridos' })
+  }
+  
+  const [tipo, simbolo] = params
   
   if (!simbolo) {
     return res.status(400).json({ error: 'Símbolo requerido' })
   }
 
-  // Para Vercel, usaremos variables de entorno para credenciales
-  const username = process.env.IOL_USER
-  const password = process.env.IOL_PASS
-
-  if (!username || !password) {
-    return res.status(400).json({ 
-      error: 'Credenciales IOL no configuradas en el servidor' 
+  if (!sessionToken) {
+    return res.status(401).json({ 
+      error: 'Session token requerido. Por favor inicia sesión.' 
     })
   }
 
   try {
+    // Extraer credenciales del JWT
+    const { username, password } = extractCredentials(sessionToken)
+    
+    // Obtener token IOL
     const token = await getIOLToken(username, password)
+    
+    // Obtener cotización
     const data = await fetchQuote(token, simbolo)
     
     res.status(200).json({ data, meta: { source: 'IOL API' } })
   } catch (error) {
     console.error('Error fetching quote:', error.message)
+    
+    if (error.message.includes('token') || error.message.includes('Token')) {
+      return res.status(401).json({ 
+        error: 'Sesión inválida o expirada. Por favor inicia sesión nuevamente.' 
+      })
+    }
     
     const status = error.response?.status || 500
     res.status(status).json({ 

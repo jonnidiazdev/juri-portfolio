@@ -1,26 +1,38 @@
 import { useState, useEffect } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 
 export default function SettingsModal({ isOpen, onClose }) {
   const [iolUser, setIolUser] = useState('')
   const [iolPass, setIolPass] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [isSaved, setIsSaved] = useState(false)
+  
+  const queryClient = useQueryClient()
 
   useEffect(() => {
     if (isOpen) {
-      // Limpiar formulario al abrir
+      // No cargar credenciales (ya no se guardan)
+      // Solo limpiar el formulario
       setIolUser('')
       setIolPass('')
       setIsSaved(false)
+      
+      // Verificar si hay sesión activa
+      const sessionToken = localStorage.getItem('iol-session-token')
+      if (sessionToken) {
+        // En este caso, solo verificamos que existe el token
+        // El backend validará si es válido en cada request
+        console.log('Sesión existente encontrada')
+      }
     }
   }, [isOpen])
 
   const handleSave = async () => {
     if (iolUser.trim() && iolPass.trim()) {
       try {
-        // Solo probar credenciales
+        // Login en el backend para crear sesión JWT
         const base = import.meta.env.PROD ? '' : 'http://localhost:4000'
-        const response = await fetch(`${base}/api/iol/test-credentials`, {
+        const response = await fetch(`${base}/api/iol/login`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -32,13 +44,19 @@ export default function SettingsModal({ isOpen, onClose }) {
         const result = await response.json()
         
         if (response.ok && result.success) {
+          // Guardar solo el session token JWT (no las credenciales)
+          localStorage.setItem('iol-session-token', result.sessionToken)
+          
+          // Invalidar y refrescar cotizaciones argentinas
+          queryClient.invalidateQueries({ queryKey: ['argentineQuotes'] })
+          
           setIsSaved(true)
           setTimeout(() => {
             setIsSaved(false)
             onClose()
           }, 1500)
         } else {
-          alert(`❌ Error: ${result.error || 'Credenciales inválidas'}`)
+          alert(`❌ Error: ${result.error || 'No se pudo crear la sesión'}`)
         }
       } catch (error) {
         alert(`❌ Error de conexión: ${error.message}`)
@@ -47,7 +65,13 @@ export default function SettingsModal({ isOpen, onClose }) {
   }
 
   const handleClear = async () => {
-    if (confirm('¿Estás seguro de limpiar el formulario?')) {
+    if (confirm('¿Estás seguro de eliminar la sesión guardada?')) {
+      // Eliminar session token
+      localStorage.removeItem('iol-session-token')
+      
+      // Invalidar cotizaciones argentinas (ya no hay sesión válida)
+      queryClient.invalidateQueries({ queryKey: ['argentineQuotes'] })
+      
       setIolUser('')
       setIolPass('')
     }
@@ -74,6 +98,12 @@ export default function SettingsModal({ isOpen, onClose }) {
       
       if (response.ok && result.success) {
         alert('✅ Conexión exitosa con IOL')
+        
+        // Si hay sesión activa, refrescar cotizaciones
+        const sessionToken = localStorage.getItem('iol-session-token')
+        if (sessionToken) {
+          queryClient.invalidateQueries({ queryKey: ['argentineQuotes'] })
+        }
       } else {
         alert(`❌ Error: ${result.error || 'Credenciales inválidas'}`)
       }
@@ -112,10 +142,10 @@ export default function SettingsModal({ isOpen, onClose }) {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               <div className="text-sm text-blue-300">
-                <p className="font-semibold mb-1">Configuración para Vercel</p>
+                <p className="font-semibold mb-1">Credenciales Seguras</p>
                 <p className="text-blue-200">
-                  Las credenciales deben configurarse como <strong>variables de entorno</strong> en tu proyecto de Vercel.
-                  Esta pantalla solo permite probar que las credenciales funcionen.
+                  Tus credenciales se encriptan en un <strong>token JWT</strong> que se guarda localmente. 
+                  Las credenciales nunca se envían en texto plano después del login inicial.
                 </p>
               </div>
             </div>
@@ -182,7 +212,7 @@ export default function SettingsModal({ isOpen, onClose }) {
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
-              Credenciales validadas exitosamente
+              Sesión JWT creada exitosamente. Actualizando cotizaciones...
             </div>
           )}
 
@@ -191,13 +221,13 @@ export default function SettingsModal({ isOpen, onClose }) {
               onClick={handleClear}
               className="flex-1 px-4 py-2 bg-red-500/20 hover:bg-red-500 text-red-400 hover:text-white rounded-lg font-semibold transition-colors"
             >
-              Limpiar
+              Cerrar Sesión
             </button>
             <button
               onClick={handleSave}
               className="flex-1 px-4 py-2 bg-cyan-500 hover:bg-cyan-600 text-white rounded-lg font-semibold transition-colors"
             >
-              Probar
+              Iniciar Sesión
             </button>
           </div>
         </div>
