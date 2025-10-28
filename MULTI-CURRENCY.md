@@ -65,16 +65,60 @@ Cada activo muestra un badge indicando su moneda:
 
 ### Valor Total
 
-Para activos en USD, se muestra:
-- Valor principal en USD
-- Equivalente en ARS (usando dólar blue)
+⚠️ **ACTUALIZADO**: Los totales ahora se muestran en **ambas monedas simultáneamente** con cotización seleccionable.
 
-**Ejemplo**:
+Para activos individuales:
+- Se mantiene el formato original con equivalentes
+- Para activos en USD: valor principal en USD + equivalente ARS
+- Para activos en ARS: valor principal en ARS + equivalente USD
+
+**Ejemplo activo USD**:
 ```
 Valor Total
 $1,234.56 USD
 ≈ $1,234,560.00 ARS
 ```
+
+**Ejemplo activo ARS**:
+```
+Valor Total
+$1,234,560.00 ARS
+≈ $1,100.45 USD MEP
+```
+
+### Totales Consolidados Multi-Moneda 🆕
+
+**Nueva funcionalidad**: El resumen del portfolio ahora muestra **dos totales simultáneos**:
+
+#### 📊 Totales en Pesos (ARS)
+- **Valor Total**: Suma de todos los activos convertidos a ARS
+- **Invertido**: Capital inicial convertido a ARS  
+- **Ganancia/Pérdida**: Diferencia en pesos argentinos
+
+#### 💵 Totales en Dólares (USD)
+- **Valor Total**: Suma de todos los activos convertidos a USD
+- **Invertido**: Capital inicial convertido a USD
+- **Ganancia/Pérdida**: Diferencia en dólares
+
+#### 🎛️ Selector de Cotización
+
+**Nuevo control**: Elige qué tipo de dólar usar para **todas** las conversiones:
+
+| Cotización | Descripción | Cuándo usar |
+|------------|-------------|-------------|
+| 🏛️ **Dólar Oficial** | Cotización BCRA | Operaciones oficiales |
+| 💸 **Dólar Blue** | Mercado paralelo | Conversión realista (recomendado) |
+| 💱 **Dólar MEP** | Mercado Electrónico | Inversiones bursátiles |
+| 🏦 **Dólar CCL** | Contado con Liquidación | Operaciones institucionales |
+
+**Conversiones**:
+- **USD → ARS**: `Valor ARS = Valor USD × Cotización (venta)`
+- **ARS → USD**: `Valor USD = Valor ARS ÷ Cotización (venta)`
+
+**Configuración**:
+- Tu elección se guarda automáticamente en localStorage
+- Los totales se actualizan en tiempo real al cambiar cotización
+- Se muestra la cotización utilizada bajo los totales
 
 Para activos en ARS, se muestra:
 - Valor principal en ARS
@@ -191,6 +235,69 @@ La aplicación usa formato argentino:
 - [ ] Mostrar ganancia/pérdida considerando variación del dólar
 - [ ] Alertas de cambio de tipo de cambio
 - [ ] Gráfico de distribución por moneda
+
+## Ejemplos Prácticos del Sistema Multi-Moneda
+
+### Portfolio Ejemplo
+
+**Activos en el portfolio**:
+- Bitcoin: $10,000 USD
+- GGAL: $500,000 ARS  
+- GD30: $5,000 USD
+
+**Configuración**: Dólar Blue seleccionado a $1,200
+
+#### 📊 Totales en ARS (automático)
+- Bitcoin: $10,000 × 1,200 = $12,000,000 ARS
+- GGAL: $500,000 ARS (sin conversión)
+- GD30: $5,000 × 1,200 = $6,000,000 ARS
+- **🟢 Total ARS**: $18,500,000 ARS
+
+#### 💵 Totales en USD (automático)  
+- Bitcoin: $10,000 USD (sin conversión)
+- GGAL: $500,000 ÷ 1,200 = $416.67 USD
+- GD30: $5,000 USD (sin conversión)
+- **🟢 Total USD**: $15,416.67 USD
+
+### Impacto del Cambio de Cotización
+
+**Escenario**: Cambias de **Dólar Blue** ($1,200) a **Dólar MEP** ($1,150)
+
+#### Antes (Blue $1,200)
+- Total ARS: $18,500,000
+- Total USD: $15,416.67
+
+#### Después (MEP $1,150)
+- Total ARS: $17,750,000 (-$750,000)
+- Total USD: $15,434.78 (+$18.11)
+
+**💡 Insight**: La diferencia refleja el spread entre cotizaciones, mostrando cómo el tipo de cambio afecta la valoración del portfolio.
+
+### Casos de Uso por Cotización
+
+#### 🏛️ Dólar Oficial
+**Ideal para**: Portfolio conservador, operaciones bancarias oficiales
+```
+Total conservador = Mínima valoración en ARS
+```
+
+#### 💸 Dólar Blue (Recomendado)
+**Ideal para**: Valoración realista del poder adquisitivo
+```
+Total realista = Valor de mercado real en ARS
+```
+
+#### 💱 Dólar MEP
+**Ideal para**: Inversores que operan en mercados regulados
+```
+Total bursátil = Valoración según mercado oficial
+```
+
+#### 🏦 Dólar CCL
+**Ideal para**: Grandes inversores o institucionales
+```
+Total institucional = Valoración para liquidación
+```
 
 ## Migración de Activos Existentes
 

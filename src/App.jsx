@@ -2,9 +2,12 @@ import { useState, useEffect } from 'react'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { useCryptoPrices, useDolarPrice } from './hooks/useInvestments'
 import { useArgentineQuotes } from './hooks/useArgentineQuotes'
+import { useMultiCurrencyCalculations } from './hooks/useMultiCurrency'
 import { ASSET_TYPES } from './config/constants'
 import PortfolioSummary from './components/PortfolioSummary'
 import PortfolioStats from './components/PortfolioStats'
+import MultiCurrencySummary from './components/MultiCurrencySummary'
+import CurrencySelector from './components/CurrencySelector'
 import AssetCard from './components/AssetCard'
 import AddAssetModal from './components/AddAssetModal'
 import EditAssetModal from './components/EditAssetModal'
@@ -31,6 +34,9 @@ function App() {
   const { data: cryptoPrices, isLoading: loadingCrypto, isError: errorCrypto, error: cryptoError } = useCryptoPrices(cryptoIds)
   const { data: dolarData, isLoading: loadingDolar } = useDolarPrice()
   const { data: argQuotes, isLoading: loadingArgQuotes } = useArgentineQuotes(assets)
+  
+  // Nuevos cálculos multi-moneda
+  const multiCurrencyData = useMultiCurrencyCalculations(assets, cryptoPrices, argQuotes, dolarData)
 
   useEffect(() => {
     localStorage.setItem('portfolio-assets', JSON.stringify(assets))
@@ -53,12 +59,16 @@ function App() {
 
   const getCurrentPrice = (asset) => {
     if (asset.type === ASSET_TYPES.CRYPTO) {
-      return cryptoPrices?.[asset.symbol]?.usd || 0
+      // cryptoPrices es un objeto con symbols como claves
+      const cryptoData = cryptoPrices?.[asset.symbol]
+      const price = cryptoData?.usd
+      return (typeof price === 'number' && price > 0) ? price : asset.purchasePrice
+    } else {
+      // argQuotes usa asset.id como clave
+      const quote = argQuotes?.[asset.id]
+      const price = quote?.price
+      return (typeof price === 'number' && price > 0) ? price : asset.purchasePrice
     }
-    // Activos argentinos: usar precio de la API cuando esté disponible
-    const quote = argQuotes?.[asset.id]
-    if (quote && quote.price) return quote.price
-    return asset.purchasePrice
   }
 
   const calculateTotals = () => {
@@ -133,12 +143,15 @@ function App() {
 
           {assets.length > 0 && (
             <>
-              <PortfolioSummary 
-                totalValue={totals.totalValue} 
-                change24h={totals.change}
-                currency="ars"
+              {/* Nuevos totales multi-moneda */}
+              <MultiCurrencySummary 
+                totalsARS={multiCurrencyData.totalsARS}
+                totalsUSD={multiCurrencyData.totalsUSD}
+                exchangeRateInfo={multiCurrencyData.exchangeRateInfo}
+                className="mb-6"
               />
 
+              {/* Stats legacy para compatibilidad */}
               <PortfolioStats 
                 coins={assets.map(a => ({ ...a, current_price: getCurrentPrice(a) }))}
                 holdings={assets}
@@ -147,14 +160,22 @@ function App() {
             </>
           )}
 
+          {/* Selector de cotización minimalista integrado con las cotizaciones del dólar */}
           {dolarData && (
-            <div className="mt-4">
-              <h3 className="text-lg font-semibold text-gray-300 mb-3 flex items-center gap-2">
-                <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                Cotizaciones del Dólar
-              </h3>
+            <div className="mt-6">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-lg font-semibold text-gray-300 flex items-center gap-2">
+                  <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  Cotizaciones del Dólar
+                </h3>
+                
+                {/* Selector minimalista */}
+                <CurrencySelector 
+                  dolarData={dolarData}
+                />
+              </div>
               <DolarQuotes dolares={dolarData} isLoading={loadingDolar} />
             </div>
           )}
