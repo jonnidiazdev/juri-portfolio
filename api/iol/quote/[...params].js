@@ -131,15 +131,46 @@ export default async function handler(req, res) {
   const { params } = req.query
   const sessionToken = req.headers['x-session-token']
   
-  console.log('📋 Params recibidos:', params)
+  console.log('📋 Raw params:', params)
+  console.log('📋 Params type:', typeof params)
+  console.log('📋 Full query object:', JSON.stringify(req.query))
   console.log('📋 Session token presente:', !!sessionToken)
   
-  if (!params || params.length < 2) {
-    console.log('❌ Parámetros insuficientes')
-    return res.status(400).json({ error: 'Parámetros tipo y símbolo requeridos' })
+  // Normalizar params - puede ser string, array, o undefined
+  let normalizedParams = []
+  if (Array.isArray(params)) {
+    normalizedParams = params
+  } else if (typeof params === 'string') {
+    normalizedParams = [params]
+  } else if (params) {
+    normalizedParams = [params]
   }
   
-  const [tipo, simbolo] = params
+  // También verificar si los parámetros vienen directamente en la query
+  if (normalizedParams.length === 0) {
+    // Buscar parámetros alternativos en la URL
+    const { tipo, simbolo } = req.query
+    if (tipo && simbolo) {
+      normalizedParams = [tipo, simbolo]
+      console.log('📋 Usando parámetros alternativos:', normalizedParams)
+    }
+  }
+  
+  console.log('📋 Params normalizados:', normalizedParams)
+  
+  if (!normalizedParams || normalizedParams.length < 2) {
+    console.log('❌ Parámetros insuficientes. Recibido:', normalizedParams)
+    return res.status(400).json({ 
+      error: 'Parámetros tipo y símbolo requeridos',
+      debug: { 
+        received: normalizedParams,
+        rawQuery: req.query,
+        url: req.url 
+      }
+    })
+  }
+  
+  const [tipo, simbolo] = normalizedParams
   console.log('📋 Tipo:', tipo, 'Símbolo:', simbolo)
   
   if (!simbolo) {
