@@ -8,9 +8,6 @@
     "server": "node server/index.js",
     "dev:full": "concurrently \"npm run server\" \"npm run dev\"",
     "build": "vite build",
-    "build:full": "npm run build && npm run copy-server",
-    "copy-server": "cp -r server dist/",
-    "start": "NODE_ENV=production node dist/server/production.js",
     "preview": "vite preview",
     "lint": "eslint ."
   },

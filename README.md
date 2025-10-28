@@ -167,12 +167,17 @@ La aplicación soporta activos tanto en **ARS** como en **USD**:
 ```
 mi-portfolio/
 ├── server/
-│   └── index.js              # Backend Express - Proxy IOL API
+│   └── index.js              # Backend Express - SOLO DESARROLLO LOCAL
+├── api/                      # 🆕 Vercel Serverless Functions - SOLO PRODUCCIÓN
+│   ├── health.js
+│   ├── _utils/jwt.js
+│   └── iol/
 ├── src/
 │   ├── components/           # Componentes React reutilizables
 │   │   ├── AssetCard.jsx
 │   │   ├── AddAssetModal.jsx
 │   │   ├── EditAssetModal.jsx
+│   │   ├── IOLSessionStatus.jsx  # 🆕 Indicador de sesión IOL
 │   │   ├── PortfolioSummary.jsx
 │   │   ├── PortfolioStats.jsx
 │   │   ├── LoadingSpinner.jsx
@@ -183,6 +188,21 @@ mi-portfolio/
 │   │   ├── useInvestments.js # Hooks cripto y dólar
 │   │   └── useArgentineQuotes.js # Hook cotizaciones IOL
 │   ├── services/
+│   │   └── iol.js            # Cliente API IOL (frontend)
+│   ├── utils/
+│   │   └── formatters.js     # Utilidades de formato
+│   ├── App.jsx               # Componente principal
+│   ├── main.jsx              # Punto de entrada
+│   └── index.css             # Estilos globales
+├── .env                      # Credenciales (NO subir a Git)
+├── .env.example              # Plantilla de credenciales
+├── package.json
+├── vercel.json               # 🆕 Configuración de Vercel
+├── ARCHITECTURE.md           # 🆕 Documentación de arquitectura
+└── vite.config.js
+```
+
+📖 **Ver [ARCHITECTURE.md](./ARCHITECTURE.md)** para entender la diferencia entre desarrollo y producción.
 │   │   └── iol.js            # Cliente API IOL (frontend)
 │   ├── utils/
 │   │   └── formatters.js     # Utilidades de formato

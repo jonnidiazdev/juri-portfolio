@@ -1,3 +1,16 @@
+/*
+ * Express Server - SOLO PARA DESARROLLO LOCAL
+ * 
+ * Este servidor se usa únicamente durante el desarrollo local.
+ * En producción, se utilizan las Vercel Serverless Functions (carpeta /api).
+ * 
+ * Comandos:
+ * - npm run dev:full  (recomendado para desarrollo)
+ * - npm run server    (solo backend)
+ * 
+ * Ver ARCHITECTURE.md para más información.
+ */
+
 import express from 'express'
 import axios from 'axios'
 import dotenv from 'dotenv'
