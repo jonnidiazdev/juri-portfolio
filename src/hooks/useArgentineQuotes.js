@@ -26,8 +26,8 @@ export function useArgentineQuotes(assets) {
       }
       return results
     },
-    staleTime: REFRESH_INTERVALS.normal,
-    refetchInterval: REFRESH_INTERVALS.normal,
+    staleTime: REFRESH_INTERVALS.slow,
+    refetchInterval: REFRESH_INTERVALS.slow,
     enabled: argAssets.length > 0,
   })
 }

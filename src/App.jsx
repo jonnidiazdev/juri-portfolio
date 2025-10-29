@@ -150,13 +150,6 @@ function App() {
                 exchangeRateInfo={multiCurrencyData.exchangeRateInfo}
                 className="mb-6"
               />
-
-              {/* Stats legacy para compatibilidad */}
-              <PortfolioStats 
-                coins={assets.map(a => ({ ...a, current_price: getCurrentPrice(a) }))}
-                holdings={assets}
-                currency="ars"
-              />
             </>
           )}
 

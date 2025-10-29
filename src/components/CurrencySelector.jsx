@@ -8,16 +8,16 @@ const CURRENCY_OPTIONS = [
     apiKey: 'blue'
   },
   { 
-    id: 'mep', 
+    id: 'bolsa', 
     name: 'MEP', 
     icon: '💱',
-    apiKey: 'mep'
+    apiKey: 'bolsa'
   },
   { 
-    id: 'ccl', 
+    id: 'contadoconliqui', 
     name: 'CCL', 
     icon: '🏦',
-    apiKey: 'ccl'
+    apiKey: 'contadoconliqui'
   },
   { 
     id: 'oficial', 
