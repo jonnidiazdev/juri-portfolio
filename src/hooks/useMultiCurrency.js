@@ -1,6 +1,8 @@
 import { useMemo } from 'react'
 import { useCurrencyPreference, getSelectedCurrencyRate } from '../components/CurrencySelector'
 import { ASSET_TYPES } from '../config/constants'
+import { calculatePlazoFijo } from '../utils/plazoFijoCalculations'
+import { calculateEfectivo } from '../utils/efectivoCalculations'
 
 export function useMultiCurrencyCalculations(assets, cryptoPrices, argQuotes, dolarData) {
   const currencyPreference = useCurrencyPreference()
@@ -32,6 +34,19 @@ export function useMultiCurrencyCalculations(assets, cryptoPrices, argQuotes, do
         const cryptoData = cryptoPrices?.[asset.symbol]
         const price = cryptoData?.usd
         return (typeof price === 'number' && price > 0) ? price : asset.purchasePrice
+      } else if (asset.type === ASSET_TYPES.PLAZO_FIJO) {
+        // Para plazos fijos, calcular el valor actual basado en TNA y días transcurridos
+        const plazoFijoData = calculatePlazoFijo(
+          asset.amount,
+          asset.tna,
+          asset.startDate,
+          asset.endDate
+        )
+        // Retornar el precio por unidad (valor actual / cantidad)
+        return plazoFijoData.currentValue / asset.amount
+      } else if (asset.type === ASSET_TYPES.EFECTIVO) {
+        // Para efectivo, el precio actual es 1 (sin variación)
+        return 1
       } else {
         // argQuotes usa asset.id como clave
         const quote = argQuotes?.[asset.id]
@@ -49,8 +64,27 @@ export function useMultiCurrencyCalculations(assets, cryptoPrices, argQuotes, do
       const currentPrice = getCurrentPrice(asset)
       const assetCurrency = asset.currency || (asset.type === ASSET_TYPES.CRYPTO ? 'USD' : 'ARS')
       
-      const investedValue = asset.amount * asset.purchasePrice
-      const currentValue = asset.amount * currentPrice
+      let investedValue, currentValue
+      
+      if (asset.type === ASSET_TYPES.PLAZO_FIJO) {
+        // Para plazos fijos: usar cálculo específico
+        const plazoFijoData = calculatePlazoFijo(
+          asset.amount,
+          asset.tna,
+          asset.startDate,
+          asset.endDate
+        )
+        investedValue = plazoFijoData.capital
+        currentValue = plazoFijoData.currentValue
+      } else if (asset.type === ASSET_TYPES.EFECTIVO) {
+        // Para efectivo: valor = cantidad, sin precio de compra
+        investedValue = asset.amount
+        currentValue = asset.amount
+      } else {
+        // Para otros activos: cantidad × precio
+        investedValue = asset.amount * asset.purchasePrice
+        currentValue = asset.amount * currentPrice
+      }
 
       if (assetCurrency === 'USD') {
         // Activo en USD

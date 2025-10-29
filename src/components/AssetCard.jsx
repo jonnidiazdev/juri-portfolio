@@ -1,7 +1,19 @@
 import { formatCurrency } from '../utils/formatters'
 import { ASSET_TYPES } from '../config/constants'
+import PlazoFijoCard from './PlazoFijoCard'
+import EfectivoCard from './EfectivoCard'
 
 export default function AssetCard({ asset, currentPrice, onEdit, onDelete, currency = 'ars', dolarPrice, dolarMepPrice }) {
+  // Si es un plazo fijo, usar el componente específico
+  if (asset.type === ASSET_TYPES.PLAZO_FIJO) {
+    return <PlazoFijoCard asset={asset} onEdit={onEdit} onDelete={onDelete} />
+  }
+
+  // Si es efectivo, usar el componente específico
+  if (asset.type === ASSET_TYPES.EFECTIVO) {
+    return <EfectivoCard asset={asset} onEdit={onEdit} onRemove={onDelete} />
+  }
+
   const isCrypto = asset.type === ASSET_TYPES.CRYPTO
   const assetCurrency = asset.currency || (isCrypto ? 'USD' : 'ARS')
   const price = currentPrice || 0
@@ -26,6 +38,7 @@ export default function AssetCard({ asset, currentPrice, onEdit, onDelete, curre
       [ASSET_TYPES.CEDEAR]: 'CEDEAR',
       [ASSET_TYPES.BOND]: 'Bono',
       [ASSET_TYPES.LETRA]: 'Letra',
+      [ASSET_TYPES.PLAZO_FIJO]: 'Plazo Fijo',
     }
     return labels[type] || type
   }

@@ -3,6 +3,8 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { useCryptoPrices, useDolarPrice } from './hooks/useInvestments'
 import { useArgentineQuotes } from './hooks/useArgentineQuotes'
 import { useMultiCurrencyCalculations } from './hooks/useMultiCurrency'
+import { calculatePlazoFijo } from './utils/plazoFijoCalculations'
+import { calculateEfectivo } from './utils/efectivoCalculations'
 import { ASSET_TYPES } from './config/constants'
 import PortfolioSummary from './components/PortfolioSummary'
 import PortfolioStats from './components/PortfolioStats'
@@ -63,6 +65,19 @@ function App() {
       const cryptoData = cryptoPrices?.[asset.symbol]
       const price = cryptoData?.usd
       return (typeof price === 'number' && price > 0) ? price : asset.purchasePrice
+    } else if (asset.type === ASSET_TYPES.PLAZO_FIJO) {
+      // Para plazos fijos, calcular el valor actual basado en TNA y días transcurridos
+      const plazoFijoData = calculatePlazoFijo(
+        asset.amount,
+        asset.tna,
+        asset.startDate,
+        asset.endDate
+      )
+      // Retornar el precio por unidad (valor actual / cantidad)
+      return plazoFijoData.currentValue / asset.amount
+    } else if (asset.type === ASSET_TYPES.EFECTIVO) {
+      // Para efectivo, el precio actual es 1 (sin variación)
+      return 1
     } else {
       // argQuotes usa asset.id como clave
       const quote = argQuotes?.[asset.id]
@@ -78,8 +93,28 @@ function App() {
     assets.forEach(asset => {
       const currentPrice = getCurrentPrice(asset)
       const assetCurrency = asset.currency || (asset.type === ASSET_TYPES.CRYPTO ? 'USD' : 'ARS')
-      const value = asset.amount * currentPrice
-      const invested = asset.amount * asset.purchasePrice
+      
+      let value, invested
+      
+      if (asset.type === ASSET_TYPES.PLAZO_FIJO) {
+        // Para plazos fijos: el capital es asset.amount y el valor actual se calcula con TNA
+        const plazoFijoData = calculatePlazoFijo(
+          asset.amount,
+          asset.tna,
+          asset.startDate,
+          asset.endDate
+        )
+        value = plazoFijoData.currentValue
+        invested = plazoFijoData.capital // El capital inicial
+      } else if (asset.type === ASSET_TYPES.EFECTIVO) {
+        // Para efectivo: valor = cantidad, sin precio de compra
+        value = asset.amount
+        invested = asset.amount // El efectivo no se "invierte", es capital disponible
+      } else {
+        // Para otros activos: cantidad × precio
+        value = asset.amount * currentPrice
+        invested = asset.amount * asset.purchasePrice
+      }
       
       // Convertir todo a ARS para el total unificado
       if (assetCurrency === 'USD' && dolarData?.blue) {
@@ -99,7 +134,9 @@ function App() {
 
   // Agrupar activos por tipo
   const cryptoAssets = assets.filter(a => a.type === ASSET_TYPES.CRYPTO)
-  const argentineAssets = assets.filter(a => a.type !== ASSET_TYPES.CRYPTO)
+  const argentineAssets = assets.filter(a => a.type !== ASSET_TYPES.CRYPTO && a.type !== ASSET_TYPES.PLAZO_FIJO && a.type !== ASSET_TYPES.EFECTIVO)
+  const plazoFijoAssets = assets.filter(a => a.type === ASSET_TYPES.PLAZO_FIJO)
+  const efectivoAssets = assets.filter(a => a.type === ASSET_TYPES.EFECTIVO)
 
   return (
     <div className="bg-gray-900 min-h-screen text-white">
@@ -218,7 +255,7 @@ function App() {
             )}
 
             {argentineAssets.length > 0 && (
-              <section>
+              <section className="mb-12">
                 <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
                   <svg className="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
@@ -227,6 +264,54 @@ function App() {
                 </h2>
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {argentineAssets.map(asset => (
+                    <AssetCard 
+                      key={asset.id}
+                      asset={asset}
+                      currentPrice={getCurrentPrice(asset)}
+                      onEdit={setEditingAsset}
+                      onDelete={handleDeleteAsset}
+                      dolarPrice={dolarData?.blue?.venta}
+                      dolarMepPrice={dolarData?.bolsa?.venta}
+                    />
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {plazoFijoAssets.length > 0 && (
+              <section>
+                <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
+                  <svg className="w-6 h-6 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  Plazos Fijos
+                </h2>
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {plazoFijoAssets.map(asset => (
+                    <AssetCard 
+                      key={asset.id}
+                      asset={asset}
+                      currentPrice={getCurrentPrice(asset)}
+                      onEdit={setEditingAsset}
+                      onDelete={handleDeleteAsset}
+                      dolarPrice={dolarData?.blue?.venta}
+                      dolarMepPrice={dolarData?.bolsa?.venta}
+                    />
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {efectivoAssets.length > 0 && (
+              <section>
+                <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
+                  <svg className="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  Efectivo y Cuentas Bancarias
+                </h2>
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {efectivoAssets.map(asset => (
                     <AssetCard 
                       key={asset.id}
                       asset={asset}

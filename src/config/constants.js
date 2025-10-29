@@ -44,6 +44,9 @@ export const ASSET_TYPES = {
   CEDEAR: 'cedear',
   BOND: 'bono',
   LETRA: 'letra',
+  OBLIGACION_NEGOCIABLE: 'obligacion-negociable',
+  PLAZO_FIJO: 'plazo-fijo',
+  EFECTIVO: 'efectivo',
 }
 
 export const FIAT_CURRENCIES = ['usd', 'ars']
@@ -58,3 +61,64 @@ export const POPULAR_CRYPTOS = [
   'bitcoin', 'ethereum', 'tether', 'binancecoin', 'usd-coin',
   'ripple', 'cardano', 'dogecoin', 'solana', 'polkadot'
 ]
+
+// Configuración específica para efectivo y cuentas bancarias
+export const EFECTIVO_CONFIG = {
+  // Tipos de tenencia de efectivo
+  TIPOS: {
+    EFECTIVO: 'efectivo',
+    CUENTA_BANCARIA: 'cuenta-bancaria',
+    CUENTA_AHORRO: 'cuenta-ahorro',
+    CUENTA_CORRIENTE: 'cuenta-corriente',
+    CUENTA_DOLARES: 'cuenta-dolares',
+    PLAZO_FIJO_TRADICIONAL: 'plazo-fijo-tradicional'
+  },
+  // Descripción de cada tipo
+  TIPOS_DESCRIPCIONES: {
+    'efectivo': 'Efectivo (Billetes)',
+    'cuenta-bancaria': 'Cuenta Bancaria',
+    'cuenta-ahorro': 'Caja de Ahorro',
+    'cuenta-corriente': 'Cuenta Corriente',
+    'cuenta-dolares': 'Cuenta en Dólares',
+    'plazo-fijo-tradicional': 'Plazo Fijo Tradicional'
+  },
+  // Bancos populares en Argentina
+  BANCOS: [
+    'Banco Nación',
+    'Banco Provincia de Buenos Aires',
+    'Banco Ciudad de Buenos Aires',
+    'Banco Macro',
+    'Banco Galicia',
+    'Banco Santander Río',
+    'BBVA Argentina',
+    'Banco Hipotecario',
+    'Banco Supervielle',
+    'Banco Patagonia',
+    'Banco Credicoop',
+    'Banco Industrial',
+    'Efectivo (Sin banco)',
+    'Otro'
+  ]
+}
+
+export const PLAZO_FIJO_CONFIG = {
+  // Tasas típicas en Argentina (solo referencia, el usuario ingresa la real)
+  TYPICAL_RATES: {
+    ARS: { min: 80, max: 120 }, // TNA típica en pesos
+    USD: { min: 3, max: 8 }     // TNA típica en dólares
+  },
+  // Duración típica en días
+  TYPICAL_DURATIONS: [30, 60, 90, 120, 180, 365],
+  // Bancos populares (para referencia)
+  POPULAR_BANKS: [
+    'Banco Nación',
+    'Banco Provincia',
+    'Banco Ciudad',
+    'Banco Macro',
+    'Banco Galicia',
+    'Banco Santander',
+    'BBVA',
+    'Banco Hipotecario',
+    'Otros'
+  ]
+}

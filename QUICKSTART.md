@@ -55,9 +55,17 @@ Si usas solo `npm run dev`:
    - Cantidad: `10`
    - Precio Compra: `1000`
 
-3. **Ver Actualización Automática**
+3. **Agregar Plazo Fijo**
+   - Tipo: Plazo Fijo
+   - Banco: `Banco Nación`
+   - Capital: `100000`
+   - TNA: `85.5`
+   - Fechas: inicio y vencimiento
+
+4. **Ver Actualización Automática**
    - Espera 60 segundos
    - Los precios se actualizan solos
+   - Los plazos fijos muestran progreso diario
 
 ## Archivos Importantes
 
