@@ -43,7 +43,22 @@ export default function CurrencySelector({ dolarData, className = '' }) {
 
   return (
     <div className={`flex items-center gap-4 text-sm ${className}`}>
-      <span className="text-gray-400 whitespace-nowrap">Cotización:</span>
+      <div className="flex items-center gap-2">
+        <span className="text-gray-400 whitespace-nowrap">Cotización de conversión:</span>
+        <div className="relative group">
+          <div 
+            className="w-4 h-4 rounded-full flex items-center justify-center cursor-help hover:bg-gray-700 transition-colors border border-gray-400"
+            title="La cotización seleccionada se usa para convertir entre ARS y USD en los totales del portfolio"
+          >
+            <span className="text-xs font-bold text-gray-300 hover:text-white">?</span>
+          </div>
+          {/* Tooltip */}
+          <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10 border border-gray-700">
+            La cotización seleccionada se usa para convertir entre ARS y USD en los totales del portfolio
+            <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
+          </div>
+        </div>
+      </div>
       
       <div className="flex items-center gap-1">
         {CURRENCY_OPTIONS.map((option) => {
