@@ -3,7 +3,11 @@ import { fetchArgentineQuote } from '../services/iol'
 import { ASSET_TYPES, REFRESH_INTERVALS } from '../config/constants'
 
 export function useArgentineQuotes(assets) {
-  const argAssets = assets.filter(a => a.type !== ASSET_TYPES.CRYPTO)
+  const argAssets = assets.filter(a => 
+    a.type !== ASSET_TYPES.CRYPTO && 
+    a.type !== ASSET_TYPES.PLAZO_FIJO && 
+    a.type !== ASSET_TYPES.EFECTIVO
+  )
   const symbols = argAssets.map(a => `${a.type}:${a.symbol}`).join('|')
 
   return useQuery({
