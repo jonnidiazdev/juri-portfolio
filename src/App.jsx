@@ -188,6 +188,12 @@ function App() {
   const plazoFijoStats = calculateAssetTypeStats(plazoFijoAssets)
   const efectivoStats = calculateAssetTypeStats(efectivoAssets)
 
+  // Ordenar activos alfabéticamente por nombre
+  const sortedCryptoAssets = [...cryptoAssets].sort((a, b) => a.name.localeCompare(b.name))
+  const sortedArgentineAssets = [...argentineAssets].sort((a, b) => a.name.localeCompare(b.name))
+  const sortedPlazoFijoAssets = [...plazoFijoAssets].sort((a, b) => a.name.localeCompare(b.name))
+  const sortedEfectivoAssets = [...efectivoAssets].sort((a, b) => a.name.localeCompare(b.name))
+
   return (
     <div className="bg-gray-900 min-h-screen text-white">
       <div className="container mx-auto px-4 py-8 max-w-7xl">
@@ -294,7 +300,7 @@ function App() {
                   </span>
                 </h2>
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {cryptoAssets.map(asset => (
+                  {sortedCryptoAssets.map(asset => (
                     <AssetCard 
                       key={asset.id}
                       asset={asset}
@@ -323,7 +329,7 @@ function App() {
                   </span>
                 </h2>
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {argentineAssets.map(asset => (
+                  {sortedArgentineAssets.map(asset => (
                     <AssetCard 
                       key={asset.id}
                       asset={asset}
@@ -352,7 +358,7 @@ function App() {
                   </span>
                 </h2>
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {plazoFijoAssets.map(asset => (
+                  {sortedPlazoFijoAssets.map(asset => (
                     <AssetCard 
                       key={asset.id}
                       asset={asset}
@@ -379,7 +385,7 @@ function App() {
                   </span>
                 </h2>
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {efectivoAssets.map(asset => (
+                  {sortedEfectivoAssets.map(asset => (
                     <AssetCard 
                       key={asset.id}
                       asset={asset}
