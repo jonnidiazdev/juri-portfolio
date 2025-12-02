@@ -188,11 +188,17 @@ function App() {
   const plazoFijoStats = calculateAssetTypeStats(plazoFijoAssets)
   const efectivoStats = calculateAssetTypeStats(efectivoAssets)
 
-  // Ordenar activos alfabéticamente por nombre
-  const sortedCryptoAssets = [...cryptoAssets].sort((a, b) => a.name.localeCompare(b.name))
-  const sortedArgentineAssets = [...argentineAssets].sort((a, b) => a.name.localeCompare(b.name))
-  const sortedPlazoFijoAssets = [...plazoFijoAssets].sort((a, b) => a.name.localeCompare(b.name))
-  const sortedEfectivoAssets = [...efectivoAssets].sort((a, b) => a.name.localeCompare(b.name))
+  // Ordenar activos alfabéticamente por ticker/símbolo cuando aplique
+  const getSortKey = (asset) => {
+    // Preferir ticker; fallback a símbolo (crypto) o nombre
+    const key = asset.ticker || asset.symbol || asset.name || ''
+    return typeof key === 'string' ? key.toUpperCase() : ''
+  }
+
+  const sortedCryptoAssets = [...cryptoAssets].sort((a, b) => getSortKey(a).localeCompare(getSortKey(b)))
+  const sortedArgentineAssets = [...argentineAssets].sort((a, b) => getSortKey(a).localeCompare(getSortKey(b)))
+  const sortedPlazoFijoAssets = [...plazoFijoAssets].sort((a, b) => getSortKey(a).localeCompare(getSortKey(b)))
+  const sortedEfectivoAssets = [...efectivoAssets].sort((a, b) => getSortKey(a).localeCompare(getSortKey(b)))
 
   return (
     <div className="bg-gray-900 min-h-screen text-white">
