@@ -1,12 +1,23 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { ASSET_TYPES } from '../config/constants'
 
 export default function EditAssetModal({ isOpen, onClose, onSave, asset }) {
   const [formData, setFormData] = useState({
-    amount: asset?.amount || '',
-    purchasePrice: asset?.purchasePrice || '',
-    currency: asset?.currency || 'ARS',
+    amount: '',
+    purchasePrice: '',
+    currency: 'ARS',
   })
+
+  // Actualizar formData cuando cambie el asset
+  useEffect(() => {
+    if (asset) {
+      setFormData({
+        amount: asset.amount || '',
+        purchasePrice: asset.purchasePrice || '',
+        currency: asset.currency || 'ARS',
+      })
+    }
+  }, [asset])
 
   const handleSubmit = (e) => {
     e.preventDefault()
