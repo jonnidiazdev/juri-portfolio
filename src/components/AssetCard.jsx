@@ -11,7 +11,7 @@ export default function AssetCard({ asset, currentPrice, onEdit, onDelete, curre
 
   // Si es efectivo, usar el componente específico
   if (asset.type === ASSET_TYPES.EFECTIVO) {
-    return <EfectivoCard asset={asset} onEdit={onEdit} onRemove={onDelete} />
+    return <EfectivoCard asset={asset} onEdit={onEdit} onDelete={onDelete} />
   }
 
   const isCrypto = asset.type === ASSET_TYPES.CRYPTO

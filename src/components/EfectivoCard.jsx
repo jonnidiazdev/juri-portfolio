@@ -5,7 +5,7 @@ import {
   getEfectivoColor 
 } from '../utils/efectivoCalculations'
 
-export default function EfectivoCard({ asset, onEdit, onRemove }) {
+export default function EfectivoCard({ asset, onEdit, onDelete }) {
   const efectivoData = calculateEfectivo(
     asset.amount,
     asset.tipoEfectivo,
@@ -41,7 +41,7 @@ export default function EfectivoCard({ asset, onEdit, onRemove }) {
             </svg>
           </button>
           <button
-            onClick={() => onRemove(asset.id)}
+            onClick={() => onDelete(asset.id)}
             className="text-gray-400 hover:text-red-500 transition-colors"
             title="Eliminar"
           >
