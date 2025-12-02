@@ -14,7 +14,7 @@ export default function PlazoFijoCard({ asset, onEdit, onDelete }) {
   const assetCurrency = asset.currency || 'ARS'
 
   return (
-    <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-6 border border-gray-700 shadow-lg hover:shadow-xl transition-all duration-300 group">
+    <div className="asset-card bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-6 border border-gray-700 shadow-lg hover:shadow-xl transition-all duration-300">
       <div className="flex justify-between items-start mb-4">
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-1">
@@ -37,7 +37,7 @@ export default function PlazoFijoCard({ asset, onEdit, onDelete }) {
           </div>
         </div>
 
-        <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="asset-card-actions flex gap-2">
           <button
             onClick={() => onEdit(asset)}
             className="p-2 text-gray-400 hover:text-cyan-400 hover:bg-gray-700 rounded-lg transition-colors"

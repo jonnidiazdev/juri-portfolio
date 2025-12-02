@@ -59,7 +59,7 @@ export default function AssetCard({ asset, currentPrice, onEdit, onDelete, curre
   }
 
   return (
-    <div className="bg-gray-800 rounded-lg p-5 border border-gray-700 hover:border-cyan-500 transition-all duration-300 group">
+    <div className="asset-card bg-gray-800 rounded-lg p-5 border border-gray-700 transition-all duration-300">
       <div className="flex items-start justify-between mb-4">
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-1">
@@ -78,10 +78,10 @@ export default function AssetCard({ asset, currentPrice, onEdit, onDelete, curre
           <p className="text-gray-400 text-sm uppercase">{asset.symbol}</p>
         </div>
         
-        <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="asset-card-actions flex gap-2">
           <button
             onClick={() => onEdit(asset)}
-            className="p-2 bg-gray-700 hover:bg-gray-600 text-cyan-400 rounded-lg transition-colors"
+            className="p-2 text-gray-400 hover:text-cyan-400 hover:bg-gray-700 rounded-lg transition-colors"
             title="Editar"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -90,7 +90,7 @@ export default function AssetCard({ asset, currentPrice, onEdit, onDelete, curre
           </button>
           <button
             onClick={() => onDelete(asset.id)}
-            className="p-2 bg-red-500/20 hover:bg-red-500 text-red-400 hover:text-white rounded-lg transition-colors"
+            className="p-2 text-gray-400 hover:text-red-400 hover:bg-gray-700 rounded-lg transition-colors"
             title="Eliminar"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

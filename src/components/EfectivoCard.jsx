@@ -17,12 +17,35 @@ export default function EfectivoCard({ asset, onEdit, onDelete }) {
   const formattedInfo = formatEfectivoInfo(efectivoData)
   const icon = getEfectivoIcon(asset.tipoEfectivo)
   const colorClass = getEfectivoColor(asset.tipoEfectivo)
+  
+  // Mapear colores a valores CSS reales
+  const colorMap = {
+    'green': { border: '#10b981', bg: 'rgba(16, 185, 129, 0.1)', text: '#34d399' },
+    'blue': { border: '#3b82f6', bg: 'rgba(59, 130, 246, 0.1)', text: '#60a5fa' },
+    'indigo': { border: '#6366f1', bg: 'rgba(99, 102, 241, 0.1)', text: '#818cf8' },
+    'purple': { border: '#a855f7', bg: 'rgba(168, 85, 247, 0.1)', text: '#c084fc' },
+    'yellow': { border: '#eab308', bg: 'rgba(234, 179, 8, 0.1)', text: '#facc15' },
+    'gray': { border: '#6b7280', bg: 'rgba(107, 114, 128, 0.1)', text: '#9ca3af' }
+  }
+  
+  const colors = colorMap[colorClass] || colorMap['gray']
 
   return (
-    <div className={`bg-gray-800 rounded-xl p-6 border border-${colorClass}-500/20 hover:border-${colorClass}-500/40 transition-all duration-300`}>
+    <div 
+      className="asset-card bg-gray-800 rounded-xl p-6 border transition-all duration-300 hover:shadow-lg"
+      style={{ 
+        borderColor: `${colors.border}33`,
+        '--hover-border-color': `${colors.border}66`
+      }}
+      onMouseEnter={(e) => e.currentTarget.style.borderColor = colors.border + '66'}
+      onMouseLeave={(e) => e.currentTarget.style.borderColor = colors.border + '33'}
+    >
       <div className="flex justify-between items-start mb-4">
         <div className="flex items-center space-x-3">
-          <div className={`text-2xl bg-${colorClass}-500/10 rounded-lg p-2`}>
+          <div 
+            className="text-2xl rounded-lg p-2"
+            style={{ backgroundColor: colors.bg }}
+          >
             {icon}
           </div>
           <div>
@@ -30,10 +53,10 @@ export default function EfectivoCard({ asset, onEdit, onDelete }) {
             <p className="text-gray-400 text-sm">{formattedInfo.subtitulo}</p>
           </div>
         </div>
-        <div className="flex space-x-2">
+        <div className="asset-card-actions flex gap-2">
           <button
             onClick={() => onEdit(asset)}
-            className="text-gray-400 hover:text-blue-500 transition-colors"
+            className="p-2 text-gray-400 hover:text-cyan-400 hover:bg-gray-700 rounded-lg transition-colors"
             title="Editar"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -42,7 +65,7 @@ export default function EfectivoCard({ asset, onEdit, onDelete }) {
           </button>
           <button
             onClick={() => onDelete(asset.id)}
-            className="text-gray-400 hover:text-red-500 transition-colors"
+            className="p-2 text-gray-400 hover:text-red-400 hover:bg-gray-700 rounded-lg transition-colors"
             title="Eliminar"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -57,7 +80,10 @@ export default function EfectivoCard({ asset, onEdit, onDelete }) {
         <div className="bg-gray-900/50 rounded-lg p-4">
           <div className="flex justify-between items-center">
             <span className="text-gray-400">Monto Disponible</span>
-            <span className={`text-xl font-bold text-${colorClass}-400`}>
+            <span 
+              className="text-xl font-bold"
+              style={{ color: colors.text }}
+            >
               {formattedInfo.montoFormateado}
             </span>
           </div>
@@ -67,15 +93,15 @@ export default function EfectivoCard({ asset, onEdit, onDelete }) {
         <div className="grid grid-cols-3 gap-4 text-sm">
           <div className="text-center">
             <p className="text-gray-400">Disponibilidad</p>
-            <p className={`font-semibold text-${colorClass}-400`}>{formattedInfo.disponibilidad}</p>
+            <p className="font-semibold" style={{ color: colors.text }}>{formattedInfo.disponibilidad}</p>
           </div>
           <div className="text-center">
             <p className="text-gray-400">Liquidez</p>
-            <p className={`font-semibold text-${colorClass}-400`}>{formattedInfo.liquidez}</p>
+            <p className="font-semibold" style={{ color: colors.text }}>{formattedInfo.liquidez}</p>
           </div>
           <div className="text-center">
             <p className="text-gray-400">Riesgo</p>
-            <p className={`font-semibold text-${colorClass}-400`}>{formattedInfo.riesgo}</p>
+            <p className="font-semibold" style={{ color: colors.text }}>{formattedInfo.riesgo}</p>
           </div>
         </div>
 
@@ -106,8 +132,11 @@ export default function EfectivoCard({ asset, onEdit, onDelete }) {
 
         {/* Indicadores visuales */}
         <div className="flex space-x-2">
-          <div className={`flex-1 bg-${colorClass}-500/10 rounded-lg p-2 text-center`}>
-            <div className={`text-${colorClass}-400 text-xs font-semibold`}>LÍQUIDO</div>
+          <div 
+            className="flex-1 rounded-lg p-2 text-center"
+            style={{ backgroundColor: colors.bg }}
+          >
+            <div className="text-xs font-semibold" style={{ color: colors.text }}>LÍQUIDO</div>
           </div>
           <div className="flex-1 bg-green-500/10 rounded-lg p-2 text-center">
             <div className="text-green-400 text-xs font-semibold">SIN RIESGO</div>
