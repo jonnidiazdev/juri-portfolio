@@ -138,6 +138,56 @@ function App() {
   const plazoFijoAssets = assets.filter(a => a.type === ASSET_TYPES.PLAZO_FIJO)
   const efectivoAssets = assets.filter(a => a.type === ASSET_TYPES.EFECTIVO)
 
+  // Calcular ganancias/pérdidas por tipo de activo
+  const calculateAssetTypeStats = (assetList) => {
+    let totalValue = 0
+    let totalInvested = 0
+
+    assetList.forEach(asset => {
+      const currentPrice = getCurrentPrice(asset)
+      const assetCurrency = asset.currency || (asset.type === ASSET_TYPES.CRYPTO ? 'USD' : 'ARS')
+      
+      let value, invested
+      
+      if (asset.type === ASSET_TYPES.PLAZO_FIJO) {
+        const plazoFijoData = calculatePlazoFijo(
+          asset.amount,
+          asset.tna,
+          asset.startDate,
+          asset.endDate
+        )
+        value = plazoFijoData.currentValue
+        invested = plazoFijoData.capital
+      } else if (asset.type === ASSET_TYPES.EFECTIVO) {
+        value = asset.amount
+        invested = asset.amount
+      } else {
+        value = asset.amount * currentPrice
+        invested = asset.amount * asset.purchasePrice
+      }
+      
+      // Convertir todo a ARS para totales
+      if (assetCurrency === 'USD' && dolarData?.blue) {
+        totalValue += value * dolarData.blue.venta
+        totalInvested += invested * dolarData.blue.venta
+      } else {
+        totalValue += value
+        totalInvested += invested
+      }
+    })
+
+    const profit = totalValue - totalInvested
+    const profitPercent = totalInvested > 0 ? ((totalValue - totalInvested) / totalInvested) * 100 : 0
+    const isProfit = profit >= 0
+
+    return { totalValue, totalInvested, profit, profitPercent, isProfit }
+  }
+
+  const cryptoStats = calculateAssetTypeStats(cryptoAssets)
+  const argentineStats = calculateAssetTypeStats(argentineAssets)
+  const plazoFijoStats = calculateAssetTypeStats(plazoFijoAssets)
+  const efectivoStats = calculateAssetTypeStats(efectivoAssets)
+
   return (
     <div className="bg-gray-900 min-h-screen text-white">
       <div className="container mx-auto px-4 py-8 max-w-7xl">
@@ -232,11 +282,16 @@ function App() {
           <>
             {cryptoAssets.length > 0 && (
               <section className="mb-12">
-                <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
+                <h2 className="text-2xl font-bold mb-6 flex items-center gap-3">
                   <svg className="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                   Criptomonedas
+                  <span className={`text-sm font-medium px-3 py-1 rounded-full ${
+                    cryptoStats.isProfit ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
+                  }`}>
+                    {cryptoStats.isProfit ? '+' : ''}{cryptoStats.profitPercent.toFixed(2)}%
+                  </span>
                 </h2>
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {cryptoAssets.map(asset => (
@@ -256,11 +311,16 @@ function App() {
 
             {argentineAssets.length > 0 && (
               <section className="mb-12">
-                <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
+                <h2 className="text-2xl font-bold mb-6 flex items-center gap-3">
                   <svg className="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                   </svg>
                   Mercado Argentino
+                  <span className={`text-sm font-medium px-3 py-1 rounded-full ${
+                    argentineStats.isProfit ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
+                  }`}>
+                    {argentineStats.isProfit ? '+' : ''}{argentineStats.profitPercent.toFixed(2)}%
+                  </span>
                 </h2>
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {argentineAssets.map(asset => (
@@ -280,11 +340,16 @@ function App() {
 
             {plazoFijoAssets.length > 0 && (
               <section>
-                <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
+                <h2 className="text-2xl font-bold mb-6 flex items-center gap-3">
                   <svg className="w-6 h-6 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                   Plazos Fijos
+                  <span className={`text-sm font-medium px-3 py-1 rounded-full ${
+                    plazoFijoStats.isProfit ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
+                  }`}>
+                    {plazoFijoStats.isProfit ? '+' : ''}{plazoFijoStats.profitPercent.toFixed(2)}%
+                  </span>
                 </h2>
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {plazoFijoAssets.map(asset => (
@@ -304,11 +369,14 @@ function App() {
 
             {efectivoAssets.length > 0 && (
               <section>
-                <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
+                <h2 className="text-2xl font-bold mb-6 flex items-center gap-3">
                   <svg className="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                   Efectivo y Cuentas Bancarias
+                  <span className="text-sm font-medium px-3 py-1 rounded-full bg-gray-500/20 text-gray-400">
+                    0.00%
+                  </span>
                 </h2>
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {efectivoAssets.map(asset => (
