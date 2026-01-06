@@ -5,6 +5,7 @@ import { useArgentineQuotes } from './hooks/useArgentineQuotes'
 import { useMultiCurrencyCalculations } from './hooks/useMultiCurrency'
 import { calculatePlazoFijo } from './utils/plazoFijoCalculations'
 import { calculateEfectivo } from './utils/efectivoCalculations'
+import { formatCurrency } from './utils/formatters'
 import { ASSET_TYPES } from './config/constants'
 import PortfolioSummary from './components/PortfolioSummary'
 import PortfolioStats from './components/PortfolioStats'
@@ -294,7 +295,7 @@ function App() {
           <>
             {cryptoAssets.length > 0 && (
               <section className="mb-12">
-                <h2 className="text-2xl font-bold mb-6 flex items-center gap-3">
+                <h2 className="text-2xl font-bold mb-6 flex items-center gap-3 flex-wrap">
                   <svg className="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
@@ -303,6 +304,9 @@ function App() {
                     cryptoStats.isProfit ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
                   }`}>
                     {cryptoStats.isProfit ? '+' : ''}{cryptoStats.profitPercent.toFixed(2)}%
+                  </span>
+                  <span className="text-sm text-gray-400">
+                    Invertido: {formatCurrency(cryptoStats.totalInvested, 'ARS')} → Actual: {formatCurrency(cryptoStats.totalValue, 'ARS')}
                   </span>
                 </h2>
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -315,6 +319,8 @@ function App() {
                       onDelete={handleDeleteAsset}
                       dolarPrice={dolarData?.blue?.venta}
                       dolarMepPrice={dolarData?.bolsa?.venta}
+                      conversionRate={multiCurrencyData.exchangeRate}
+                      exchangeRateInfo={multiCurrencyData.exchangeRateInfo}
                     />
                   ))}
                 </div>
@@ -323,7 +329,7 @@ function App() {
 
             {argentineAssets.length > 0 && (
               <section className="mb-12">
-                <h2 className="text-2xl font-bold mb-6 flex items-center gap-3">
+                <h2 className="text-2xl font-bold mb-6 flex items-center gap-3 flex-wrap">
                   <svg className="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                   </svg>
@@ -332,6 +338,9 @@ function App() {
                     argentineStats.isProfit ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
                   }`}>
                     {argentineStats.isProfit ? '+' : ''}{argentineStats.profitPercent.toFixed(2)}%
+                  </span>
+                  <span className="text-sm text-gray-400">
+                    Invertido: {formatCurrency(argentineStats.totalInvested, 'ARS')} → Actual: {formatCurrency(argentineStats.totalValue, 'ARS')}
                   </span>
                 </h2>
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -344,6 +353,8 @@ function App() {
                       onDelete={handleDeleteAsset}
                       dolarPrice={dolarData?.blue?.venta}
                       dolarMepPrice={dolarData?.bolsa?.venta}
+                      conversionRate={multiCurrencyData.exchangeRate}
+                      exchangeRateInfo={multiCurrencyData.exchangeRateInfo}
                     />
                   ))}
                 </div>
@@ -352,7 +363,7 @@ function App() {
 
             {plazoFijoAssets.length > 0 && (
               <section>
-                <h2 className="text-2xl font-bold mb-6 flex items-center gap-3">
+                <h2 className="text-2xl font-bold mb-6 flex items-center gap-3 flex-wrap">
                   <svg className="w-6 h-6 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
@@ -361,6 +372,9 @@ function App() {
                     plazoFijoStats.isProfit ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
                   }`}>
                     {plazoFijoStats.isProfit ? '+' : ''}{plazoFijoStats.profitPercent.toFixed(2)}%
+                  </span>
+                  <span className="text-sm text-gray-400">
+                    Capital: {formatCurrency(plazoFijoStats.totalInvested, 'ARS')} → Actual: {formatCurrency(plazoFijoStats.totalValue, 'ARS')}
                   </span>
                 </h2>
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -373,6 +387,8 @@ function App() {
                       onDelete={handleDeleteAsset}
                       dolarPrice={dolarData?.blue?.venta}
                       dolarMepPrice={dolarData?.bolsa?.venta}
+                      conversionRate={multiCurrencyData.exchangeRate}
+                      exchangeRateInfo={multiCurrencyData.exchangeRateInfo}
                     />
                   ))}
                 </div>
@@ -381,13 +397,16 @@ function App() {
 
             {efectivoAssets.length > 0 && (
               <section>
-                <h2 className="text-2xl font-bold mb-6 flex items-center gap-3">
+                <h2 className="text-2xl font-bold mb-6 flex items-center gap-3 flex-wrap">
                   <svg className="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                   Efectivo y Cuentas Bancarias
                   <span className="text-sm font-medium px-3 py-1 rounded-full bg-gray-500/20 text-gray-400">
                     0.00%
+                  </span>
+                  <span className="text-sm text-gray-400">
+                    Disponible: {formatCurrency(efectivoStats.totalValue, 'ARS')}
                   </span>
                 </h2>
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -400,6 +419,8 @@ function App() {
                       onDelete={handleDeleteAsset}
                       dolarPrice={dolarData?.blue?.venta}
                       dolarMepPrice={dolarData?.bolsa?.venta}
+                      conversionRate={multiCurrencyData.exchangeRate}
+                      exchangeRateInfo={multiCurrencyData.exchangeRateInfo}
                     />
                   ))}
                 </div>

@@ -142,6 +142,7 @@ export default function EfectivoCard({ asset, onEdit, onDelete }) {
             <div className="text-green-400 text-xs font-semibold">SIN RIESGO</div>
           </div>
         </div>
+
       </div>
     </div>
   )

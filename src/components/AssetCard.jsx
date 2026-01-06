@@ -1,9 +1,10 @@
 import { formatCurrency } from '../utils/formatters'
 import { ASSET_TYPES } from '../config/constants'
+import { computeAssetPL } from '../utils/assetCalculations'
 import PlazoFijoCard from './PlazoFijoCard'
 import EfectivoCard from './EfectivoCard'
 
-export default function AssetCard({ asset, currentPrice, onEdit, onDelete, currency = 'ars', dolarPrice, dolarMepPrice }) {
+export default function AssetCard({ asset, currentPrice, onEdit, onDelete, currency = 'ars', dolarPrice, dolarMepPrice, conversionRate, exchangeRateInfo }) {
   // Si es un plazo fijo, usar el componente específico
   if (asset.type === ASSET_TYPES.PLAZO_FIJO) {
     return <PlazoFijoCard asset={asset} onEdit={onEdit} onDelete={onDelete} />
@@ -19,17 +20,16 @@ export default function AssetCard({ asset, currentPrice, onEdit, onDelete, curre
   const price = currentPrice || 0
   const totalValue = asset.amount * price
   const invested = asset.amount * asset.purchasePrice
-  const profitLoss = totalValue - invested
-  const profitPercent = invested > 0 ? ((totalValue - invested) / invested) * 100 : 0
-  const isProfit = profitLoss >= 0
+  const pl = computeAssetPL(asset, price, conversionRate)
+  const isProfitLocal = (totalValue - invested) >= 0
   
   // Calcular equivalente en ARS si el activo está en USD y tenemos cotización del dólar blue
-  const showArsEquivalent = assetCurrency === 'USD' && dolarPrice
-  const totalValueARS = showArsEquivalent ? totalValue * dolarPrice : null
+  const showArsEquivalent = assetCurrency === 'USD' && (conversionRate || dolarPrice)
+  const totalValueARS = showArsEquivalent ? totalValue * (conversionRate || dolarPrice) : null
   
   // Calcular equivalente en USD MEP si el activo está en ARS y tenemos cotización MEP
-  const showMepEquivalent = assetCurrency === 'ARS' && dolarMepPrice
-  const totalValueMEP = showMepEquivalent ? totalValue / dolarMepPrice : null
+  const showUSDEquivalent = assetCurrency === 'ARS' && (conversionRate || dolarMepPrice)
+  const totalValueUSD = showUSDEquivalent ? totalValue / (conversionRate || dolarMepPrice) : null
 
   const getAssetTypeLabel = (type) => {
     const labels = {
@@ -122,28 +122,35 @@ export default function AssetCard({ asset, currentPrice, onEdit, onDelete, curre
               {formatCurrency(totalValue, assetCurrency)}
             </div>
             {showArsEquivalent && (
-              <div className="text-xs text-gray-400">
-                ≈ {formatCurrency(totalValueARS, 'ARS')}
+              <div className="text-xs text-gray-400 flex items-center gap-1 justify-end">
+                <span className="text-gray-500">≈</span>
+                <span>{formatCurrency(totalValueARS, 'ARS')}</span>
+                {exchangeRateInfo?.name && (
+                  <span className="text-gray-500 text-[10px]">{exchangeRateInfo.name}</span>
+                )}
               </div>
             )}
-            {showMepEquivalent && (
+            {showUSDEquivalent && (
               <div className="text-xs text-green-400 flex items-center gap-1 justify-end">
                 <span className="text-gray-500">≈</span>
-                <span>{formatCurrency(totalValueMEP, 'USD')}</span>
-                <span className="text-gray-500 text-[10px]">MEP</span>
+                <span>{formatCurrency(totalValueUSD, 'USD')}</span>
+                {exchangeRateInfo?.name && (
+                  <span className="text-gray-500 text-[10px]">{exchangeRateInfo.name}</span>
+                )}
               </div>
             )}
           </div>
         </div>
 
-        <div className="flex justify-between items-center">
+        {/* Ganancia/Pérdida compacta */}
+        <div className="flex justify-between items-center pt-2 border-t border-gray-700">
           <span className="text-gray-400 text-sm">Ganancia/Pérdida</span>
           <div className="text-right">
-            <div className={`font-bold ${isProfit ? 'text-green-400' : 'text-red-400'}`}>
-              {formatCurrency(profitLoss, assetCurrency)}
+            <div className={`font-bold ${pl.plUSD >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+              {formatCurrency(pl.plUSD, 'USD')} / {formatCurrency(pl.plARS, 'ARS')}
             </div>
-            <div className={`text-sm ${isProfit ? 'text-green-400' : 'text-red-400'}`}>
-              {isProfit ? '+' : ''}{profitPercent.toFixed(2)}%
+            <div className={`text-sm ${pl.plUSD >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+              {pl.plUSD >= 0 ? '+' : ''}{pl.plPctUSD.toFixed(2)}%
             </div>
           </div>
         </div>
