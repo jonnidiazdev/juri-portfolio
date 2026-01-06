@@ -305,6 +305,11 @@ function App() {
                   }`}>
                     {cryptoStats.isProfit ? '+' : ''}{cryptoStats.profitPercent.toFixed(2)}%
                   </span>
+                  <span className={`text-sm font-medium px-3 py-1 rounded-full ${
+                    cryptoStats.isProfit ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
+                  }`}>
+                    {cryptoStats.isProfit ? '+' : ''}{formatCurrency(cryptoStats.profit / multiCurrencyData.exchangeRate, 'USD')}
+                  </span>
                   <span className="text-sm text-gray-400">
                     Invertido: {formatCurrency(cryptoStats.totalInvested, 'ARS')} → Actual: {formatCurrency(cryptoStats.totalValue, 'ARS')}
                   </span>
@@ -339,6 +344,11 @@ function App() {
                   }`}>
                     {argentineStats.isProfit ? '+' : ''}{argentineStats.profitPercent.toFixed(2)}%
                   </span>
+                  <span className={`text-sm font-medium px-3 py-1 rounded-full ${
+                    argentineStats.isProfit ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
+                  }`}>
+                    {argentineStats.isProfit ? '+' : ''}{formatCurrency(argentineStats.profit / multiCurrencyData.exchangeRate, 'USD')}
+                  </span>
                   <span className="text-sm text-gray-400">
                     Invertido: {formatCurrency(argentineStats.totalInvested, 'ARS')} → Actual: {formatCurrency(argentineStats.totalValue, 'ARS')}
                   </span>
@@ -372,6 +382,11 @@ function App() {
                     plazoFijoStats.isProfit ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
                   }`}>
                     {plazoFijoStats.isProfit ? '+' : ''}{plazoFijoStats.profitPercent.toFixed(2)}%
+                  </span>
+                  <span className={`text-sm font-medium px-3 py-1 rounded-full ${
+                    plazoFijoStats.isProfit ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
+                  }`}>
+                    {plazoFijoStats.isProfit ? '+' : ''}{formatCurrency(plazoFijoStats.profit / multiCurrencyData.exchangeRate, 'USD')}
                   </span>
                   <span className="text-sm text-gray-400">
                     Capital: {formatCurrency(plazoFijoStats.totalInvested, 'ARS')} → Actual: {formatCurrency(plazoFijoStats.totalValue, 'ARS')}
