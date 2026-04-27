@@ -13,7 +13,8 @@ Aplicación web moderna para gestionar y monitorear tu portfolio de inversiones:
 - ⚙️ **Configuración Segura** - Credenciales IOL guardadas localmente en tu navegador
 - 🔄 **Caché Inteligente** - React Query optimiza las peticiones y reduce llamadas a APIs
 - 📱 **Responsive** - Diseño adaptable a todos los dispositivos
-- 💾 **Persistencia Local** - Tus holdings se guardan en localStorage
+- ☁️ **Persistencia en la Nube (opcional)** - Tus holdings se sincronizan con Firebase Firestore (fallback local si no está configurado)
+- 🔐 **Acceso con Google** - El ingreso a la app se realiza con Firebase Authentication (Google)
 - 🔒 **Seguridad** - Credenciales manejadas de forma segura, nunca enviadas a terceros
 
 ## 🚀 Tecnologías
@@ -79,6 +80,45 @@ PORT=4000
 - El archivo `.env` está en `.gitignore` para proteger tus credenciales
 - Usa `.env.example` como referencia
 - NUNCA subas tus credenciales reales a Git
+
+### 2.5 Configurar Firebase (Opcional)
+
+Si querés que el portfolio deje de depender solo del navegador y quede persistido en la nube, completá estas variables en tu `.env`:
+
+```bash
+VITE_FIREBASE_API_KEY=""
+VITE_FIREBASE_AUTH_DOMAIN=""
+VITE_FIREBASE_PROJECT_ID=""
+VITE_FIREBASE_STORAGE_BUCKET=""
+VITE_FIREBASE_MESSAGING_SENDER_ID=""
+VITE_FIREBASE_APP_ID=""
+VITE_FIREBASE_MEASUREMENT_ID=""
+```
+
+Si no están configuradas, la app usa persistencia local automáticamente.
+
+### 2.6 Configurar Seguridad de Firestore (Recomendado)
+
+La app sincroniza el portfolio en documentos con formato `portfolios/{uid}` y requiere inicio de sesión con Google para identificar al usuario.
+
+1. En Firebase Console, habilitá **Authentication > Sign-in method > Google**.
+2. En Firestore Database, usá reglas seguras por usuario autenticado.
+3. Desde el proyecto, desplegá reglas:
+
+```bash
+npm install -g firebase-tools
+firebase login
+firebase use --add
+firebase deploy --only firestore:rules
+```
+
+El repo ya incluye `firestore.rules` y `firebase.json` para este despliegue.
+
+### 2.7 Política de credenciales IOL
+
+- El login de la app (portfolio) es exclusivamente con Google.
+- La autenticación de IOL se mantiene **local** en el navegador mediante `iol-session-token`.
+- No se guardan credenciales de IOL en Firebase.
 
 ### 3. Iniciar la Aplicación
 

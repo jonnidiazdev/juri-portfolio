@@ -168,7 +168,9 @@ export default function AddAssetModal({ isOpen, onClose, onAdd }) {
               value={formData.symbol}
               onChange={(e) => {
                 const raw = e.target.value
-                const formatted = raw.toUpperCase()
+                const formatted = assetType === ASSET_TYPES.CRYPTO
+                  ? raw.toLowerCase()
+                  : raw.toUpperCase()
                 handleChange('symbol', formatted)
               }}
               className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-cyan-500"

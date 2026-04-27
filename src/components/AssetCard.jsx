@@ -1,10 +1,10 @@
-import { formatCurrency } from '../utils/formatters'
+import { formatCurrency, getTimeAgo } from '../utils/formatters'
 import { ASSET_TYPES } from '../config/constants'
 import { computeAssetPL } from '../utils/assetCalculations'
 import PlazoFijoCard from './PlazoFijoCard'
 import EfectivoCard from './EfectivoCard'
 
-export default function AssetCard({ asset, currentPrice, onEdit, onDelete, currency = 'ars', dolarPrice, dolarMepPrice, conversionRate, exchangeRateInfo }) {
+export default function AssetCard({ asset, currentPrice, onEdit, onDelete, dolarPrice, dolarMepPrice, conversionRate, exchangeRateInfo, fetchedAt }) {
   // Si es un plazo fijo, usar el componente específico
   if (asset.type === ASSET_TYPES.PLAZO_FIJO) {
     return <PlazoFijoCard asset={asset} onEdit={onEdit} onDelete={onDelete} />
@@ -19,9 +19,7 @@ export default function AssetCard({ asset, currentPrice, onEdit, onDelete, curre
   const assetCurrency = asset.currency || (isCrypto ? 'USD' : 'ARS')
   const price = currentPrice || 0
   const totalValue = asset.amount * price
-  const invested = asset.amount * asset.purchasePrice
   const pl = computeAssetPL(asset, price, conversionRate)
-  const isProfitLocal = (totalValue - invested) >= 0
   
   // Calcular equivalente en ARS si el activo está en USD y tenemos cotización del dólar blue
   const showArsEquivalent = assetCurrency === 'USD' && (conversionRate || dolarPrice)
@@ -41,21 +39,6 @@ export default function AssetCard({ asset, currentPrice, onEdit, onDelete, curre
       [ASSET_TYPES.PLAZO_FIJO]: 'Plazo Fijo',
     }
     return labels[type] || type
-  }
-
-  const getAssetIcon = (type) => {
-    if (type === ASSET_TYPES.CRYPTO) {
-      return (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-      )
-    }
-    return (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-      </svg>
-    )
   }
 
   return (
@@ -154,6 +137,13 @@ export default function AssetCard({ asset, currentPrice, onEdit, onDelete, curre
             </div>
           </div>
         </div>
+
+        {/* Timestamp */}
+        {fetchedAt && (
+          <div className="pt-2 border-t border-gray-700">
+            <p className="text-xs text-gray-500 text-center">Actualizado {getTimeAgo(fetchedAt)}</p>
+          </div>
+        )}
       </div>
     </div>
   )

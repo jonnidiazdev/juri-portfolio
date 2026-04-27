@@ -12,6 +12,22 @@ export const formatPercentage = (value) => {
   return `${sign}${value.toFixed(2)}%`
 }
 
+export const getTimeAgo = (isoDateString) => {
+  if (!isoDateString) return 'nunca'
+  
+  const date = new Date(isoDateString)
+  const now = new Date()
+  const seconds = Math.floor((now - date) / 1000)
+  
+  if (seconds < 60) return 'hace menos de 1 min'
+  const minutes = Math.floor(seconds / 60)
+  if (minutes < 60) return `hace ${minutes} min`
+  const hours = Math.floor(minutes / 60)
+  if (hours < 24) return `hace ${hours}h`
+  const days = Math.floor(hours / 24)
+  return `hace ${days}d`
+}
+
 export const formatNumber = (num) => {
   if (num >= 1e9) return `${(num / 1e9).toFixed(2)}B`
   if (num >= 1e6) return `${(num / 1e6).toFixed(2)}M`

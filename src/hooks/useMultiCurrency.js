@@ -2,7 +2,6 @@ import { useMemo } from 'react'
 import { useCurrencyPreference, getSelectedCurrencyRate } from '../components/CurrencySelector'
 import { ASSET_TYPES } from '../config/constants'
 import { calculatePlazoFijo } from '../utils/plazoFijoCalculations'
-import { calculateEfectivo } from '../utils/efectivoCalculations'
 
 export function useMultiCurrencyCalculations(assets, cryptoPrices, argQuotes, dolarData) {
   const currencyPreference = useCurrencyPreference()
@@ -31,7 +30,8 @@ export function useMultiCurrencyCalculations(assets, cryptoPrices, argQuotes, do
     const getCurrentPrice = (asset) => {
       if (asset.type === ASSET_TYPES.CRYPTO) {
         // cryptoPrices es un objeto con symbols como claves, no un array
-        const cryptoData = cryptoPrices?.[asset.symbol]
+        const normalizedSymbol = String(asset.symbol || '').trim().toLowerCase()
+        const cryptoData = cryptoPrices?.[normalizedSymbol]
         const price = cryptoData?.usd
         return (typeof price === 'number' && price > 0) ? price : asset.purchasePrice
       } else if (asset.type === ASSET_TYPES.PLAZO_FIJO) {

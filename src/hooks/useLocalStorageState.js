@@ -1,43 +1,146 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react'
+import { getFirestoreClient, isFirebaseConfigured } from '../config/firebase'
 
-// Esta función auxiliar obtiene el valor inicial
-function getSavedValue(key, initialValue) {
-  // 1. Intenta leer de localStorage
-  const savedValue = localStorage.getItem(key);
+const PORTFOLIO_OWNER_KEY = 'portfolio-owner-id'
 
-  // 2. Si hay algo guardado, lo parsea (de string a objeto) y lo devuelve
-  if (savedValue) {
-    try {
-      return JSON.parse(savedValue);
-    } catch (error) {
-      // Si hay un error en el JSON (ej. está corrupto), usa el valor inicial
-      console.error("Error al parsear localStorage", error);
-      return initialValue;
-    }
-  }
+function getOrCreatePortfolioOwnerId() {
+  if (typeof window === 'undefined') return 'anonymous-owner'
 
-  // 3. Si no hay nada guardado, devuelve el valor inicial
-  return initialValue;
+  const existing = window.localStorage.getItem(PORTFOLIO_OWNER_KEY)
+  if (existing) return existing
+
+  const generated =
+    typeof crypto !== 'undefined' && crypto.randomUUID
+      ? crypto.randomUUID()
+      : `owner-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`
+
+  window.localStorage.setItem(PORTFOLIO_OWNER_KEY, generated)
+  return generated
 }
 
-// Este es el Hook
-export function useLocalStorageState(key, initialValue) {
-  // 1. Usamos useState, pero le pasamos una *función* para que
-  //    solo lea de localStorage LA PRIMERA VEZ (es más eficiente).
-  const [value, setValue] = useState(() => {
-    return getSavedValue(key, initialValue);
-  });
+function readLocalValue(key, initialValue) {
+  if (typeof window === 'undefined') return initialValue
 
-  // 2. Usamos useEffect para guardar en localStorage CADA VEZ que
-  //    el 'value' (o la 'key') cambien.
+  const savedValue = window.localStorage.getItem(key)
+  if (!savedValue) return initialValue
+
+  try {
+    return JSON.parse(savedValue)
+  } catch (error) {
+    console.error('Error al parsear localStorage', error)
+    return initialValue
+  }
+}
+
+function writeLocalValue(key, value) {
+  if (typeof window === 'undefined') return
+  if (value === undefined) return
+
+  window.localStorage.setItem(key, JSON.stringify(value))
+}
+
+export function useLocalStorageState(key, initialValue, ownerId = null) {
+  const [value, setValue] = useState(() => readLocalValue(key, initialValue))
+  const initialValueRef = useRef(initialValue)
+  const isRemoteHydrated = useRef(false)
+  const skipRemoteWrite = useRef(false)
+
+  const docOwnerId = ownerId || getOrCreatePortfolioOwnerId()
+
   useEffect(() => {
-    // Solo guardamos si el valor no es 'undefined'
-    if (value !== undefined) {
-      localStorage.setItem(key, JSON.stringify(value));
+    if (!isFirebaseConfigured || !ownerId) {
+      isRemoteHydrated.current = true
+      return undefined
     }
-  }, [key, value]); // <-- La "dependencia": se ejecuta si 'key' o 'value' cambian
 
-  // 3. Devolvemos el valor y la función para cambiarlo,
-  //    igual que 'useState'.
-  return [value, setValue];
+    isRemoteHydrated.current = false
+
+    let unsubscribe = () => {}
+    let isCancelled = false
+
+    getFirestoreClient().then((client) => {
+      if (isCancelled || !client) {
+        isRemoteHydrated.current = true
+        return
+      }
+
+      const { db, doc, onSnapshot, serverTimestamp, setDoc } = client
+      const docRef = doc(db, 'portfolios', docOwnerId)
+
+      unsubscribe = onSnapshot(
+        docRef,
+        (snapshot) => {
+          const remoteData = snapshot.data()
+          const remoteValue = remoteData?.[key]
+
+          if (remoteValue !== undefined) {
+            skipRemoteWrite.current = true
+            setValue(remoteValue)
+            writeLocalValue(key, remoteValue)
+            isRemoteHydrated.current = true
+            return
+          }
+
+          const localValue = readLocalValue(key, initialValueRef.current)
+          writeLocalValue(key, localValue)
+
+          setDoc(
+            docRef,
+            {
+              [key]: localValue,
+              updatedAt: serverTimestamp()
+            },
+            { merge: true }
+          ).catch((error) => {
+            console.error('Error al migrar datos locales hacia Firebase', error)
+          })
+
+          isRemoteHydrated.current = true
+        },
+        (error) => {
+          console.error('Error al leer estado desde Firebase. Se mantiene persistencia local.', error)
+          isRemoteHydrated.current = true
+        }
+      )
+    })
+
+    return () => {
+      isCancelled = true
+      unsubscribe()
+    }
+  }, [docOwnerId, key, ownerId])
+
+  useEffect(() => {
+    if (value !== undefined) {
+      writeLocalValue(key, value)
+    }
+
+    if (!isFirebaseConfigured || !ownerId) return
+    if (!isRemoteHydrated.current) return
+
+    if (skipRemoteWrite.current) {
+      skipRemoteWrite.current = false
+      return
+    }
+
+    getFirestoreClient().then((client) => {
+      if (!client) return
+
+      const { db, doc, serverTimestamp, setDoc } = client
+      const docRef = doc(db, 'portfolios', docOwnerId)
+
+      setDoc(
+        docRef,
+        {
+          [key]: value,
+          updatedAt: serverTimestamp()
+        },
+        { merge: true }
+      ).catch((error) => {
+        console.error('Error al sincronizar estado en Firebase', error)
+      })
+    })
+  }, [docOwnerId, key, ownerId, value])
+
+  return [value, setValue]
 }

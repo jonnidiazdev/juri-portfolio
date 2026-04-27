@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { useCryptoPrices, useDolarPrice } from './hooks/useInvestments'
 import { useArgentineQuotes } from './hooks/useArgentineQuotes'
 import { useMultiCurrencyCalculations } from './hooks/useMultiCurrency'
+import { useLocalStorageState } from './hooks/useLocalStorageState'
+import { signOutGoogle } from './config/firebase'
 import { calculatePlazoFijo } from './utils/plazoFijoCalculations'
-import { calculateEfectivo } from './utils/efectivoCalculations'
 import { formatCurrency } from './utils/formatters'
 import { ASSET_TYPES } from './config/constants'
 import PortfolioSummary from './components/PortfolioSummary'
@@ -20,11 +21,8 @@ import LoadingSpinner from './components/LoadingSpinner'
 import ErrorMessage from './components/ErrorMessage'
 import DolarQuotes from './components/DolarQuotes'
 
-function App() {
-  const [assets, setAssets] = useState(() => {
-    const saved = localStorage.getItem('portfolio-assets')
-    return saved ? JSON.parse(saved) : []
-  })
+function App({ user }) {
+  const [assets, setAssets] = useLocalStorageState('portfolio-assets', [], user?.uid)
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
   const [editingAsset, setEditingAsset] = useState(null)
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
@@ -34,16 +32,12 @@ function App() {
     .filter(a => a.type === ASSET_TYPES.CRYPTO)
     .map(a => a.symbol)
 
-  const { data: cryptoPrices, isLoading: loadingCrypto, isError: errorCrypto, error: cryptoError } = useCryptoPrices(cryptoIds)
-  const { data: dolarData, isLoading: loadingDolar } = useDolarPrice()
-  const { data: argQuotes, isLoading: loadingArgQuotes } = useArgentineQuotes(assets)
+  const { data: cryptoPrices, isLoading: loadingCrypto, isError: errorCrypto, error: cryptoError } = useCryptoPrices(cryptoIds, user?.uid)
+  const { data: dolarData, isLoading: loadingDolar } = useDolarPrice(user?.uid)
+  const { data: argQuotes, isLoading: loadingArgQuotes } = useArgentineQuotes(assets, user?.uid)
   
   // Nuevos cálculos multi-moneda
   const multiCurrencyData = useMultiCurrencyCalculations(assets, cryptoPrices, argQuotes, dolarData)
-
-  useEffect(() => {
-    localStorage.setItem('portfolio-assets', JSON.stringify(assets))
-  }, [assets])
 
   const handleAddAsset = (newAsset) => {
     setAssets([...assets, newAsset])
@@ -63,7 +57,8 @@ function App() {
   const getCurrentPrice = (asset) => {
     if (asset.type === ASSET_TYPES.CRYPTO) {
       // cryptoPrices es un objeto con symbols como claves
-      const cryptoData = cryptoPrices?.[asset.symbol]
+      const normalizedSymbol = String(asset.symbol || '').trim().toLowerCase()
+      const cryptoData = cryptoPrices?.[normalizedSymbol]
       const price = cryptoData?.usd
       return (typeof price === 'number' && price > 0) ? price : asset.purchasePrice
     } else if (asset.type === ASSET_TYPES.PLAZO_FIJO) {
@@ -86,52 +81,6 @@ function App() {
       return (typeof price === 'number' && price > 0) ? price : asset.purchasePrice
     }
   }
-
-  const calculateTotals = () => {
-    let totalValue = 0
-    let totalInvested = 0
-
-    assets.forEach(asset => {
-      const currentPrice = getCurrentPrice(asset)
-      const assetCurrency = asset.currency || (asset.type === ASSET_TYPES.CRYPTO ? 'USD' : 'ARS')
-      
-      let value, invested
-      
-      if (asset.type === ASSET_TYPES.PLAZO_FIJO) {
-        // Para plazos fijos: el capital es asset.amount y el valor actual se calcula con TNA
-        const plazoFijoData = calculatePlazoFijo(
-          asset.amount,
-          asset.tna,
-          asset.startDate,
-          asset.endDate
-        )
-        value = plazoFijoData.currentValue
-        invested = plazoFijoData.capital // El capital inicial
-      } else if (asset.type === ASSET_TYPES.EFECTIVO) {
-        // Para efectivo: valor = cantidad, sin precio de compra
-        value = asset.amount
-        invested = asset.amount // El efectivo no se "invierte", es capital disponible
-      } else {
-        // Para otros activos: cantidad × precio
-        value = asset.amount * currentPrice
-        invested = asset.amount * asset.purchasePrice
-      }
-      
-      // Convertir todo a ARS para el total unificado
-      if (assetCurrency === 'USD' && dolarData?.blue) {
-        totalValue += value * dolarData.blue.venta
-        totalInvested += invested * dolarData.blue.venta
-      } else {
-        totalValue += value
-        totalInvested += invested
-      }
-    })
-
-    const change = totalInvested > 0 ? ((totalValue - totalInvested) / totalInvested) * 100 : 0
-    return { totalValue, totalInvested, change }
-  }
-
-  const totals = calculateTotals()
 
   // Agrupar activos por tipo
   const cryptoAssets = assets.filter(a => a.type === ASSET_TYPES.CRYPTO)
@@ -201,6 +150,10 @@ function App() {
   const sortedPlazoFijoAssets = [...plazoFijoAssets].sort((a, b) => getSortKey(a).localeCompare(getSortKey(b)))
   const sortedEfectivoAssets = [...efectivoAssets].sort((a, b) => getSortKey(a).localeCompare(getSortKey(b)))
 
+  const userName = user?.displayName || 'Usuario'
+  const userEmail = user?.email || ''
+  const userPhoto = user?.photoURL || ''
+
   return (
     <div className="bg-gray-900 min-h-screen text-white">
       <div className="container mx-auto px-4 py-8 max-w-7xl">
@@ -216,6 +169,32 @@ function App() {
             </div>
 
             <div className="flex gap-2">
+              <div className="hidden md:flex items-center gap-3 px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg max-w-xs">
+                {userPhoto ? (
+                  <img
+                    src={userPhoto}
+                    alt={userName}
+                    className="w-8 h-8 rounded-full"
+                    referrerPolicy="no-referrer"
+                  />
+                ) : (
+                  <div className="w-8 h-8 rounded-full bg-cyan-500/20 text-cyan-300 flex items-center justify-center text-xs font-bold">
+                    {userName.slice(0, 1).toUpperCase()}
+                  </div>
+                )}
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-gray-200 truncate">{userName}</p>
+                  <p className="text-xs text-gray-400 truncate">{userEmail}</p>
+                </div>
+              </div>
+
+              <button
+                onClick={signOutGoogle}
+                className="px-4 py-3 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-lg font-semibold transition-colors"
+                title={userEmail || 'Cerrar sesion'}
+              >
+                Salir
+              </button>
               <button
                 onClick={() => setIsSettingsOpen(true)}
                 className="px-4 py-3 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-lg font-semibold transition-colors flex items-center gap-2"
@@ -269,7 +248,7 @@ function App() {
                   dolarData={dolarData}
                 />
               </div>
-              <DolarQuotes dolares={dolarData} isLoading={loadingDolar} />
+              <DolarQuotes dolares={dolarData} isLoading={loadingDolar} fetchedAt={dolarData?._fetchedAt} />
             </div>
           )}
         </header>
@@ -326,6 +305,7 @@ function App() {
                       dolarMepPrice={dolarData?.bolsa?.venta}
                       conversionRate={multiCurrencyData.exchangeRate}
                       exchangeRateInfo={multiCurrencyData.exchangeRateInfo}
+                      fetchedAt={cryptoPrices?._fetchedAt}
                     />
                   ))}
                 </div>
@@ -365,6 +345,7 @@ function App() {
                       dolarMepPrice={dolarData?.bolsa?.venta}
                       conversionRate={multiCurrencyData.exchangeRate}
                       exchangeRateInfo={multiCurrencyData.exchangeRateInfo}
+                      fetchedAt={argQuotes?._fetchedAt}
                     />
                   ))}
                 </div>

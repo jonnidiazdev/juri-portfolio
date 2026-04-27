@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { DOLAR_TYPES, DOLAR_DESCRIPTIONS } from '../config/constants'
-import { formatCurrency } from '../utils/formatters'
+import { getTimeAgo } from '../utils/formatters'
 
-export default function DolarQuotes({ dolares, isLoading }) {
+export default function DolarQuotes({ dolares, isLoading, fetchedAt }) {
   const [showDetails, setShowDetails] = useState(false)
 
   if (isLoading) {
@@ -39,11 +39,7 @@ export default function DolarQuotes({ dolares, isLoading }) {
     return names[key] || key
   }
 
-  const lastUpdate = dolares.blue?.fechaActualizacion || dolares.oficial?.fechaActualizacion
-  const timeAgo = lastUpdate ? new Date(lastUpdate).toLocaleTimeString('es-AR', { 
-    hour: '2-digit', 
-    minute: '2-digit' 
-  }) : ''
+  const timeAgo = fetchedAt ? getTimeAgo(fetchedAt) : ''
 
   return (
     <div className="space-y-2">
@@ -69,7 +65,7 @@ export default function DolarQuotes({ dolares, isLoading }) {
         <div className="flex items-center gap-3">
           {timeAgo && (
             <span className="text-xs text-gray-500">
-              {timeAgo}
+              Actualizado {timeAgo}
             </span>
           )}
           

@@ -74,6 +74,9 @@ export default function SettingsModal({ isOpen, onClose }) {
       
       setIolUser('')
       setIolPass('')
+      
+      // Recargar página para refrescar con datos cacheados
+      window.location.reload()
     }
   }
 
