@@ -53,14 +53,20 @@ body {
 }
 
 .asset-card-actions {
-  opacity: 0;
+  opacity: 1;
   transition: opacity 0.2s ease-in-out;
 }
 
-.asset-card:hover .asset-card-actions {
-  opacity: 1;
-}
+@media (hover: hover) {
+  .asset-card-actions {
+    opacity: 0;
+  }
 
-.asset-card:hover {
-  border-color: #06b6d4 !important;
+  .asset-card:hover .asset-card-actions {
+    opacity: 1;
+  }
+
+  .asset-card:hover {
+    border-color: #06b6d4 !important;
+  }
 }

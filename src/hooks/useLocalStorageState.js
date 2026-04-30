@@ -1,23 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { getFirestoreClient, isFirebaseConfigured } from '../config/firebase'
 
-const PORTFOLIO_OWNER_KEY = 'portfolio-owner-id'
-
-function getOrCreatePortfolioOwnerId() {
-  if (typeof window === 'undefined') return 'anonymous-owner'
-
-  const existing = window.localStorage.getItem(PORTFOLIO_OWNER_KEY)
-  if (existing) return existing
-
-  const generated =
-    typeof crypto !== 'undefined' && crypto.randomUUID
-      ? crypto.randomUUID()
-      : `owner-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`
-
-  window.localStorage.setItem(PORTFOLIO_OWNER_KEY, generated)
-  return generated
-}
-
 function readLocalValue(key, initialValue) {
   if (typeof window === 'undefined') return initialValue
 
@@ -39,16 +22,32 @@ function writeLocalValue(key, value) {
   window.localStorage.setItem(key, JSON.stringify(value))
 }
 
+// Función para comparar si dos valores son equivalentes (considerando arrays vacíos y valores iniciales)
+function isEmptyValue(value, initialValue) {
+  if (value === initialValue) return true
+  if (Array.isArray(value) && Array.isArray(initialValue)) {
+    return value.length === 0 && initialValue.length === 0
+  }
+  if (value === null || value === undefined) return true
+  return false
+}
+
 export function useLocalStorageState(key, initialValue, ownerId = null) {
   const [value, setValue] = useState(() => readLocalValue(key, initialValue))
   const initialValueRef = useRef(initialValue)
   const isRemoteHydrated = useRef(false)
   const skipRemoteWrite = useRef(false)
 
-  const docOwnerId = ownerId || getOrCreatePortfolioOwnerId()
-
   useEffect(() => {
-    if (!isFirebaseConfigured || !ownerId) {
+    // Si Firebase no está configurado, solo usar localStorage
+    if (!isFirebaseConfigured) {
+      isRemoteHydrated.current = true
+      return undefined
+    }
+
+    // Si Firebase está configurado pero no hay ownerId (usuario no autenticado),
+    // esperar a que se autentique antes de sincronizar
+    if (!ownerId) {
       isRemoteHydrated.current = true
       return undefined
     }
@@ -65,14 +64,16 @@ export function useLocalStorageState(key, initialValue, ownerId = null) {
       }
 
       const { db, doc, onSnapshot, serverTimestamp, setDoc } = client
-      const docRef = doc(db, 'portfolios', docOwnerId)
+      const docRef = doc(db, 'portfolios', ownerId)
 
       unsubscribe = onSnapshot(
         docRef,
         (snapshot) => {
           const remoteData = snapshot.data()
           const remoteValue = remoteData?.[key]
+          const localValue = readLocalValue(key, initialValueRef.current)
 
+          // Si hay datos remotos, SIEMPRE priorizarlos
           if (remoteValue !== undefined) {
             skipRemoteWrite.current = true
             setValue(remoteValue)
@@ -81,19 +82,25 @@ export function useLocalStorageState(key, initialValue, ownerId = null) {
             return
           }
 
-          const localValue = readLocalValue(key, initialValueRef.current)
-          writeLocalValue(key, localValue)
+          // Si NO hay datos remotos pero hay datos locales no vacíos, migrarlos
+          if (!isEmptyValue(localValue, initialValueRef.current)) {
+            console.log(`Migrando datos locales de "${key}" a Firestore para usuario ${ownerId}`)
+            writeLocalValue(key, localValue)
 
-          setDoc(
-            docRef,
-            {
-              [key]: localValue,
-              updatedAt: serverTimestamp()
-            },
-            { merge: true }
-          ).catch((error) => {
-            console.error('Error al migrar datos locales hacia Firebase', error)
-          })
+            setDoc(
+              docRef,
+              {
+                [key]: localValue,
+                updatedAt: serverTimestamp()
+              },
+              { merge: true }
+            ).catch((error) => {
+              console.error('Error al migrar datos locales hacia Firebase', error)
+            })
+          } else {
+            // No hay datos ni remotos ni locales, usar el valor inicial
+            writeLocalValue(key, initialValueRef.current)
+          }
 
           isRemoteHydrated.current = true
         },
@@ -108,26 +115,32 @@ export function useLocalStorageState(key, initialValue, ownerId = null) {
       isCancelled = true
       unsubscribe()
     }
-  }, [docOwnerId, key, ownerId])
+  }, [ownerId, key])
 
   useEffect(() => {
+    // Siempre guardar en localStorage como caché local
     if (value !== undefined) {
       writeLocalValue(key, value)
     }
 
+    // Si Firebase no está configurado o no hay ownerId, solo usar localStorage
     if (!isFirebaseConfigured || !ownerId) return
+
+    // Esperar a que se complete la hidratación inicial desde Firebase
     if (!isRemoteHydrated.current) return
 
+    // Si estamos aplicando datos remotos, no escribir de vuelta
     if (skipRemoteWrite.current) {
       skipRemoteWrite.current = false
       return
     }
 
+    // Sincronizar el valor actual con Firestore
     getFirestoreClient().then((client) => {
       if (!client) return
 
       const { db, doc, serverTimestamp, setDoc } = client
-      const docRef = doc(db, 'portfolios', docOwnerId)
+      const docRef = doc(db, 'portfolios', ownerId)
 
       setDoc(
         docRef,
@@ -140,7 +153,7 @@ export function useLocalStorageState(key, initialValue, ownerId = null) {
         console.error('Error al sincronizar estado en Firebase', error)
       })
     })
-  }, [docOwnerId, key, ownerId, value])
+  }, [ownerId, key, value])
 
   return [value, setValue]
 }

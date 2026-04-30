@@ -44,8 +44,8 @@ export default function DolarQuotes({ dolares, isLoading, fetchedAt }) {
   return (
     <div className="space-y-2">
       {/* Línea compacta principal */}
-      <div className="flex items-center justify-between bg-gray-800/50 rounded-lg px-4 py-2 border border-gray-700/50">
-        <div className="flex items-center gap-4 flex-wrap">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between bg-gray-800/50 rounded-lg px-3 sm:px-4 py-2 border border-gray-700/50 gap-2">
+        <div className="flex items-center gap-2 sm:gap-4 flex-wrap">
           {mainQuotes.map(({ key, icon, color }) => {
             const dolar = dolares[key]
             if (!dolar || !dolar.venta) return null
@@ -62,9 +62,9 @@ export default function DolarQuotes({ dolares, isLoading, fetchedAt }) {
           })}
         </div>
         
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 self-end sm:self-auto">
           {timeAgo && (
-            <span className="text-xs text-gray-500">
+            <span className="text-xs text-gray-500 hidden sm:inline">
               Actualizado {timeAgo}
             </span>
           )}
@@ -89,7 +89,7 @@ export default function DolarQuotes({ dolares, isLoading, fetchedAt }) {
       {/* Panel expandible con detalles */}
       {showDetails && (
         <div className="bg-gray-800 rounded-lg p-4 border border-gray-700 animate-fadeIn">
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
             {Object.entries(dolares).map(([key, dolar]) => {
               if (!dolar || typeof dolar !== 'object') return null
               

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { useCryptoPrices, useDolarPrice } from './hooks/useInvestments'
 import { useArgentineQuotes } from './hooks/useArgentineQuotes'
@@ -26,6 +26,18 @@ function App({ user }) {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
   const [editingAsset, setEditingAsset] = useState(null)
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
+  const [showFab, setShowFab] = useState(false)
+  const addButtonRef = useRef(null)
+
+  useEffect(() => {
+    if (!addButtonRef.current) return
+    const observer = new IntersectionObserver(
+      ([entry]) => setShowFab(!entry.isIntersecting),
+      { threshold: 0 }
+    )
+    observer.observe(addButtonRef.current)
+    return () => observer.disconnect()
+  }, [])
 
   // Obtener IDs únicos de criptomonedas
   const cryptoIds = assets
@@ -156,19 +168,19 @@ function App({ user }) {
 
   return (
     <div className="bg-gray-900 min-h-screen text-white">
-      <div className="container mx-auto px-4 py-8 max-w-7xl">
+      <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-8 max-w-7xl">
         <header className="mb-8">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
             <div>
-              <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500 mb-2">
+              <h1 className="text-2xl sm:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500 mb-2">
                 El Juri-Portfolio
               </h1>
-              <p className="text-gray-400">
+              <p className="text-gray-400 text-sm sm:text-base">
                 La app para gestionar las inversiones del jurio
               </p>
             </div>
 
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <div className="hidden md:flex items-center gap-3 px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg max-w-xs">
                 {userPhoto ? (
                   <img
@@ -207,13 +219,15 @@ function App({ user }) {
               </button>
               
               <button
+                ref={addButtonRef}
                 onClick={() => setIsAddModalOpen(true)}
-                className="px-6 py-3 bg-cyan-500 hover:bg-cyan-600 text-white rounded-lg font-semibold transition-colors flex items-center gap-2 justify-center"
+                className="px-4 sm:px-6 py-3 bg-cyan-500 hover:bg-cyan-600 text-white rounded-lg font-semibold transition-colors flex items-center gap-2 justify-center flex-1 sm:flex-none"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                 </svg>
-                Agregar Activo
+                <span className="hidden sm:inline">Agregar Activo</span>
+                <span className="sm:hidden">Agregar</span>
               </button>
             </div>
           </div>
@@ -274,26 +288,26 @@ function App({ user }) {
           <>
             {cryptoAssets.length > 0 && (
               <section className="mb-12">
-                <h2 className="text-2xl font-bold mb-6 flex items-center gap-3 flex-wrap">
-                  <svg className="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 flex items-center gap-2 sm:gap-3 flex-wrap">
+                  <svg className="w-5 h-5 sm:w-6 sm:h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                   Criptomonedas
-                  <span className={`text-sm font-medium px-3 py-1 rounded-full ${
+                  <span className={`text-xs sm:text-sm font-medium px-2 sm:px-3 py-1 rounded-full ${
                     cryptoStats.isProfit ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
                   }`}>
                     {cryptoStats.isProfit ? '+' : ''}{cryptoStats.profitPercent.toFixed(2)}%
                   </span>
-                  <span className={`text-sm font-medium px-3 py-1 rounded-full ${
+                  <span className={`text-xs sm:text-sm font-medium px-2 sm:px-3 py-1 rounded-full ${
                     cryptoStats.isProfit ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
                   }`}>
                     {cryptoStats.isProfit ? '+' : ''}{formatCurrency(cryptoStats.profit / multiCurrencyData.exchangeRate, 'USD')}
                   </span>
-                  <span className="text-sm text-gray-400">
+                  <span className="text-xs sm:text-sm text-gray-400 basis-full sm:basis-auto">
                     Invertido: {formatCurrency(cryptoStats.totalInvested, 'ARS')} → Actual: {formatCurrency(cryptoStats.totalValue, 'ARS')}
                   </span>
                 </h2>
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                   {sortedCryptoAssets.map(asset => (
                     <AssetCard 
                       key={asset.id}
@@ -314,26 +328,26 @@ function App({ user }) {
 
             {argentineAssets.length > 0 && (
               <section className="mb-12">
-                <h2 className="text-2xl font-bold mb-6 flex items-center gap-3 flex-wrap">
-                  <svg className="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 flex items-center gap-2 sm:gap-3 flex-wrap">
+                  <svg className="w-5 h-5 sm:w-6 sm:h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                   </svg>
                   Mercado Argentino
-                  <span className={`text-sm font-medium px-3 py-1 rounded-full ${
+                  <span className={`text-xs sm:text-sm font-medium px-2 sm:px-3 py-1 rounded-full ${
                     argentineStats.isProfit ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
                   }`}>
                     {argentineStats.isProfit ? '+' : ''}{argentineStats.profitPercent.toFixed(2)}%
                   </span>
-                  <span className={`text-sm font-medium px-3 py-1 rounded-full ${
+                  <span className={`text-xs sm:text-sm font-medium px-2 sm:px-3 py-1 rounded-full ${
                     argentineStats.isProfit ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
                   }`}>
                     {argentineStats.isProfit ? '+' : ''}{formatCurrency(argentineStats.profit / multiCurrencyData.exchangeRate, 'USD')}
                   </span>
-                  <span className="text-sm text-gray-400">
+                  <span className="text-xs sm:text-sm text-gray-400 basis-full sm:basis-auto">
                     Invertido: {formatCurrency(argentineStats.totalInvested, 'ARS')} → Actual: {formatCurrency(argentineStats.totalValue, 'ARS')}
                   </span>
                 </h2>
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                   {sortedArgentineAssets.map(asset => (
                     <AssetCard 
                       key={asset.id}
@@ -354,26 +368,26 @@ function App({ user }) {
 
             {plazoFijoAssets.length > 0 && (
               <section>
-                <h2 className="text-2xl font-bold mb-6 flex items-center gap-3 flex-wrap">
-                  <svg className="w-6 h-6 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 flex items-center gap-2 sm:gap-3 flex-wrap">
+                  <svg className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                   Plazos Fijos
-                  <span className={`text-sm font-medium px-3 py-1 rounded-full ${
+                  <span className={`text-xs sm:text-sm font-medium px-2 sm:px-3 py-1 rounded-full ${
                     plazoFijoStats.isProfit ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
                   }`}>
                     {plazoFijoStats.isProfit ? '+' : ''}{plazoFijoStats.profitPercent.toFixed(2)}%
                   </span>
-                  <span className={`text-sm font-medium px-3 py-1 rounded-full ${
+                  <span className={`text-xs sm:text-sm font-medium px-2 sm:px-3 py-1 rounded-full ${
                     plazoFijoStats.isProfit ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
                   }`}>
                     {plazoFijoStats.isProfit ? '+' : ''}{formatCurrency(plazoFijoStats.profit / multiCurrencyData.exchangeRate, 'USD')}
                   </span>
-                  <span className="text-sm text-gray-400">
+                  <span className="text-xs sm:text-sm text-gray-400 basis-full sm:basis-auto">
                     Capital: {formatCurrency(plazoFijoStats.totalInvested, 'ARS')} → Actual: {formatCurrency(plazoFijoStats.totalValue, 'ARS')}
                   </span>
                 </h2>
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                   {sortedPlazoFijoAssets.map(asset => (
                     <AssetCard 
                       key={asset.id}
@@ -393,19 +407,20 @@ function App({ user }) {
 
             {efectivoAssets.length > 0 && (
               <section>
-                <h2 className="text-2xl font-bold mb-6 flex items-center gap-3 flex-wrap">
-                  <svg className="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 flex items-center gap-2 sm:gap-3 flex-wrap">
+                  <svg className="w-5 h-5 sm:w-6 sm:h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
-                  Efectivo y Cuentas Bancarias
-                  <span className="text-sm font-medium px-3 py-1 rounded-full bg-gray-500/20 text-gray-400">
+                  <span className="hidden sm:inline">Efectivo y Cuentas Bancarias</span>
+                  <span className="sm:hidden">Efectivo</span>
+                  <span className="text-xs sm:text-sm font-medium px-2 sm:px-3 py-1 rounded-full bg-gray-500/20 text-gray-400">
                     0.00%
                   </span>
-                  <span className="text-sm text-gray-400">
+                  <span className="text-xs sm:text-sm text-gray-400 basis-full sm:basis-auto">
                     Disponible: {formatCurrency(efectivoStats.totalValue, 'ARS')}
                   </span>
                 </h2>
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                   {sortedEfectivoAssets.map(asset => (
                     <AssetCard 
                       key={asset.id}
@@ -458,6 +473,19 @@ function App({ user }) {
 
         <ReactQueryDevtools initialIsOpen={false} />
       </div>
+
+      {/* Floating Action Button */}
+      {showFab && (
+        <button
+          onClick={() => setIsAddModalOpen(true)}
+          className="fixed bottom-6 right-6 w-14 h-14 bg-cyan-500 hover:bg-cyan-600 text-white rounded-full shadow-lg shadow-cyan-500/30 flex items-center justify-center transition-all duration-200 z-40 active:scale-95"
+          title="Agregar Activo"
+        >
+          <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
+          </svg>
+        </button>
+      )}
     </div>
   )
 }

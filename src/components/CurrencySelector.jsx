@@ -42,9 +42,9 @@ export default function CurrencySelector({ dolarData, className = '' }) {
   const currentRate = dolarData?.[selectedOption?.apiKey]?.venta
 
   return (
-    <div className={`flex items-center gap-4 text-sm ${className}`}>
+    <div className={`flex flex-wrap items-center gap-2 sm:gap-4 text-sm ${className}`}>
       <div className="flex items-center gap-2">
-        <span className="text-gray-400 whitespace-nowrap">Cotización de conversión:</span>
+        <span className="text-gray-400 whitespace-nowrap text-xs sm:text-sm">Cotización:</span>
         <div className="relative group">
           <div 
             className="w-4 h-4 rounded-full flex items-center justify-center cursor-help hover:bg-gray-700 transition-colors border border-gray-400"
@@ -60,7 +60,7 @@ export default function CurrencySelector({ dolarData, className = '' }) {
         </div>
       </div>
       
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-1 flex-wrap">
         {CURRENCY_OPTIONS.map((option) => {
           const rate = dolarData?.[option.apiKey]
           const isSelected = selectedCurrency === option.id
