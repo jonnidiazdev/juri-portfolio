@@ -32,7 +32,7 @@ export default function EfectivoCard({ asset, onEdit, onDelete }) {
 
   return (
     <div 
-      className="asset-card bg-gray-800 rounded-xl p-6 border transition-all duration-300 hover:shadow-lg"
+      className="asset-card bg-white rounded-xl p-5 border transition-all duration-300 hover:shadow-lg"
       style={{ 
         borderColor: `${colors.border}33`,
         '--hover-border-color': `${colors.border}66`
@@ -49,14 +49,14 @@ export default function EfectivoCard({ asset, onEdit, onDelete }) {
             {icon}
           </div>
           <div>
-            <h3 className="text-lg font-semibold text-white">{asset.name}</h3>
-            <p className="text-gray-400 text-sm">{formattedInfo.subtitulo}</p>
+            <h3 className="text-lg font-semibold text-slate-800">{asset.name}</h3>
+            <p className="text-slate-400 text-sm">{formattedInfo.subtitulo}</p>
           </div>
         </div>
         <div className="asset-card-actions flex gap-2">
           <button
             onClick={() => onEdit(asset)}
-            className="p-2 text-gray-400 hover:text-cyan-400 hover:bg-gray-700 rounded-lg transition-colors"
+            className="p-2 text-slate-400 hover:text-indigo-500 hover:bg-indigo-50 rounded-lg transition-colors"
             title="Editar"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -65,7 +65,7 @@ export default function EfectivoCard({ asset, onEdit, onDelete }) {
           </button>
           <button
             onClick={() => onDelete(asset.id)}
-            className="p-2 text-gray-400 hover:text-red-400 hover:bg-gray-700 rounded-lg transition-colors"
+            className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors"
             title="Eliminar"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -77,9 +77,9 @@ export default function EfectivoCard({ asset, onEdit, onDelete }) {
 
       <div className="space-y-4">
         {/* Monto principal */}
-        <div className="bg-gray-900/50 rounded-lg p-4">
+        <div className="bg-slate-50 rounded-lg p-4">
           <div className="flex justify-between items-center">
-            <span className="text-gray-400">Monto Disponible</span>
+            <span className="text-slate-400">Monto Disponible</span>
             <span 
               className="text-xl font-bold"
               style={{ color: colors.text }}
@@ -92,40 +92,40 @@ export default function EfectivoCard({ asset, onEdit, onDelete }) {
         {/* Información adicional */}
         <div className="grid grid-cols-3 gap-4 text-sm">
           <div className="text-center">
-            <p className="text-gray-400">Disponibilidad</p>
+            <p className="text-slate-400">Disponibilidad</p>
             <p className="font-semibold" style={{ color: colors.text }}>{formattedInfo.disponibilidad}</p>
           </div>
           <div className="text-center">
-            <p className="text-gray-400">Liquidez</p>
+            <p className="text-slate-400">Liquidez</p>
             <p className="font-semibold" style={{ color: colors.text }}>{formattedInfo.liquidez}</p>
           </div>
           <div className="text-center">
-            <p className="text-gray-400">Riesgo</p>
+            <p className="text-slate-400">Riesgo</p>
             <p className="font-semibold" style={{ color: colors.text }}>{formattedInfo.riesgo}</p>
           </div>
         </div>
 
         {/* Descripción si existe */}
         {asset.descripcion && (
-          <div className="bg-gray-900/30 rounded-lg p-3">
-            <p className="text-gray-300 text-sm">{asset.descripcion}</p>
+          <div className="bg-slate-50 rounded-lg p-3">
+            <p className="text-slate-600 text-sm">{asset.descripcion}</p>
           </div>
         )}
 
         {/* Información del tipo */}
-        <div className="border-t border-gray-700 pt-3">
+        <div className="border-t border-slate-100 pt-3">
           <div className="flex justify-between items-center text-sm">
-            <span className="text-gray-400">Tipo</span>
-            <span className="text-gray-300">{formattedInfo.titulo}</span>
+            <span className="text-slate-400">Tipo</span>
+            <span className="text-slate-600">{formattedInfo.titulo}</span>
           </div>
           <div className="flex justify-between items-center text-sm mt-1">
-            <span className="text-gray-400">Identificador</span>
-            <span className="text-gray-300 font-mono">{asset.symbol}</span>
+            <span className="text-slate-400">Identificador</span>
+            <span className="text-slate-600 font-mono">{asset.symbol}</span>
           </div>
           {asset.banco && asset.banco !== 'Sin banco' && (
             <div className="flex justify-between items-center text-sm mt-1">
-              <span className="text-gray-400">Entidad</span>
-              <span className="text-gray-300">{asset.banco}</span>
+              <span className="text-slate-400">Entidad</span>
+              <span className="text-slate-600">{asset.banco}</span>
             </div>
           )}
         </div>

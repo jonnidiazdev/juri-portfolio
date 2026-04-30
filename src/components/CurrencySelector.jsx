@@ -44,18 +44,18 @@ export default function CurrencySelector({ dolarData, className = '' }) {
   return (
     <div className={`flex flex-wrap items-center gap-2 sm:gap-4 text-sm ${className}`}>
       <div className="flex items-center gap-2">
-        <span className="text-gray-400 whitespace-nowrap text-xs sm:text-sm">Cotización:</span>
+        <span className="text-slate-400 whitespace-nowrap text-xs sm:text-sm">Cotización:</span>
         <div className="relative group">
           <div 
-            className="w-4 h-4 rounded-full flex items-center justify-center cursor-help hover:bg-gray-700 transition-colors border border-gray-400"
+            className="w-4 h-4 rounded-full flex items-center justify-center cursor-help hover:bg-slate-100 transition-colors border border-slate-300"
             title="La cotización seleccionada se usa para convertir entre ARS y USD en los totales del portfolio"
           >
-            <span className="text-xs font-bold text-gray-300 hover:text-white">?</span>
+            <span className="text-xs font-bold text-slate-400 hover:text-slate-600">?</span>
           </div>
           {/* Tooltip */}
-          <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10 border border-gray-700">
+          <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-slate-800 text-white text-xs rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
             La cotización seleccionada se usa para convertir entre ARS y USD en los totales del portfolio
-            <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
+            <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-slate-800"></div>
           </div>
         </div>
       </div>
@@ -74,10 +74,10 @@ export default function CurrencySelector({ dolarData, className = '' }) {
               className={`
                 px-3 py-1 rounded-lg text-xs font-medium transition-all
                 ${isSelected 
-                  ? 'bg-cyan-500 text-white shadow-lg' 
+                  ? 'bg-indigo-500 text-white shadow-sm' 
                   : isAvailable 
-                    ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' 
-                    : 'bg-gray-800 text-gray-600 cursor-not-allowed'
+                    ? 'bg-slate-100 text-slate-600 hover:bg-slate-200' 
+                    : 'bg-slate-50 text-slate-300 cursor-not-allowed'
                 }
               `}
               title={isAvailable ? `$${rate.venta?.toFixed(2)}` : 'No disponible'}
@@ -89,7 +89,7 @@ export default function CurrencySelector({ dolarData, className = '' }) {
       </div>
 
       {currentRate && (
-        <span className="text-cyan-400 font-semibold whitespace-nowrap">
+        <span className="text-indigo-500 font-semibold whitespace-nowrap">
           ${currentRate.toFixed(2)}
         </span>
       )}

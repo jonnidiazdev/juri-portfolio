@@ -167,21 +167,21 @@ function App({ user }) {
   const userPhoto = user?.photoURL || ''
 
   return (
-    <div className="bg-gray-900 min-h-screen text-white">
+    <div className="bg-slate-50 min-h-screen text-slate-800">
       <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-8 max-w-7xl">
         <header className="mb-8">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
             <div>
-              <h1 className="text-2xl sm:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500 mb-2">
+              <h1 className="text-2xl sm:text-4xl font-bold text-indigo-500 mb-1">
                 El Juri-Portfolio
               </h1>
-              <p className="text-gray-400 text-sm sm:text-base">
+              <p className="text-slate-400 text-sm sm:text-base">
                 La app para gestionar las inversiones del jurio
               </p>
             </div>
 
             <div className="flex flex-wrap gap-2">
-              <div className="hidden md:flex items-center gap-3 px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg max-w-xs">
+              <div className="hidden md:flex items-center gap-3 px-3 py-2 bg-white border border-slate-200 rounded-lg max-w-xs shadow-sm">
                 {userPhoto ? (
                   <img
                     src={userPhoto}
@@ -190,26 +190,26 @@ function App({ user }) {
                     referrerPolicy="no-referrer"
                   />
                 ) : (
-                  <div className="w-8 h-8 rounded-full bg-cyan-500/20 text-cyan-300 flex items-center justify-center text-xs font-bold">
+                  <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-500 flex items-center justify-center text-xs font-bold">
                     {userName.slice(0, 1).toUpperCase()}
                   </div>
                 )}
                 <div className="min-w-0">
-                  <p className="text-sm font-semibold text-gray-200 truncate">{userName}</p>
-                  <p className="text-xs text-gray-400 truncate">{userEmail}</p>
+                  <p className="text-sm font-semibold text-slate-700 truncate">{userName}</p>
+                  <p className="text-xs text-slate-400 truncate">{userEmail}</p>
                 </div>
               </div>
 
               <button
                 onClick={signOutGoogle}
-                className="px-4 py-3 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-lg font-semibold transition-colors"
+                className="px-4 py-3 bg-white hover:bg-slate-50 text-slate-500 border border-slate-200 rounded-lg font-medium transition-colors shadow-sm"
                 title={userEmail || 'Cerrar sesion'}
               >
                 Salir
               </button>
               <button
                 onClick={() => setIsSettingsOpen(true)}
-                className="px-4 py-3 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-lg font-semibold transition-colors flex items-center gap-2"
+                className="px-4 py-3 bg-white hover:bg-slate-50 text-slate-500 border border-slate-200 rounded-lg font-medium transition-colors flex items-center gap-2 shadow-sm"
                 title="Configuración"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -221,7 +221,7 @@ function App({ user }) {
               <button
                 ref={addButtonRef}
                 onClick={() => setIsAddModalOpen(true)}
-                className="px-4 sm:px-6 py-3 bg-cyan-500 hover:bg-cyan-600 text-white rounded-lg font-semibold transition-colors flex items-center gap-2 justify-center flex-1 sm:flex-none"
+                className="px-4 sm:px-6 py-3 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg font-semibold transition-colors flex items-center gap-2 justify-center flex-1 sm:flex-none shadow-sm"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -250,8 +250,8 @@ function App({ user }) {
           {dolarData && (
             <div className="mt-6">
               <div className="flex items-center justify-between mb-3">
-                <h3 className="text-lg font-semibold text-gray-300 flex items-center gap-2">
-                  <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <h3 className="text-base font-semibold text-slate-600 flex items-center gap-2">
+                  <svg className="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                   Cotizaciones del Dólar
@@ -269,14 +269,14 @@ function App({ user }) {
 
         {assets.length === 0 ? (
           <div className="text-center py-16">
-            <svg className="w-24 h-24 text-gray-700 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-24 h-24 text-slate-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
             </svg>
-            <h3 className="text-2xl font-bold text-gray-600 mb-2">Portfolio Vacío</h3>
-            <p className="text-gray-500 mb-6">Comienza agregando tus primeras inversiones</p>
+            <h3 className="text-2xl font-bold text-slate-500 mb-2">Portfolio Vacío</h3>
+            <p className="text-slate-400 mb-6">Comienza agregando tus primeras inversiones</p>
             <button
               onClick={() => setIsAddModalOpen(true)}
-              className="px-6 py-3 bg-cyan-500 hover:bg-cyan-600 text-white rounded-lg font-semibold transition-colors inline-flex items-center gap-2"
+              className="px-6 py-3 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg font-semibold transition-colors inline-flex items-center gap-2 shadow-sm"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -288,22 +288,22 @@ function App({ user }) {
           <>
             {cryptoAssets.length > 0 && (
               <section className="mb-12">
-                <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 flex items-center gap-2 sm:gap-3 flex-wrap">
-                  <svg className="w-5 h-5 sm:w-6 sm:h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 flex items-center gap-2 sm:gap-3 flex-wrap text-slate-700">
+                  <svg className="w-5 h-5 sm:w-6 sm:h-6 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                   Criptomonedas
                   <span className={`text-xs sm:text-sm font-medium px-2 sm:px-3 py-1 rounded-full ${
-                    cryptoStats.isProfit ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
+                    cryptoStats.isProfit ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-500'
                   }`}>
                     {cryptoStats.isProfit ? '+' : ''}{cryptoStats.profitPercent.toFixed(2)}%
                   </span>
                   <span className={`text-xs sm:text-sm font-medium px-2 sm:px-3 py-1 rounded-full ${
-                    cryptoStats.isProfit ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
+                    cryptoStats.isProfit ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-500'
                   }`}>
                     {cryptoStats.isProfit ? '+' : ''}{formatCurrency(cryptoStats.profit / multiCurrencyData.exchangeRate, 'USD')}
                   </span>
-                  <span className="text-xs sm:text-sm text-gray-400 basis-full sm:basis-auto">
+                  <span className="text-xs sm:text-sm text-slate-400 basis-full sm:basis-auto">
                     Invertido: {formatCurrency(cryptoStats.totalInvested, 'ARS')} → Actual: {formatCurrency(cryptoStats.totalValue, 'ARS')}
                   </span>
                 </h2>
@@ -328,22 +328,22 @@ function App({ user }) {
 
             {argentineAssets.length > 0 && (
               <section className="mb-12">
-                <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 flex items-center gap-2 sm:gap-3 flex-wrap">
-                  <svg className="w-5 h-5 sm:w-6 sm:h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 flex items-center gap-2 sm:gap-3 flex-wrap text-slate-700">
+                  <svg className="w-5 h-5 sm:w-6 sm:h-6 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                   </svg>
                   Mercado Argentino
                   <span className={`text-xs sm:text-sm font-medium px-2 sm:px-3 py-1 rounded-full ${
-                    argentineStats.isProfit ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
+                    argentineStats.isProfit ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-500'
                   }`}>
                     {argentineStats.isProfit ? '+' : ''}{argentineStats.profitPercent.toFixed(2)}%
                   </span>
                   <span className={`text-xs sm:text-sm font-medium px-2 sm:px-3 py-1 rounded-full ${
-                    argentineStats.isProfit ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
+                    argentineStats.isProfit ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-500'
                   }`}>
                     {argentineStats.isProfit ? '+' : ''}{formatCurrency(argentineStats.profit / multiCurrencyData.exchangeRate, 'USD')}
                   </span>
-                  <span className="text-xs sm:text-sm text-gray-400 basis-full sm:basis-auto">
+                  <span className="text-xs sm:text-sm text-slate-400 basis-full sm:basis-auto">
                     Invertido: {formatCurrency(argentineStats.totalInvested, 'ARS')} → Actual: {formatCurrency(argentineStats.totalValue, 'ARS')}
                   </span>
                 </h2>
@@ -368,22 +368,22 @@ function App({ user }) {
 
             {plazoFijoAssets.length > 0 && (
               <section>
-                <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 flex items-center gap-2 sm:gap-3 flex-wrap">
-                  <svg className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 flex items-center gap-2 sm:gap-3 flex-wrap text-slate-700">
+                  <svg className="w-5 h-5 sm:w-6 sm:h-6 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                   Plazos Fijos
                   <span className={`text-xs sm:text-sm font-medium px-2 sm:px-3 py-1 rounded-full ${
-                    plazoFijoStats.isProfit ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
+                    plazoFijoStats.isProfit ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-500'
                   }`}>
                     {plazoFijoStats.isProfit ? '+' : ''}{plazoFijoStats.profitPercent.toFixed(2)}%
                   </span>
                   <span className={`text-xs sm:text-sm font-medium px-2 sm:px-3 py-1 rounded-full ${
-                    plazoFijoStats.isProfit ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
+                    plazoFijoStats.isProfit ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-500'
                   }`}>
                     {plazoFijoStats.isProfit ? '+' : ''}{formatCurrency(plazoFijoStats.profit / multiCurrencyData.exchangeRate, 'USD')}
                   </span>
-                  <span className="text-xs sm:text-sm text-gray-400 basis-full sm:basis-auto">
+                  <span className="text-xs sm:text-sm text-slate-400 basis-full sm:basis-auto">
                     Capital: {formatCurrency(plazoFijoStats.totalInvested, 'ARS')} → Actual: {formatCurrency(plazoFijoStats.totalValue, 'ARS')}
                   </span>
                 </h2>
@@ -407,16 +407,16 @@ function App({ user }) {
 
             {efectivoAssets.length > 0 && (
               <section>
-                <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 flex items-center gap-2 sm:gap-3 flex-wrap">
-                  <svg className="w-5 h-5 sm:w-6 sm:h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 flex items-center gap-2 sm:gap-3 flex-wrap text-slate-700">
+                  <svg className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                   <span className="hidden sm:inline">Efectivo y Cuentas Bancarias</span>
                   <span className="sm:hidden">Efectivo</span>
-                  <span className="text-xs sm:text-sm font-medium px-2 sm:px-3 py-1 rounded-full bg-gray-500/20 text-gray-400">
+                  <span className="text-xs sm:text-sm font-medium px-2 sm:px-3 py-1 rounded-full bg-slate-100 text-slate-400">
                     0.00%
                   </span>
-                  <span className="text-xs sm:text-sm text-gray-400 basis-full sm:basis-auto">
+                  <span className="text-xs sm:text-sm text-slate-400 basis-full sm:basis-auto">
                     Disponible: {formatCurrency(efectivoStats.totalValue, 'ARS')}
                   </span>
                 </h2>
@@ -441,9 +441,9 @@ function App({ user }) {
         )}
 
         {(loadingCrypto || loadingDolar || loadingArgQuotes) && assets.length > 0 && (
-          <div className="fixed bottom-4 right-4 bg-gray-800 border border-cyan-500 rounded-lg p-3 flex items-center gap-2">
-            <div className="w-4 h-4 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin"></div>
-            <span className="text-sm text-gray-300">Actualizando cotizaciones...</span>
+          <div className="fixed bottom-4 right-4 bg-white border border-indigo-200 rounded-lg p-3 flex items-center gap-2 shadow-md">
+            <div className="w-4 h-4 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin"></div>
+            <span className="text-sm text-slate-600">Actualizando cotizaciones...</span>
           </div>
         )}
 
@@ -478,7 +478,7 @@ function App({ user }) {
       {showFab && (
         <button
           onClick={() => setIsAddModalOpen(true)}
-          className="fixed bottom-6 right-6 w-14 h-14 bg-cyan-500 hover:bg-cyan-600 text-white rounded-full shadow-lg shadow-cyan-500/30 flex items-center justify-center transition-all duration-200 z-40 active:scale-95"
+          className="fixed bottom-6 right-6 w-14 h-14 bg-indigo-500 hover:bg-indigo-600 text-white rounded-full shadow-lg shadow-indigo-200 flex items-center justify-center transition-all duration-200 z-40 active:scale-95"
           title="Agregar Activo"
         >
           <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">

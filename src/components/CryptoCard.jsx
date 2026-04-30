@@ -9,7 +9,7 @@ export default function CryptoCard({ coin, holdings = 0, currency = 'usd' }) {
   const isPositive = change24h >= 0
 
   return (
-    <div className="bg-gray-800 rounded-lg p-5 border border-gray-700 hover:border-cyan-500 transition-all duration-300 hover:shadow-lg hover:shadow-cyan-500/20">
+    <div className="bg-white rounded-xl p-5 border border-slate-200 transition-all duration-300 shadow-sm">
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center gap-3">
           {coin.image && (
@@ -17,7 +17,7 @@ export default function CryptoCard({ coin, holdings = 0, currency = 'usd' }) {
           )}
           <div>
             <h3 className="text-white font-semibold text-lg">{coin.name}</h3>
-            <p className="text-gray-400 text-sm uppercase">{coin.symbol}</p>
+            <p className="text-slate-400 text-sm uppercase">{coin.symbol}</p>
           </div>
         </div>
         
@@ -30,7 +30,7 @@ export default function CryptoCard({ coin, holdings = 0, currency = 'usd' }) {
 
       <div className="space-y-2">
         <div className="flex justify-between items-center">
-          <span className="text-gray-400 text-sm">Precio</span>
+          <span className="text-slate-400 text-sm">Precio</span>
           <span className="text-white font-semibold">
             {formatCurrency(price, currency.toUpperCase())}
           </span>
@@ -39,14 +39,14 @@ export default function CryptoCard({ coin, holdings = 0, currency = 'usd' }) {
         {holdings > 0 && (
           <>
             <div className="flex justify-between items-center">
-              <span className="text-gray-400 text-sm">Cantidad</span>
+              <span className="text-slate-400 text-sm">Cantidad</span>
               <span className="text-white font-semibold">
                 {holdings.toFixed(8)} {coin.symbol.toUpperCase()}
               </span>
             </div>
             
-            <div className="flex justify-between items-center pt-2 border-t border-gray-700">
-              <span className="text-gray-400 text-sm">Valor Total</span>
+            <div className="flex justify-between items-center pt-2 border-t border-slate-100">
+              <span className="text-slate-400 text-sm">Valor Total</span>
               <span className="text-cyan-400 font-bold">
                 {formatCurrency(totalValue, currency.toUpperCase())}
               </span>

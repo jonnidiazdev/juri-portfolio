@@ -119,9 +119,9 @@ export default function SettingsModal({ isOpen, onClose }) {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4 border border-gray-700">
+      <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4 border border-slate-200 shadow-lg">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+          <h2 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
             <svg className="w-6 h-6 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -130,7 +130,7 @@ export default function SettingsModal({ isOpen, onClose }) {
           </h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-white transition-colors"
+            className="text-slate-400 hover:text-slate-600 transition-colors"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -155,7 +155,7 @@ export default function SettingsModal({ isOpen, onClose }) {
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-gray-300 mb-2">
+            <label className="block text-sm font-semibold text-slate-600 mb-2">
               Usuario IOL
             </label>
             <input
@@ -163,12 +163,12 @@ export default function SettingsModal({ isOpen, onClose }) {
               value={iolUser}
               onChange={(e) => setIolUser(e.target.value)}
               placeholder="tu-usuario"
-              className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-cyan-500 transition-colors"
+              className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 placeholder-slate-400 focus:outline-none focus:border-indigo-400 transition-colors"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-gray-300 mb-2">
+            <label className="block text-sm font-semibold text-slate-600 mb-2">
               Contraseña IOL
             </label>
             <div className="relative">
@@ -177,12 +177,12 @@ export default function SettingsModal({ isOpen, onClose }) {
                 value={iolPass}
                 onChange={(e) => setIolPass(e.target.value)}
                 placeholder="••••••••"
-                className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-cyan-500 transition-colors pr-10"
+                className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 placeholder-slate-400 focus:outline-none focus:border-indigo-400 transition-colors pr-10"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
               >
                 {showPassword ? (
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -219,16 +219,16 @@ export default function SettingsModal({ isOpen, onClose }) {
             </div>
           )}
 
-          <div className="flex gap-2 pt-4 border-t border-gray-700">
+          <div className="flex gap-2 pt-4 border-t border-slate-200">
             <button
               onClick={handleClear}
-              className="flex-1 px-4 py-2 bg-red-500/20 hover:bg-red-500 text-red-400 hover:text-white rounded-lg font-semibold transition-colors"
+              className="flex-1 px-4 py-2 bg-rose-50 hover:bg-rose-500 text-rose-500 hover:text-white rounded-lg font-semibold transition-colors"
             >
               Cerrar Sesión
             </button>
             <button
               onClick={handleSave}
-              className="flex-1 px-4 py-2 bg-cyan-500 hover:bg-cyan-600 text-white rounded-lg font-semibold transition-colors"
+              className="flex-1 px-4 py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg font-semibold transition-colors"
             >
               Iniciar Sesión
             </button>

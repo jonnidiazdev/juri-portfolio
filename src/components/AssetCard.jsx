@@ -42,29 +42,29 @@ export default function AssetCard({ asset, currentPrice, onEdit, onDelete, dolar
   }
 
   return (
-    <div className="asset-card bg-gray-800 rounded-lg p-5 border border-gray-700 transition-all duration-300">
+    <div className="asset-card bg-white rounded-xl p-5 border border-slate-200 transition-all duration-300 shadow-sm">
       <div className="flex items-start justify-between mb-4">
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-1">
             <span className={`px-2 py-1 rounded text-xs font-semibold ${
-              isCrypto ? 'bg-purple-500/20 text-purple-400' : 'bg-blue-500/20 text-blue-400'
+              isCrypto ? 'bg-violet-50 text-violet-500' : 'bg-sky-50 text-sky-500'
             }`}>
               {getAssetTypeLabel(asset.type)}
             </span>
             <span className={`px-2 py-1 rounded text-xs font-semibold ${
-              assetCurrency === 'USD' ? 'bg-green-500/20 text-green-400' : 'bg-yellow-500/20 text-yellow-400'
+              assetCurrency === 'USD' ? 'bg-emerald-50 text-emerald-500' : 'bg-amber-50 text-amber-600'
             }`}>
               {assetCurrency}
             </span>
           </div>
-          <h3 className="text-white font-semibold text-lg">{asset.name}</h3>
-          <p className="text-gray-400 text-sm uppercase">{asset.symbol}</p>
+          <h3 className="text-slate-800 font-semibold text-lg">{asset.name}</h3>
+          <p className="text-slate-400 text-sm uppercase">{asset.symbol}</p>
         </div>
         
         <div className="asset-card-actions flex gap-2">
           <button
             onClick={() => onEdit(asset)}
-            className="p-2 text-gray-400 hover:text-cyan-400 hover:bg-gray-700 rounded-lg transition-colors"
+            className="p-2 text-slate-400 hover:text-indigo-500 hover:bg-indigo-50 rounded-lg transition-colors"
             title="Editar"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -73,7 +73,7 @@ export default function AssetCard({ asset, currentPrice, onEdit, onDelete, dolar
           </button>
           <button
             onClick={() => onDelete(asset.id)}
-            className="p-2 text-gray-400 hover:text-red-400 hover:bg-gray-700 rounded-lg transition-colors"
+            className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors"
             title="Eliminar"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -85,40 +85,40 @@ export default function AssetCard({ asset, currentPrice, onEdit, onDelete, dolar
 
       <div className="space-y-2">
         <div className="flex justify-between items-center">
-          <span className="text-gray-400 text-sm">Precio Actual</span>
-          <span className="text-white font-semibold">
+          <span className="text-slate-400 text-sm">Precio Actual</span>
+          <span className="text-slate-700 font-semibold">
             {price > 0 ? formatCurrency(price, assetCurrency) : 'N/A'}
           </span>
         </div>
 
         <div className="flex justify-between items-center">
-          <span className="text-gray-400 text-sm">Cantidad</span>
-          <span className="text-white font-semibold">
+          <span className="text-slate-400 text-sm">Cantidad</span>
+          <span className="text-slate-700 font-semibold">
             {asset.amount.toLocaleString('es-AR', { maximumFractionDigits: 8 })}
           </span>
         </div>
         
-        <div className="flex justify-between items-center pt-2 border-t border-gray-700">
-          <span className="text-gray-400 text-sm">Valor Total</span>
+        <div className="flex justify-between items-center pt-2 border-t border-slate-100">
+          <span className="text-slate-400 text-sm">Valor Total</span>
           <div className="text-right">
-            <div className="text-cyan-400 font-bold">
+            <div className="text-indigo-500 font-bold">
               {formatCurrency(totalValue, assetCurrency)}
             </div>
             {showArsEquivalent && (
-              <div className="text-xs text-gray-400 flex items-center gap-1 justify-end">
-                <span className="text-gray-500">≈</span>
+              <div className="text-xs text-slate-400 flex items-center gap-1 justify-end">
+                <span className="text-slate-300">≈</span>
                 <span>{formatCurrency(totalValueARS, 'ARS')}</span>
                 {exchangeRateInfo?.name && (
-                  <span className="text-gray-500 text-[10px]">{exchangeRateInfo.name}</span>
+                  <span className="text-slate-300 text-[10px]">{exchangeRateInfo.name}</span>
                 )}
               </div>
             )}
             {showUSDEquivalent && (
-              <div className="text-xs text-green-400 flex items-center gap-1 justify-end">
-                <span className="text-gray-500">≈</span>
+              <div className="text-xs text-emerald-500 flex items-center gap-1 justify-end">
+                <span className="text-slate-300">≈</span>
                 <span>{formatCurrency(totalValueUSD, 'USD')}</span>
                 {exchangeRateInfo?.name && (
-                  <span className="text-gray-500 text-[10px]">{exchangeRateInfo.name}</span>
+                  <span className="text-slate-300 text-[10px]">{exchangeRateInfo.name}</span>
                 )}
               </div>
             )}
@@ -126,13 +126,13 @@ export default function AssetCard({ asset, currentPrice, onEdit, onDelete, dolar
         </div>
 
         {/* Ganancia/Pérdida compacta */}
-        <div className="flex justify-between items-center pt-2 border-t border-gray-700">
-          <span className="text-gray-400 text-sm">Ganancia/Pérdida</span>
+        <div className="flex justify-between items-center pt-2 border-t border-slate-100">
+          <span className="text-slate-400 text-sm">Ganancia/Pérdida</span>
           <div className="text-right">
-            <div className={`font-bold ${pl.plUSD >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+            <div className={`font-bold ${pl.plUSD >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
               {formatCurrency(pl.plUSD, 'USD')} / {formatCurrency(pl.plARS, 'ARS')}
             </div>
-            <div className={`text-sm ${pl.plUSD >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+            <div className={`text-sm ${pl.plUSD >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
               {pl.plUSD >= 0 ? '+' : ''}{pl.plPctUSD.toFixed(2)}%
             </div>
           </div>
@@ -140,8 +140,8 @@ export default function AssetCard({ asset, currentPrice, onEdit, onDelete, dolar
 
         {/* Timestamp */}
         {fetchedAt && (
-          <div className="pt-2 border-t border-gray-700">
-            <p className="text-xs text-gray-500 text-center">Actualizado {getTimeAgo(fetchedAt)}</p>
+          <div className="pt-2 border-t border-slate-100">
+            <p className="text-xs text-slate-400 text-center">Actualizado {getTimeAgo(fetchedAt)}</p>
           </div>
         )}
       </div>
