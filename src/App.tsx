@@ -129,21 +129,22 @@ function App({ user }: AppProps) {
   const userPhoto = user?.photoURL || ''
 
   return (
-    <div className="bg-slate-50 min-h-screen text-slate-800">
+    <div className="bg-ink min-h-screen text-paper">
       <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-8 max-w-7xl">
         <header className="mb-8">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+          <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-6">
             <div>
-              <h1 className="text-2xl sm:text-4xl font-bold text-indigo-500 mb-1">
+              <p className="text-celeste text-xs font-mono-data uppercase tracking-widest mb-2">Observatorio financiero</p>
+              <h1 className="font-display text-3xl sm:text-4xl font-semibold text-paper mb-1">
                 El Juri-Portfolio
               </h1>
-              <p className="text-slate-400 text-sm sm:text-base">
-                La app para gestionar las inversiones del jurio
+              <p className="text-muted text-sm sm:text-base">
+                Gestión de inversiones del jurio
               </p>
             </div>
 
             <div className="flex flex-wrap gap-2">
-              <div className="hidden md:flex items-center gap-3 px-3 py-2 bg-white border border-slate-200 rounded-lg max-w-xs shadow-sm">
+              <div className="hidden md:flex items-center gap-3 px-3 py-2 card max-w-xs">
                 {userPhoto ? (
                   <img
                     src={userPhoto}
@@ -152,26 +153,26 @@ function App({ user }: AppProps) {
                     referrerPolicy="no-referrer"
                   />
                 ) : (
-                  <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-500 flex items-center justify-center text-xs font-bold">
+                  <div className="w-8 h-8 rounded-full bg-celeste/15 text-celeste flex items-center justify-center text-xs font-bold">
                     {userName.slice(0, 1).toUpperCase()}
                   </div>
                 )}
                 <div className="min-w-0">
-                  <p className="text-sm font-semibold text-slate-700 truncate">{userName}</p>
-                  <p className="text-xs text-slate-400 truncate">{userEmail}</p>
+                  <p className="text-sm font-semibold text-paper truncate">{userName}</p>
+                  <p className="text-xs text-subtle truncate">{userEmail}</p>
                 </div>
               </div>
 
               <button
                 onClick={signOutGoogle}
-                className="px-4 py-3 bg-white hover:bg-slate-50 text-slate-500 border border-slate-200 rounded-lg font-medium transition-colors shadow-sm"
-                title={userEmail || 'Cerrar sesion'}
+                className="btn-ghost px-4 py-3"
+                title={userEmail || 'Cerrar sesión'}
               >
                 Salir
               </button>
               <button
                 onClick={() => setIsSettingsOpen(true)}
-                className="px-4 py-3 bg-white hover:bg-slate-50 text-slate-500 border border-slate-200 rounded-lg font-medium transition-colors flex items-center gap-2 shadow-sm"
+                className="btn-ghost px-4 py-3 flex items-center gap-2"
                 title="Configuración"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -184,12 +185,12 @@ function App({ user }: AppProps) {
                 ref={addButtonRef}
                 onClick={() => setIsAddModalOpen(true)}
                 disabled={isCloudSyncing}
-                className="px-4 sm:px-6 py-3 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg font-semibold transition-colors flex items-center gap-2 justify-center flex-1 sm:flex-none shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                className="btn-primary px-4 sm:px-6 py-3 flex items-center gap-2 justify-center flex-1 sm:flex-none disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                 </svg>
-                <span className="hidden sm:inline">Agregar Activo</span>
+                <span className="hidden sm:inline">Agregar activo</span>
                 <span className="sm:hidden">Agregar</span>
               </button>
             </div>
@@ -200,16 +201,16 @@ function App({ user }: AppProps) {
           <PortfolioSyncBanner isSyncing={isCloudSyncing} />
 
           {syncError && (
-            <div className="mb-4 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 flex items-center justify-between gap-2 text-amber-700 text-sm">
+            <div className="status-banner mb-4 bg-peso/10 border border-peso/25 text-peso justify-between">
               <span>{syncError}</span>
-              <button onClick={() => setSyncError(null)} className="text-amber-500 hover:text-amber-700">✕</button>
+              <button onClick={() => setSyncError(null)} className="text-peso/70 hover:text-peso shrink-0">✕</button>
             </div>
           )}
 
           {iolAuthError && (
-            <div className="mb-4 bg-rose-50 border border-rose-200 rounded-lg px-3 py-2 flex items-center justify-between gap-2 text-rose-600 text-sm">
+            <div className="status-banner mb-4 bg-loss/10 border border-loss/25 text-loss justify-between">
               <span>{iolAuthError}</span>
-              <button onClick={() => setIolAuthError(null)} className="text-rose-400 hover:text-rose-600">✕</button>
+              <button onClick={() => setIolAuthError(null)} className="text-loss/70 hover:text-loss shrink-0">✕</button>
             </div>
           )}
 
@@ -228,15 +229,11 @@ function App({ user }: AppProps) {
           {/* Selector de cotización minimalista integrado con las cotizaciones del dólar */}
           {dolarData && (
             <div className="mt-6">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-base font-semibold text-slate-600 flex items-center gap-2">
-                  <svg className="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  Cotizaciones del Dólar
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
+                <h3 className="text-sm font-mono-data uppercase tracking-widest text-muted">
+                  Cotizaciones del dólar
                 </h3>
                 
-                {/* Selector minimalista */}
                 <CurrencySelector
                   dolarData={dolarData}
                   currencyPreference={currencyPreference}
@@ -253,46 +250,43 @@ function App({ user }: AppProps) {
             <LoadingSpinner text="Cargando portfolio desde la nube..." />
           </div>
         ) : assets.length === 0 ? (
-          <div className="text-center py-16">
-            <svg className="w-24 h-24 text-slate-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-            </svg>
-            <h3 className="text-2xl font-bold text-slate-500 mb-2">Portfolio Vacío</h3>
-            <p className="text-slate-400 mb-6">Comienza agregando tus primeras inversiones</p>
+          <div className="text-center py-16 animate-fade-in">
+            <div className="w-16 h-16 mx-auto mb-6 rounded-full border border-border flex items-center justify-center">
+              <svg className="w-8 h-8 text-subtle" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+              </svg>
+            </div>
+            <h3 className="font-display text-2xl font-semibold text-muted mb-2">Portfolio vacío</h3>
+            <p className="text-subtle mb-6">Agregá tu primer activo para empezar a seguir tus inversiones</p>
             <button
               onClick={() => setIsAddModalOpen(true)}
               disabled={isCloudSyncing}
-              className="px-6 py-3 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg font-semibold transition-colors inline-flex items-center gap-2 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              className="btn-primary px-6 py-3 inline-flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
               </svg>
-              Agregar Primer Activo
+              Agregar primer activo
             </button>
           </div>
         ) : (
           <>
             {cryptoAssets.length > 0 && (
               <section className="mb-12">
-                <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 flex items-center gap-2 sm:gap-3 flex-wrap text-slate-700">
-                  <svg className="w-5 h-5 sm:w-6 sm:h-6 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  Criptomonedas
-                  <span className={`text-xs sm:text-sm font-medium px-2 sm:px-3 py-1 rounded-full ${
-                    cryptoStats.isProfit ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-500'
-                  }`}>
-                    {cryptoStats.isProfit ? '+' : ''}{cryptoStats.profitPercent.toFixed(2)}%
-                  </span>
-                  <span className={`text-xs sm:text-sm font-medium px-2 sm:px-3 py-1 rounded-full ${
-                    cryptoStats.isProfit ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-500'
-                  }`}>
-                    {cryptoStats.isProfit ? '+' : ''}{formatCurrency(cryptoStats.profit / (multiCurrencyData.exchangeRate ?? 1), 'USD')}
-                  </span>
-                  <span className="text-xs sm:text-sm text-slate-400 basis-full sm:basis-auto">
-                    Invertido: {formatCurrency(cryptoStats.totalInvested, 'ARS')} → Actual: {formatCurrency(cryptoStats.totalValue, 'ARS')}
-                  </span>
-                </h2>
+                <div className="section-rule section-rule--crypto mb-4 sm:mb-6">
+                  <h2 className="text-lg sm:text-xl font-semibold text-paper flex items-center gap-2 sm:gap-3 flex-wrap">
+                    Criptomonedas
+                    <span className={`text-xs font-mono-data font-medium px-2 py-0.5 rounded ${cryptoStats.isProfit ? 'badge-profit' : 'badge-loss'}`}>
+                      {cryptoStats.isProfit ? '+' : ''}{cryptoStats.profitPercent.toFixed(2)}%
+                    </span>
+                    <span className={`text-xs font-mono-data font-medium px-2 py-0.5 rounded ${cryptoStats.isProfit ? 'badge-profit' : 'badge-loss'}`}>
+                      {cryptoStats.isProfit ? '+' : ''}{formatCurrency(cryptoStats.profit / (multiCurrencyData.exchangeRate ?? 1), 'USD')}
+                    </span>
+                    <span className="text-xs text-subtle basis-full sm:basis-auto font-mono-data">
+                      {formatCurrency(cryptoStats.totalInvested, 'ARS')} → {formatCurrency(cryptoStats.totalValue, 'ARS')}
+                    </span>
+                  </h2>
+                </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                   {sortedCryptoAssets.map(asset => (
                     <AssetCard 
@@ -314,25 +308,20 @@ function App({ user }: AppProps) {
 
             {argentineAssets.length > 0 && (
               <section className="mb-12">
-                <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 flex items-center gap-2 sm:gap-3 flex-wrap text-slate-700">
-                  <svg className="w-5 h-5 sm:w-6 sm:h-6 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                  </svg>
-                  Mercado Argentino
-                  <span className={`text-xs sm:text-sm font-medium px-2 sm:px-3 py-1 rounded-full ${
-                    argentineStats.isProfit ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-500'
-                  }`}>
-                    {argentineStats.isProfit ? '+' : ''}{argentineStats.profitPercent.toFixed(2)}%
-                  </span>
-                  <span className={`text-xs sm:text-sm font-medium px-2 sm:px-3 py-1 rounded-full ${
-                    argentineStats.isProfit ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-500'
-                  }`}>
-                    {argentineStats.isProfit ? '+' : ''}{formatCurrency(argentineStats.profit / (multiCurrencyData.exchangeRate ?? 1), 'USD')}
-                  </span>
-                  <span className="text-xs sm:text-sm text-slate-400 basis-full sm:basis-auto">
-                    Invertido: {formatCurrency(argentineStats.totalInvested, 'ARS')} → Actual: {formatCurrency(argentineStats.totalValue, 'ARS')}
-                  </span>
-                </h2>
+                <div className="section-rule section-rule--argentine mb-4 sm:mb-6">
+                  <h2 className="text-lg sm:text-xl font-semibold text-paper flex items-center gap-2 sm:gap-3 flex-wrap">
+                    Mercado argentino
+                    <span className={`text-xs font-mono-data font-medium px-2 py-0.5 rounded ${argentineStats.isProfit ? 'badge-profit' : 'badge-loss'}`}>
+                      {argentineStats.isProfit ? '+' : ''}{argentineStats.profitPercent.toFixed(2)}%
+                    </span>
+                    <span className={`text-xs font-mono-data font-medium px-2 py-0.5 rounded ${argentineStats.isProfit ? 'badge-profit' : 'badge-loss'}`}>
+                      {argentineStats.isProfit ? '+' : ''}{formatCurrency(argentineStats.profit / (multiCurrencyData.exchangeRate ?? 1), 'USD')}
+                    </span>
+                    <span className="text-xs text-subtle basis-full sm:basis-auto font-mono-data">
+                      {formatCurrency(argentineStats.totalInvested, 'ARS')} → {formatCurrency(argentineStats.totalValue, 'ARS')}
+                    </span>
+                  </h2>
+                </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                   {sortedArgentineAssets.map(asset => (
                     <AssetCard 
@@ -353,26 +342,21 @@ function App({ user }: AppProps) {
             )}
 
             {plazoFijoAssets.length > 0 && (
-              <section>
-                <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 flex items-center gap-2 sm:gap-3 flex-wrap text-slate-700">
-                  <svg className="w-5 h-5 sm:w-6 sm:h-6 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  Plazos Fijos
-                  <span className={`text-xs sm:text-sm font-medium px-2 sm:px-3 py-1 rounded-full ${
-                    plazoFijoStats.isProfit ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-500'
-                  }`}>
-                    {plazoFijoStats.isProfit ? '+' : ''}{plazoFijoStats.profitPercent.toFixed(2)}%
-                  </span>
-                  <span className={`text-xs sm:text-sm font-medium px-2 sm:px-3 py-1 rounded-full ${
-                    plazoFijoStats.isProfit ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-500'
-                  }`}>
-                    {plazoFijoStats.isProfit ? '+' : ''}{formatCurrency(plazoFijoStats.profit / (multiCurrencyData.exchangeRate ?? 1), 'USD')}
-                  </span>
-                  <span className="text-xs sm:text-sm text-slate-400 basis-full sm:basis-auto">
-                    Capital: {formatCurrency(plazoFijoStats.totalInvested, 'ARS')} → Actual: {formatCurrency(plazoFijoStats.totalValue, 'ARS')}
-                  </span>
-                </h2>
+              <section className="mb-12">
+                <div className="section-rule section-rule--plazo mb-4 sm:mb-6">
+                  <h2 className="text-lg sm:text-xl font-semibold text-paper flex items-center gap-2 sm:gap-3 flex-wrap">
+                    Plazos fijos
+                    <span className={`text-xs font-mono-data font-medium px-2 py-0.5 rounded ${plazoFijoStats.isProfit ? 'badge-profit' : 'badge-loss'}`}>
+                      {plazoFijoStats.isProfit ? '+' : ''}{plazoFijoStats.profitPercent.toFixed(2)}%
+                    </span>
+                    <span className={`text-xs font-mono-data font-medium px-2 py-0.5 rounded ${plazoFijoStats.isProfit ? 'badge-profit' : 'badge-loss'}`}>
+                      {plazoFijoStats.isProfit ? '+' : ''}{formatCurrency(plazoFijoStats.profit / (multiCurrencyData.exchangeRate ?? 1), 'USD')}
+                    </span>
+                    <span className="text-xs text-subtle basis-full sm:basis-auto font-mono-data">
+                      {formatCurrency(plazoFijoStats.totalInvested, 'ARS')} → {formatCurrency(plazoFijoStats.totalValue, 'ARS')}
+                    </span>
+                  </h2>
+                </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                   {sortedPlazoFijoAssets.map(asset => (
                     <AssetCard 
@@ -393,19 +377,18 @@ function App({ user }: AppProps) {
 
             {efectivoAssets.length > 0 && (
               <section>
-                <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 flex items-center gap-2 sm:gap-3 flex-wrap text-slate-700">
-                  <svg className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  <span className="hidden sm:inline">Efectivo y Cuentas Bancarias</span>
-                  <span className="sm:hidden">Efectivo</span>
-                  <span className="text-xs sm:text-sm font-medium px-2 sm:px-3 py-1 rounded-full bg-slate-100 text-slate-400">
-                    0.00%
-                  </span>
-                  <span className="text-xs sm:text-sm text-slate-400 basis-full sm:basis-auto">
-                    Disponible: {formatCurrency(efectivoStats.totalValue, 'ARS')}
-                  </span>
-                </h2>
+                <div className="section-rule section-rule--efectivo mb-4 sm:mb-6">
+                  <h2 className="text-lg sm:text-xl font-semibold text-paper flex items-center gap-2 sm:gap-3 flex-wrap">
+                    <span className="hidden sm:inline">Efectivo y cuentas</span>
+                    <span className="sm:hidden">Efectivo</span>
+                    <span className="text-xs font-mono-data font-medium px-2 py-0.5 rounded bg-surface-raised text-subtle">
+                      0.00%
+                    </span>
+                    <span className="text-xs text-subtle basis-full sm:basis-auto font-mono-data">
+                      Disponible: {formatCurrency(efectivoStats.totalValue, 'ARS')}
+                    </span>
+                  </h2>
+                </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                   {sortedEfectivoAssets.map(asset => (
                     <AssetCard 
@@ -427,9 +410,9 @@ function App({ user }: AppProps) {
         )}
 
         {(loadingCrypto || loadingDolar || loadingArgQuotes) && assets.length > 0 && (
-          <div className="fixed bottom-4 right-4 bg-white border border-indigo-200 rounded-lg p-3 flex items-center gap-2 shadow-md">
-            <div className="w-4 h-4 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin"></div>
-            <span className="text-sm text-slate-600">Actualizando cotizaciones...</span>
+          <div className="fixed bottom-4 right-4 card px-3 py-2 flex items-center gap-2 z-40">
+            <div className="w-4 h-4 border-2 border-celeste border-t-transparent rounded-full animate-spin" />
+            <span className="text-sm text-muted">Actualizando cotizaciones…</span>
           </div>
         )}
 
@@ -481,8 +464,8 @@ function App({ user }: AppProps) {
       {showFab && !isCloudSyncing && (
         <button
           onClick={() => setIsAddModalOpen(true)}
-          className="fixed bottom-6 right-6 w-14 h-14 bg-indigo-500 hover:bg-indigo-600 text-white rounded-full shadow-lg shadow-indigo-200 flex items-center justify-center transition-all duration-200 z-40 active:scale-95"
-          title="Agregar Activo"
+          className="fixed bottom-6 right-6 w-14 h-14 btn-primary rounded-full shadow-lg shadow-celeste/20 flex items-center justify-center transition-all duration-200 z-40 active:scale-95"
+          title="Agregar activo"
         >
           <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />

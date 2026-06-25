@@ -47,10 +47,10 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             onClose()
           }, 1500)
         } else {
-          alert(`❌ Error: ${result.error || 'No se pudo crear la sesión'}`)
+          alert(`Error: ${result.error || 'No se pudo crear la sesión'}`)
         }
       } catch (error) {
-        alert(`❌ Error de conexión: ${(error as Error).message}`)
+        alert(`Error de conexión: ${(error as Error).message}`)
       }
     }
   }
@@ -66,7 +66,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 
   const handleTestConnection = async () => {
     if (!iolUser.trim() || !iolPass.trim()) {
-      alert('Por favor ingresa usuario y contraseña primero')
+      alert('Ingresá usuario y contraseña primero')
       return
     }
 
@@ -83,23 +83,23 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       const result = await response.json()
 
       if (response.ok && result.success) {
-        alert('✅ Conexión exitosa con IOL')
+        alert('Conexión exitosa con IOL')
       } else {
-        alert(`❌ Error: ${result.error || 'Credenciales inválidas'}`)
+        alert(`Error: ${result.error || 'Credenciales inválidas'}`)
       }
     } catch (error) {
-      alert(`❌ Error de conexión: ${(error as Error).message}`)
+      alert(`Error de conexión: ${(error as Error).message}`)
     }
   }
 
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4 border border-slate-200 shadow-lg">
+    <div className="modal-overlay">
+      <div className="modal-panel">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
-            <svg className="w-6 h-6 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <h2 className="font-display text-2xl font-semibold text-paper flex items-center gap-2">
+            <svg className="w-5 h-5 text-celeste" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
@@ -107,7 +107,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
           </h2>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-600 transition-colors"
+            className="text-subtle hover:text-paper transition-colors"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -116,50 +116,46 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
         </div>
 
         <div className="space-y-4">
-          <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3 mb-4">
+          <div className="bg-celeste/10 border border-celeste/25 rounded-lg p-3">
             <div className="flex gap-2">
-              <svg className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 text-celeste flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              <div className="text-sm text-blue-300">
-                <p className="font-semibold mb-1">Credenciales Seguras</p>
-                <p className="text-blue-200">
-                  Tus credenciales se encriptan en un <strong>token JWT</strong> que se guarda localmente.
-                  Las credenciales nunca se envían en texto plano después del login inicial.
+              <div className="text-sm text-muted">
+                <p className="font-semibold text-paper mb-1">Credenciales seguras</p>
+                <p>
+                  Tus credenciales se encriptan en un token JWT guardado localmente.
+                  No se envían en texto plano después del login inicial.
                 </p>
               </div>
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-slate-600 mb-2">
-              Usuario IOL
-            </label>
+            <label className="field-label">Usuario IOL</label>
             <input
               type="text"
               value={iolUser}
               onChange={(e) => setIolUser(e.target.value)}
               placeholder="tu-usuario"
-              className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 placeholder-slate-400 focus:outline-none focus:border-indigo-400 transition-colors"
+              className="field-input"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-slate-600 mb-2">
-              Contraseña IOL
-            </label>
+            <label className="field-label">Contraseña IOL</label>
             <div className="relative">
               <input
                 type={showPassword ? 'text' : 'password'}
                 value={iolPass}
                 onChange={(e) => setIolPass(e.target.value)}
                 placeholder="••••••••"
-                className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 placeholder-slate-400 focus:outline-none focus:border-indigo-400 transition-colors pr-10"
+                className="field-input pr-10"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-subtle hover:text-paper transition-colors"
               >
                 {showPassword ? (
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -175,39 +171,37 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             </div>
           </div>
 
-          <div className="flex gap-2">
-            <button
-              onClick={handleTestConnection}
-              className="flex-1 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-semibold transition-colors flex items-center justify-center gap-2"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              Probar Conexión
-            </button>
-          </div>
+          <button
+            onClick={handleTestConnection}
+            className="btn-ghost w-full px-4 py-2 flex items-center justify-center gap-2"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Probar conexión
+          </button>
 
           {isSaved && (
-            <div className="bg-green-500/20 border border-green-500/50 rounded-lg p-3 text-green-300 text-sm flex items-center gap-2">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="status-banner bg-profit/10 border border-profit/25 text-profit">
+              <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
-              Sesión JWT creada exitosamente. Actualizando cotizaciones...
+              Sesión creada. Actualizando cotizaciones…
             </div>
           )}
 
-          <div className="flex gap-2 pt-4 border-t border-slate-200">
+          <div className="flex gap-2 pt-4 border-t border-border">
             <button
               onClick={handleClear}
-              className="flex-1 px-4 py-2 bg-rose-50 hover:bg-rose-500 text-rose-500 hover:text-white rounded-lg font-semibold transition-colors"
+              className="flex-1 px-4 py-2 border border-loss/30 text-loss hover:bg-loss/10 rounded-lg font-semibold transition-colors"
             >
-              Cerrar Sesión
+              Cerrar sesión
             </button>
             <button
               onClick={handleSave}
-              className="flex-1 px-4 py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg font-semibold transition-colors"
+              className="btn-primary flex-1 px-4 py-2"
             >
-              Iniciar Sesión
+              Iniciar sesión
             </button>
           </div>
         </div>

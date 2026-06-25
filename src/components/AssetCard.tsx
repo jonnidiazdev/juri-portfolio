@@ -18,12 +18,10 @@ interface AssetCardProps {
 }
 
 export default function AssetCard({ asset, currentPrice, onEdit, onDelete, dolarPrice, dolarMepPrice, conversionRate, exchangeRateInfo, fetchedAt }: AssetCardProps) {
-  // Si es un plazo fijo, usar el componente específico
   if (asset.type === ASSET_TYPES.PLAZO_FIJO) {
     return <PlazoFijoCard asset={asset} onEdit={onEdit} onDelete={onDelete} />
   }
 
-  // Si es efectivo, usar el componente específico
   if (asset.type === ASSET_TYPES.EFECTIVO) {
     return <EfectivoCard asset={asset} onEdit={onEdit} onDelete={onDelete} />
   }
@@ -33,17 +31,15 @@ export default function AssetCard({ asset, currentPrice, onEdit, onDelete, dolar
   const price = currentPrice || 0
   const totalValue = asset.amount * price
   const pl = computeAssetPL(asset, price, conversionRate)
-  
-  // Calcular equivalente en ARS si el activo está en USD y tenemos cotización del dólar blue
+
   const showArsEquivalent = assetCurrency === 'USD' && (conversionRate || dolarPrice)
   const totalValueARS = showArsEquivalent ? totalValue * (conversionRate || dolarPrice || 0) : null
-  
-  // Calcular equivalente en USD MEP si el activo está en ARS y tenemos cotización MEP
+
   const showUSDEquivalent = assetCurrency === 'ARS' && (conversionRate || dolarMepPrice)
   const totalValueUSD = showUSDEquivalent ? totalValue / (conversionRate || dolarMepPrice || 1) : null
 
-  const getAssetTypeLabel = (type) => {
-    const labels = {
+  const getAssetTypeLabel = (type: string) => {
+    const labels: Record<string, string> = {
       [ASSET_TYPES.CRYPTO]: 'Cripto',
       [ASSET_TYPES.STOCK]: 'Acción',
       [ASSET_TYPES.CEDEAR]: 'CEDEAR',
@@ -55,29 +51,29 @@ export default function AssetCard({ asset, currentPrice, onEdit, onDelete, dolar
   }
 
   return (
-    <div className="asset-card bg-white rounded-xl p-5 border border-slate-200 transition-all duration-300 shadow-sm">
+    <div className="asset-card card p-5 transition-all duration-300">
       <div className="flex items-start justify-between mb-4">
-        <div className="flex-1">
-          <div className="flex items-center gap-2 mb-1">
-            <span className={`px-2 py-1 rounded text-xs font-semibold ${
-              isCrypto ? 'bg-violet-50 text-violet-500' : 'bg-sky-50 text-sky-500'
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-1.5">
+            <span className={`px-2 py-0.5 rounded text-[10px] font-mono-data uppercase tracking-wide ${
+              isCrypto ? 'bg-violet-500/15 text-violet-400' : 'bg-celeste/15 text-celeste'
             }`}>
               {getAssetTypeLabel(asset.type)}
             </span>
-            <span className={`px-2 py-1 rounded text-xs font-semibold ${
-              assetCurrency === 'USD' ? 'bg-emerald-50 text-emerald-500' : 'bg-amber-50 text-amber-600'
+            <span className={`px-2 py-0.5 rounded text-[10px] font-mono-data uppercase tracking-wide ${
+              assetCurrency === 'USD' ? 'bg-peso/15 text-peso' : 'bg-amber-500/15 text-amber-400'
             }`}>
               {assetCurrency}
             </span>
           </div>
-          <h3 className="text-slate-800 font-semibold text-lg">{asset.name}</h3>
-          <p className="text-slate-400 text-sm uppercase">{asset.symbol}</p>
+          <h3 className="text-paper font-semibold text-lg truncate">{asset.name}</h3>
+          <p className="text-muted text-sm font-mono-data uppercase">{asset.symbol}</p>
         </div>
-        
-        <div className="asset-card-actions flex gap-2">
+
+        <div className="asset-card-actions flex gap-1 shrink-0">
           <button
             onClick={() => onEdit(asset)}
-            className="p-2 text-slate-400 hover:text-indigo-500 hover:bg-indigo-50 rounded-lg transition-colors"
+            className="p-2 text-subtle hover:text-celeste hover:bg-celeste/10 rounded-lg transition-colors"
             title="Editar"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -86,7 +82,7 @@ export default function AssetCard({ asset, currentPrice, onEdit, onDelete, dolar
           </button>
           <button
             onClick={() => onDelete(asset.id)}
-            className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors"
+            className="p-2 text-subtle hover:text-loss hover:bg-loss/10 rounded-lg transition-colors"
             title="Eliminar"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -96,65 +92,63 @@ export default function AssetCard({ asset, currentPrice, onEdit, onDelete, dolar
         </div>
       </div>
 
-      <div className="space-y-2">
+      <div className="space-y-2.5">
         <div className="flex justify-between items-center">
-          <span className="text-slate-400 text-sm">Precio Actual</span>
-          <span className="text-slate-700 font-semibold">
+          <span className="text-subtle text-sm">Precio actual</span>
+          <span className="text-paper font-mono-data font-medium">
             {price > 0 ? formatCurrency(price, assetCurrency) : 'N/A'}
           </span>
         </div>
 
         <div className="flex justify-between items-center">
-          <span className="text-slate-400 text-sm">Cantidad</span>
-          <span className="text-slate-700 font-semibold">
+          <span className="text-subtle text-sm">Cantidad</span>
+          <span className="text-paper font-mono-data font-medium">
             {asset.amount.toLocaleString('es-AR', { maximumFractionDigits: 8 })}
           </span>
         </div>
-        
-        <div className="flex justify-between items-center pt-2 border-t border-slate-100">
-          <span className="text-slate-400 text-sm">Valor Total</span>
+
+        <div className="flex justify-between items-center pt-2.5 border-t border-border">
+          <span className="text-subtle text-sm">Valor total</span>
           <div className="text-right">
-            <div className="text-indigo-500 font-bold">
+            <div className="text-celeste font-mono-data font-bold">
               {formatCurrency(totalValue, assetCurrency)}
             </div>
             {showArsEquivalent && (
-              <div className="text-xs text-slate-400 flex items-center gap-1 justify-end">
-                <span className="text-slate-300">≈</span>
+              <div className="text-xs text-muted flex items-center gap-1 justify-end font-mono-data">
+                <span className="text-subtle">≈</span>
                 <span>{formatCurrency(totalValueARS ?? 0, 'ARS')}</span>
                 {exchangeRateInfo?.name && (
-                  <span className="text-slate-300 text-[10px]">{exchangeRateInfo.name}</span>
+                  <span className="text-subtle text-[10px]">{exchangeRateInfo.name}</span>
                 )}
               </div>
             )}
             {showUSDEquivalent && (
-              <div className="text-xs text-emerald-500 flex items-center gap-1 justify-end">
-                <span className="text-slate-300">≈</span>
+              <div className="text-xs text-peso flex items-center gap-1 justify-end font-mono-data">
+                <span className="text-subtle">≈</span>
                 <span>{formatCurrency(totalValueUSD ?? 0, 'USD')}</span>
                 {exchangeRateInfo?.name && (
-                  <span className="text-slate-300 text-[10px]">{exchangeRateInfo.name}</span>
+                  <span className="text-subtle text-[10px]">{exchangeRateInfo.name}</span>
                 )}
               </div>
             )}
           </div>
         </div>
 
-        {/* Ganancia/Pérdida compacta */}
-        <div className="flex justify-between items-center pt-2 border-t border-slate-100">
-          <span className="text-slate-400 text-sm">Ganancia/Pérdida</span>
+        <div className="flex justify-between items-center pt-2.5 border-t border-border">
+          <span className="text-subtle text-sm">Resultado</span>
           <div className="text-right">
-            <div className={`font-bold ${pl.plUSD >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
+            <div className={`font-mono-data font-bold ${pl.plUSD >= 0 ? 'text-profit' : 'text-loss'}`}>
               {formatCurrency(pl.plUSD, 'USD')} / {formatCurrency(pl.plARS, 'ARS')}
             </div>
-            <div className={`text-sm ${pl.plUSD >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
+            <div className={`text-sm font-mono-data ${pl.plUSD >= 0 ? 'text-profit' : 'text-loss'}`}>
               {pl.plUSD >= 0 ? '+' : ''}{pl.plPctUSD.toFixed(2)}%
             </div>
           </div>
         </div>
 
-        {/* Timestamp */}
         {fetchedAt && (
-          <div className="pt-2 border-t border-slate-100">
-            <p className="text-xs text-slate-400 text-center">Actualizado {getTimeAgo(fetchedAt)}</p>
+          <div className="pt-2 border-t border-border">
+            <p className="text-[10px] text-subtle text-center font-mono-data">Actualizado {getTimeAgo(fetchedAt)}</p>
           </div>
         )}
       </div>

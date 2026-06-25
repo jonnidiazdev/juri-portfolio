@@ -8,7 +8,6 @@ export default function EditAssetModal({ isOpen, onClose, onSave, asset }) {
     currency: 'ARS',
   })
 
-  // Actualizar formData cuando cambie el asset
   useEffect(() => {
     if (asset) {
       setFormData({
@@ -35,13 +34,13 @@ export default function EditAssetModal({ isOpen, onClose, onSave, asset }) {
   const isCrypto = asset.type === ASSET_TYPES.CRYPTO
 
   return (
-    <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl p-6 max-w-md w-full border border-slate-200 shadow-lg">
+    <div className="modal-overlay">
+      <div className="modal-panel">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-slate-800">Editar Activo</h2>
+          <h2 className="font-display text-2xl font-semibold text-paper">Editar activo</h2>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-600 transition-colors"
+            className="text-subtle hover:text-paper transition-colors"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -49,20 +48,20 @@ export default function EditAssetModal({ isOpen, onClose, onSave, asset }) {
           </button>
         </div>
 
-        <div className="mb-4 p-3 bg-gray-900 rounded-lg">
-          <div className="text-sm text-gray-400">Activo</div>
-          <div className="text-lg font-semibold text-white">{asset.name}</div>
-          <div className="text-sm text-gray-400 uppercase">{asset.symbol}</div>
+        <div className="mb-4 p-3 card-raised">
+          <div className="text-xs text-subtle font-mono-data uppercase tracking-wide">Activo</div>
+          <div className="text-lg font-semibold text-paper">{asset.name}</div>
+          <div className="text-sm text-muted font-mono-data uppercase">{asset.symbol}</div>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {!isCrypto && (
             <div>
-              <label className="block text-slate-500 mb-2 text-sm">Moneda del Activo</label>
+              <label className="field-label">Moneda del activo</label>
               <select
                 value={formData.currency}
                 onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
-                className="w-full bg-gray-900 border border-slate-200 shadow-lg rounded-lg px-4 py-3 text-white focus:outline-none focus:border-cyan-500"
+                className="field-input"
               >
                 <option value="ARS">Pesos Argentinos (ARS)</option>
                 <option value="USD">Dólares (USD)</option>
@@ -71,27 +70,27 @@ export default function EditAssetModal({ isOpen, onClose, onSave, asset }) {
           )}
 
           <div>
-            <label className="block text-slate-500 mb-2 text-sm">Cantidad</label>
+            <label className="field-label">Cantidad</label>
             <input
               type="number"
               step="0.00000001"
               value={formData.amount}
               onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-              className="w-full bg-gray-900 border border-slate-200 shadow-lg rounded-lg px-4 py-3 text-white focus:outline-none focus:border-cyan-500"
+              className="field-input"
               required
             />
           </div>
 
           <div>
-            <label className="block text-slate-500 mb-2 text-sm">
-              Precio de Compra ({isCrypto ? 'USD' : formData.currency})
+            <label className="field-label">
+              Precio de compra ({isCrypto ? 'USD' : formData.currency})
             </label>
             <input
               type="number"
               step="0.01"
               value={formData.purchasePrice}
               onChange={(e) => setFormData({ ...formData, purchasePrice: e.target.value })}
-              className="w-full bg-gray-900 border border-slate-200 shadow-lg rounded-lg px-4 py-3 text-white focus:outline-none focus:border-cyan-500"
+              className="field-input"
               required
             />
           </div>
@@ -100,15 +99,15 @@ export default function EditAssetModal({ isOpen, onClose, onSave, asset }) {
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-3 border border-gray-600 text-gray-300 rounded-lg hover:bg-gray-700 transition-colors"
+              className="btn-ghost flex-1 px-4 py-3"
             >
               Cancelar
             </button>
             <button
               type="submit"
-              className="flex-1 px-4 py-3 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg font-semibold transition-colors"
+              className="btn-primary flex-1 px-4 py-3"
             >
-              Guardar
+              Guardar cambios
             </button>
           </div>
         </form>

@@ -10,92 +10,73 @@ export default function MultiCurrencySummary({
   const isPositiveUSD = totalsUSD.profit >= 0
 
   return (
-    <div className={`grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 ${className}`}>
-      {/* Totales en ARS */}
-      <div className="bg-white rounded-xl p-4 sm:p-6 border border-emerald-100 shadow-sm">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="p-2 bg-emerald-50 rounded-lg">
-            <svg className="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          </div>
-          <div>
-            <h3 className="text-base font-semibold text-slate-700">Portfolio en Pesos</h3>
-            <p className="text-emerald-500 text-xs">Valores convertidos a ARS</p>
-          </div>
-        </div>
-
-        <div className="space-y-4">
-          <div>
-            <p className="text-slate-400 text-xs uppercase tracking-wide mb-1">
-              Valor Total
-            </p>
-            <p className="text-2xl sm:text-3xl font-bold text-slate-800">
-              {formatCurrency(totalsARS.current, 'ARS')}
-            </p>
-          </div>
-
-          <div className="flex items-center justify-between">
+    <div className={`card overflow-hidden ${className}`}>
+      <div className="grid grid-cols-1 lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-border">
+        {/* Totales en ARS */}
+        <div className="p-5 sm:p-7">
+          <div className="flex items-baseline justify-between mb-6">
             <div>
-              <p className="text-slate-400 text-xs">Invertido</p>
-              <p className="text-base sm:text-xl font-semibold text-slate-700">
+              <p className="text-peso text-xs font-mono-data uppercase tracking-widest mb-1">En pesos</p>
+              <p className="text-muted text-xs">Convertido a ARS</p>
+            </div>
+            {exchangeRateInfo?.name && (
+              <span className="text-subtle text-[10px] font-mono-data uppercase tracking-wide">
+                {exchangeRateInfo.name}
+              </span>
+            )}
+          </div>
+
+          <p className="font-mono-data text-3xl sm:text-4xl font-semibold text-paper tracking-tight mb-6">
+            {formatCurrency(totalsARS.current, 'ARS')}
+          </p>
+
+          <div className="flex items-end justify-between gap-4">
+            <div>
+              <p className="text-subtle text-xs mb-1">Invertido</p>
+              <p className="font-mono-data text-lg text-muted">
                 {formatCurrency(totalsARS.invested, 'ARS')}
               </p>
             </div>
-            
             <div className="text-right">
-              <p className="text-slate-400 text-xs">Ganancia/Pérdida</p>
-              <div className={`text-base sm:text-xl font-semibold ${isPositiveARS ? 'text-emerald-500' : 'text-rose-500'}`}>
+              <p className="text-subtle text-xs mb-1">Resultado</p>
+              <p className={`font-mono-data text-lg font-semibold ${isPositiveARS ? 'text-profit' : 'text-loss'}`}>
                 {formatCurrency(totalsARS.profit, 'ARS')}
-              </div>
-              <div className={`text-sm ${isPositiveARS ? 'text-emerald-500' : 'text-rose-500'}`}>
+              </p>
+              <p className={`font-mono-data text-sm ${isPositiveARS ? 'text-profit' : 'text-loss'}`}>
                 {formatPercentage(totalsARS.profitPercent)}
-              </div>
+              </p>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Totales en USD */}
-      <div className="bg-white rounded-xl p-4 sm:p-6 border border-sky-100 shadow-sm">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="p-2 bg-sky-50 rounded-lg">
-            <svg className="w-6 h-6 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          </div>
-          <div>
-            <h3 className="text-base font-semibold text-slate-700">Portfolio en Dólares</h3>
-            <p className="text-sky-500 text-xs">Valores convertidos a USD</p>
-          </div>
-        </div>
-
-        <div className="space-y-4">
-          <div>
-            <p className="text-slate-400 text-xs uppercase tracking-wide mb-1">
-              Valor Total
-            </p>
-            <p className="text-2xl sm:text-3xl font-bold text-slate-800">
-              {formatCurrency(totalsUSD.current, 'USD')}
-            </p>
-          </div>
-
-          <div className="flex items-center justify-between">
+        {/* Totales en USD */}
+        <div className="p-5 sm:p-7 bg-surface-raised/40">
+          <div className="flex items-baseline justify-between mb-6">
             <div>
-              <p className="text-slate-400 text-xs">Invertido</p>
-              <p className="text-base sm:text-xl font-semibold text-slate-700">
+              <p className="text-celeste text-xs font-mono-data uppercase tracking-widest mb-1">En dólares</p>
+              <p className="text-muted text-xs">Convertido a USD</p>
+            </div>
+          </div>
+
+          <p className="font-mono-data text-3xl sm:text-4xl font-semibold text-paper tracking-tight mb-6">
+            {formatCurrency(totalsUSD.current, 'USD')}
+          </p>
+
+          <div className="flex items-end justify-between gap-4">
+            <div>
+              <p className="text-subtle text-xs mb-1">Invertido</p>
+              <p className="font-mono-data text-lg text-muted">
                 {formatCurrency(totalsUSD.invested, 'USD')}
               </p>
             </div>
-            
             <div className="text-right">
-              <p className="text-slate-400 text-xs">Ganancia/Pérdida</p>
-              <div className={`text-base sm:text-xl font-semibold ${isPositiveUSD ? 'text-emerald-500' : 'text-rose-500'}`}>
+              <p className="text-subtle text-xs mb-1">Resultado</p>
+              <p className={`font-mono-data text-lg font-semibold ${isPositiveUSD ? 'text-profit' : 'text-loss'}`}>
                 {formatCurrency(totalsUSD.profit, 'USD')}
-              </div>
-              <div className={`text-sm ${isPositiveUSD ? 'text-emerald-500' : 'text-rose-500'}`}>
+              </p>
+              <p className={`font-mono-data text-sm ${isPositiveUSD ? 'text-profit' : 'text-loss'}`}>
                 {formatPercentage(totalsUSD.profitPercent)}
-              </div>
+              </p>
             </div>
           </div>
         </div>
