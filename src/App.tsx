@@ -17,6 +17,7 @@ import AddAssetModal from './components/AddAssetModal'
 import EditAssetModal from './components/EditAssetModal'
 import SettingsModal from './components/SettingsModal'
 import IOLSessionStatus from './components/IOLSessionStatus'
+import PortfolioSyncBanner from './components/PortfolioSyncBanner'
 import LoadingSpinner from './components/LoadingSpinner'
 import ErrorMessage from './components/ErrorMessage'
 import DolarQuotes from './components/DolarQuotes'
@@ -26,8 +27,9 @@ interface AppProps {
 }
 
 function App({ user }: AppProps) {
-  const [assets, setAssets] = useLocalStorageState<Asset[]>('portfolio-assets', [], user?.uid)
-  const [currencyPreference, setCurrencyPreference] = useLocalStorageState('portfolio-currency-preference', 'blue', user?.uid)
+  const [assets, setAssets, { isSyncing: isPortfolioSyncing }] = useLocalStorageState<Asset[]>('portfolio-assets', [], user?.uid)
+  const [currencyPreference, setCurrencyPreference, { isSyncing: isPrefsSyncing }] = useLocalStorageState('portfolio-currency-preference', 'blue', user?.uid)
+  const isCloudSyncing = isPortfolioSyncing || isPrefsSyncing
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
   const [editingAsset, setEditingAsset] = useState<Asset | null>(null)
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
@@ -181,7 +183,8 @@ function App({ user }: AppProps) {
               <button
                 ref={addButtonRef}
                 onClick={() => setIsAddModalOpen(true)}
-                className="px-4 sm:px-6 py-3 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg font-semibold transition-colors flex items-center gap-2 justify-center flex-1 sm:flex-none shadow-sm"
+                disabled={isCloudSyncing}
+                className="px-4 sm:px-6 py-3 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg font-semibold transition-colors flex items-center gap-2 justify-center flex-1 sm:flex-none shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -193,6 +196,8 @@ function App({ user }: AppProps) {
           </div>
 
           <IOLSessionStatus />
+
+          <PortfolioSyncBanner isSyncing={isCloudSyncing} />
 
           {syncError && (
             <div className="mb-4 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 flex items-center justify-between gap-2 text-amber-700 text-sm">
@@ -243,7 +248,11 @@ function App({ user }: AppProps) {
           )}
         </header>
 
-        {assets.length === 0 ? (
+        {isCloudSyncing && assets.length === 0 ? (
+          <div className="text-center py-16">
+            <LoadingSpinner text="Cargando portfolio desde la nube..." />
+          </div>
+        ) : assets.length === 0 ? (
           <div className="text-center py-16">
             <svg className="w-24 h-24 text-slate-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
@@ -252,7 +261,8 @@ function App({ user }: AppProps) {
             <p className="text-slate-400 mb-6">Comienza agregando tus primeras inversiones</p>
             <button
               onClick={() => setIsAddModalOpen(true)}
-              className="px-6 py-3 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg font-semibold transition-colors inline-flex items-center gap-2 shadow-sm"
+              disabled={isCloudSyncing}
+              className="px-6 py-3 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg font-semibold transition-colors inline-flex items-center gap-2 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -468,7 +478,7 @@ function App({ user }: AppProps) {
       </div>
 
       {/* Floating Action Button */}
-      {showFab && (
+      {showFab && !isCloudSyncing && (
         <button
           onClick={() => setIsAddModalOpen(true)}
           className="fixed bottom-6 right-6 w-14 h-14 bg-indigo-500 hover:bg-indigo-600 text-white rounded-full shadow-lg shadow-indigo-200 flex items-center justify-center transition-all duration-200 z-40 active:scale-95"

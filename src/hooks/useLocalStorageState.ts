@@ -1,5 +1,11 @@
-import { useEffect, useRef, useState, Dispatch, SetStateAction } from 'react'
+import { useEffect, useRef, useState, useCallback, Dispatch, SetStateAction } from 'react'
 import { getFirestoreClient, isFirebaseConfigured } from '../config/firebase'
+import {
+  getScopedStorageKey,
+  isEmptyValue,
+  resolveInitialSync,
+  shouldPushToRemote,
+} from '../utils/portfolioSync'
 
 export const PORTFOLIO_SYNC_ERROR = 'portfolio-sync-error'
 
@@ -12,10 +18,10 @@ function readLocalValue<T>(key: string, initialValue: T): T {
   if (typeof window === 'undefined') return initialValue
 
   const savedValue = window.localStorage.getItem(key)
-  if (!savedValue) return initialValue
+  if (savedValue === null) return initialValue
 
   try {
-    return JSON.parse(savedValue)
+    return JSON.parse(savedValue) as T
   } catch (error) {
     console.error('Error al parsear localStorage', error)
     return initialValue
@@ -29,122 +35,190 @@ function writeLocalValue<T>(key: string, value: T): void {
   window.localStorage.setItem(key, JSON.stringify(value))
 }
 
-// Función para comparar si dos valores son equivalentes (considerando arrays vacíos y valores iniciales)
-function isEmptyValue<T>(value: T, initialValue: T): boolean {
-  if (value === initialValue) return true
-  if (Array.isArray(value) && Array.isArray(initialValue)) {
-    return value.length === 0 && initialValue.length === 0
-  }
-  if (value === null || value === undefined) return true
-  return false
+function hasLocalValue(storageKey: string): boolean {
+  if (typeof window === 'undefined') return false
+  return window.localStorage.getItem(storageKey) !== null
 }
 
-export function useLocalStorageState<T>(key: string, initialValue: T, ownerId: string | null = null): [T, Dispatch<SetStateAction<T>>] {
-  const [value, setValue] = useState(() => readLocalValue(key, initialValue))
+function readScopedLocalValue<T>(key: string, ownerId: string | null, initialValue: T): T {
+  const scopedKey = getScopedStorageKey(key, ownerId)
+
+  if (hasLocalValue(scopedKey)) {
+    return readLocalValue(scopedKey, initialValue)
+  }
+
+  if (ownerId && hasLocalValue(key)) {
+    const legacyValue = readLocalValue(key, initialValue)
+    if (!isEmptyValue(legacyValue, initialValue)) {
+      writeLocalValue(scopedKey, legacyValue)
+      return legacyValue
+    }
+  }
+
+  return initialValue
+}
+
+export interface LocalStorageSyncStatus {
+  isSyncing: boolean
+}
+
+export function useLocalStorageState<T>(
+  key: string,
+  initialValue: T,
+  ownerId: string | null = null
+): [T, Dispatch<SetStateAction<T>>, LocalStorageSyncStatus] {
+  const storageKey = getScopedStorageKey(key, ownerId)
   const initialValueRef = useRef(initialValue)
-  const isRemoteHydrated = useRef(false)
-  const skipRemoteWrite = useRef(false)
+  const syncReadyRef = useRef(!isFirebaseConfigured || !ownerId)
+  const skipRemoteWriteRef = useRef(false)
+  const userEditedRef = useRef(false)
+
+  const [isSyncing, setIsSyncing] = useState(() => isFirebaseConfigured && !!ownerId)
+  const [value, setValueInternal] = useState<T>(() =>
+    readScopedLocalValue(key, ownerId, initialValue)
+  )
+
+  const markSyncComplete = useCallback(() => {
+    syncReadyRef.current = true
+    setIsSyncing(false)
+  }, [])
+
+  const markSyncPending = useCallback(() => {
+    syncReadyRef.current = false
+    if (isFirebaseConfigured && ownerId) {
+      setIsSyncing(true)
+    }
+  }, [ownerId])
+
+  const setValue: Dispatch<SetStateAction<T>> = useCallback((update) => {
+    userEditedRef.current = true
+    setValueInternal(update)
+  }, [])
 
   useEffect(() => {
-    // Si Firebase no está configurado, solo usar localStorage
-    if (!isFirebaseConfigured) {
-      isRemoteHydrated.current = true
-      return undefined
-    }
-
-    // Si Firebase está configurado pero no hay ownerId (usuario no autenticado),
-    // esperar a que se autentique antes de sincronizar
-    if (!ownerId) {
-      isRemoteHydrated.current = true
-      return undefined
-    }
-
-    isRemoteHydrated.current = false
-
-    let unsubscribe = () => {}
-    let isCancelled = false
-
-    getFirestoreClient().then((client) => {
-      if (isCancelled || !client) {
-        isRemoteHydrated.current = true
-        return
-      }
-
-      const { db, doc, onSnapshot, serverTimestamp, setDoc } = client
-      const docRef = doc(db, 'portfolios', ownerId)
-
-      unsubscribe = onSnapshot(
-        docRef,
-        (snapshot: { data: () => Record<string, unknown> | undefined }) => {
-          const remoteData = snapshot.data()
-          const remoteValue = remoteData?.[key]
-          const localValue = readLocalValue(key, initialValueRef.current)
-
-          // Si hay datos remotos, SIEMPRE priorizarlos
-          if (remoteValue !== undefined) {
-            skipRemoteWrite.current = true
-            setValue(remoteValue as T)
-            writeLocalValue(key, remoteValue as T)
-            isRemoteHydrated.current = true
-            return
-          }
-
-          // Si NO hay datos remotos pero hay datos locales no vacíos, migrarlos
-          if (!isEmptyValue(localValue, initialValueRef.current)) {
-            console.log(`Migrando datos locales de "${key}" a Firestore para usuario ${ownerId}`)
-            writeLocalValue(key, localValue)
-
-            setDoc(
-              docRef,
-              {
-                [key]: localValue,
-                updatedAt: serverTimestamp()
-              },
-              { merge: true }
-            ).catch((error: unknown) => {
-              console.error('Error al migrar datos locales hacia Firebase', error)
-              notifySyncError(key, 'No se pudieron sincronizar los datos con Firebase')
-            })
-          } else {
-            // No hay datos ni remotos ni locales, usar el valor inicial
-            writeLocalValue(key, initialValueRef.current)
-          }
-
-          isRemoteHydrated.current = true
-        },
-        (error: unknown) => {
-          console.error('Error al leer estado desde Firebase. Se mantiene persistencia local.', error)
-          notifySyncError(key, 'No se pudieron cargar los datos desde Firebase')
-          isRemoteHydrated.current = true
-        }
-      )
-    })
-
-    return () => {
-      isCancelled = true
-      unsubscribe()
-    }
-  }, [ownerId, key])
-
-  useEffect(() => {
-    // Siempre guardar en localStorage como caché local
-    if (value !== undefined) {
-      writeLocalValue(key, value)
-    }
-
-    // Si Firebase no está configurado o no hay ownerId, solo usar localStorage
-    if (!isFirebaseConfigured || !ownerId) return
-
-    // Esperar a que se complete la hidratación inicial desde Firebase
-    if (!isRemoteHydrated.current) return
-
-    // Si estamos aplicando datos remotos, no escribir de vuelta
-    if (skipRemoteWrite.current) {
-      skipRemoteWrite.current = false
+    if (!isFirebaseConfigured || !ownerId) {
+      syncReadyRef.current = true
+      setIsSyncing(false)
       return
     }
 
-    // Sincronizar el valor actual con Firestore
+    markSyncPending()
+    userEditedRef.current = false
+    skipRemoteWriteRef.current = true
+    setValueInternal(readScopedLocalValue(key, ownerId, initialValueRef.current))
+  }, [ownerId, key, markSyncPending])
+
+  useEffect(() => {
+    if (!isFirebaseConfigured) {
+      markSyncComplete()
+      return undefined
+    }
+
+    if (!ownerId) {
+      markSyncComplete()
+      return undefined
+    }
+
+    markSyncPending()
+    let cancelled = false
+    let unsubscribe = () => {}
+
+    const applyRemoteValue = (remoteValue: T) => {
+      skipRemoteWriteRef.current = true
+      userEditedRef.current = false
+      setValueInternal(remoteValue)
+      writeLocalValue(storageKey, remoteValue)
+    }
+
+    const finishInitialSync = async () => {
+      const client = await getFirestoreClient()
+      if (cancelled || !client) {
+        markSyncComplete()
+        return
+      }
+
+      const { db, doc, getDocFromServer, onSnapshot, serverTimestamp, setDoc } = client
+      const docRef = doc(db, 'portfolios', ownerId)
+      const localValue = readScopedLocalValue(key, ownerId, initialValueRef.current)
+
+      try {
+        const serverSnapshot = await getDocFromServer(docRef)
+        if (cancelled) return
+
+        const remoteValue = serverSnapshot.data()?.[key] as T | undefined
+        const resolution = resolveInitialSync(remoteValue, localValue, initialValueRef.current)
+
+        if (resolution.action === 'apply_remote') {
+          applyRemoteValue(resolution.value)
+        } else if (resolution.action === 'migrate_local') {
+          applyRemoteValue(resolution.value)
+          await setDoc(
+            docRef,
+            { [key]: resolution.value, updatedAt: serverTimestamp() },
+            { merge: true }
+          )
+        } else {
+          skipRemoteWriteRef.current = true
+          setValueInternal(resolution.value)
+          writeLocalValue(storageKey, resolution.value)
+        }
+      } catch (error) {
+        console.error('Error al leer estado desde el servidor Firebase', error)
+        notifySyncError(key, 'No se pudieron cargar los datos desde Firebase. No se sobrescribirán datos remotos.')
+      }
+
+      if (cancelled) return
+
+      markSyncComplete()
+
+      unsubscribe = onSnapshot(
+        docRef,
+        (snapshot) => {
+          if (cancelled) return
+          if (snapshot.metadata.hasPendingWrites) return
+
+          const remoteValue = snapshot.data()?.[key] as T | undefined
+          if (remoteValue === undefined) return
+
+          const currentLocal = readLocalValue(storageKey, initialValueRef.current)
+          if (JSON.stringify(currentLocal) === JSON.stringify(remoteValue)) return
+
+          applyRemoteValue(remoteValue)
+        },
+        (error: unknown) => {
+          console.error('Error en sincronización en tiempo real', error)
+          notifySyncError(key, 'Error de sincronización en tiempo real')
+        }
+      )
+    }
+
+    finishInitialSync()
+
+    return () => {
+      cancelled = true
+      unsubscribe()
+    }
+  }, [ownerId, key, storageKey, markSyncComplete, markSyncPending])
+
+  useEffect(() => {
+    if (value === undefined) return
+    writeLocalValue(storageKey, value)
+
+    if (!shouldPushToRemote(
+      value,
+      initialValueRef.current,
+      syncReadyRef.current,
+      userEditedRef.current,
+      skipRemoteWriteRef.current
+    )) {
+      if (skipRemoteWriteRef.current) {
+        skipRemoteWriteRef.current = false
+      }
+      return
+    }
+
+    if (!isFirebaseConfigured || !ownerId) return
+
     getFirestoreClient().then((client) => {
       if (!client) return
 
@@ -153,17 +227,14 @@ export function useLocalStorageState<T>(key: string, initialValue: T, ownerId: s
 
       setDoc(
         docRef,
-        {
-          [key]: value,
-          updatedAt: serverTimestamp()
-        },
+        { [key]: value, updatedAt: serverTimestamp() },
         { merge: true }
       ).catch((error: unknown) => {
         console.error('Error al sincronizar estado en Firebase', error)
         notifySyncError(key, 'Error de sincronización. Los cambios se guardaron solo localmente.')
       })
     })
-  }, [ownerId, key, value])
+  }, [ownerId, key, storageKey, value])
 
-  return [value, setValue] as const
+  return [value, setValue, { isSyncing }] as const
 }
