@@ -131,3 +131,32 @@ export interface ArgentineQuotes {
 export type DolarPrices = Record<string, DolarQuote | undefined> & {
   _fetchedAt?: string
 }
+
+export interface SnapshotTotals {
+  current: number
+  invested: number
+  profit: number
+  profitPercent: number
+}
+
+export interface SnapshotByType {
+  crypto: SnapshotTotals
+  argentine: SnapshotTotals
+  plazoFijo: SnapshotTotals
+  efectivo: SnapshotTotals
+}
+
+export interface PortfolioSnapshotPayload {
+  capturedAt: string
+  currencyPreference: string
+  exchangeRate: number
+  exchangeRateName: string
+  totalsARS: SnapshotTotals
+  totalsUSD: SnapshotTotals
+  byTypeARS: SnapshotByType
+  byTypeUSD: SnapshotByType
+}
+
+export interface PortfolioSnapshot extends PortfolioSnapshotPayload {
+  id: string
+}

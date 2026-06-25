@@ -36,8 +36,15 @@ async function initializeFirebase() {
 
       firestoreApi = {
         doc: firestoreModule.doc,
+        collection: firestoreModule.collection,
         getDoc: firestoreModule.getDoc,
         getDocFromServer: firestoreModule.getDocFromServer,
+        getDocs: firestoreModule.getDocs,
+        addDoc: firestoreModule.addDoc,
+        deleteDoc: firestoreModule.deleteDoc,
+        query: firestoreModule.query,
+        orderBy: firestoreModule.orderBy,
+        limit: firestoreModule.limit,
         onSnapshot: firestoreModule.onSnapshot,
         serverTimestamp: firestoreModule.serverTimestamp,
         setDoc: firestoreModule.setDoc
@@ -68,8 +75,15 @@ export async function getFirestoreClient() {
   return {
     db: firebase.db,
     doc: firebase.doc,
+    collection: firebase.collection,
     getDoc: firebase.getDoc,
     getDocFromServer: firebase.getDocFromServer,
+    getDocs: firebase.getDocs,
+    addDoc: firebase.addDoc,
+    deleteDoc: firebase.deleteDoc,
+    query: firebase.query,
+    orderBy: firebase.orderBy,
+    limit: firebase.limit,
     onSnapshot: firebase.onSnapshot,
     serverTimestamp: firebase.serverTimestamp,
     setDoc: firebase.setDoc

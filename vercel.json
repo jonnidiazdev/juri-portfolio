@@ -3,6 +3,10 @@
     {
       "source": "/api/iol/quote/:tipo/:simbolo",
       "destination": "/api/iol/quote/[...params]"
+    },
+    {
+      "source": "/((?!api/).*)",
+      "destination": "/index.html"
     }
   ],
   "headers": [
