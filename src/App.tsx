@@ -3,14 +3,13 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { useCryptoPrices, useDolarPrice } from './hooks/useInvestments'
 import { useArgentineQuotes } from './hooks/useArgentineQuotes'
 import { useMultiCurrencyCalculations } from './hooks/useMultiCurrency'
-import { useLocalStorageState } from './hooks/useLocalStorageState'
+import { useLocalStorageState, PORTFOLIO_SYNC_ERROR } from './hooks/useLocalStorageState'
 import { signOutGoogle } from './config/firebase'
-import { calculatePlazoFijo } from './utils/plazoFijoCalculations'
+import { getCurrentPrice, calculateAssetTypeStats } from './utils/assetCalculations'
 import { formatCurrency } from './utils/formatters'
 import { ASSET_TYPES } from './config/constants'
+import { IOL_SESSION_CHANGED } from './services/iolSession'
 import type { Asset } from './types'
-import PortfolioSummary from './components/PortfolioSummary'
-import PortfolioStats from './components/PortfolioStats'
 import MultiCurrencySummary from './components/MultiCurrencySummary'
 import CurrencySelector from './components/CurrencySelector'
 import AssetCard from './components/AssetCard'
@@ -28,11 +27,37 @@ interface AppProps {
 
 function App({ user }: AppProps) {
   const [assets, setAssets] = useLocalStorageState<Asset[]>('portfolio-assets', [], user?.uid)
+  const [currencyPreference, setCurrencyPreference] = useLocalStorageState('portfolio-currency-preference', 'blue', user?.uid)
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
   const [editingAsset, setEditingAsset] = useState<Asset | null>(null)
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   const [showFab, setShowFab] = useState(false)
+  const [syncError, setSyncError] = useState<string | null>(null)
+  const [iolAuthError, setIolAuthError] = useState<string | null>(null)
   const addButtonRef = useRef<HTMLButtonElement>(null)
+
+  useEffect(() => {
+    const handleSyncError = (event: Event) => {
+      const detail = (event as CustomEvent<{ message: string }>).detail
+      if (detail?.message) setSyncError(detail.message)
+    }
+
+    const handleIOLSession = (event: Event) => {
+      const detail = (event as CustomEvent<{ reason?: string }>).detail
+      if (detail?.reason === 'expired') {
+        setIolAuthError('Tu sesión IOL expiró. Configura tus credenciales nuevamente.')
+        setIsSettingsOpen(true)
+      }
+    }
+
+    window.addEventListener(PORTFOLIO_SYNC_ERROR, handleSyncError)
+    window.addEventListener(IOL_SESSION_CHANGED, handleIOLSession)
+
+    return () => {
+      window.removeEventListener(PORTFOLIO_SYNC_ERROR, handleSyncError)
+      window.removeEventListener(IOL_SESSION_CHANGED, handleIOLSession)
+    }
+  }, [])
 
   useEffect(() => {
     if (!addButtonRef.current) return
@@ -50,15 +75,12 @@ function App({ user }: AppProps) {
     .map(a => a.symbol)
     .filter((s): s is string => !!s)
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: cryptoPrices, isLoading: loadingCrypto, isError: errorCrypto, error: cryptoError } = useCryptoPrices(cryptoIds, user?.uid) as any
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: dolarData, isLoading: loadingDolar } = useDolarPrice(user?.uid) as any
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: argQuotes, isLoading: loadingArgQuotes } = useArgentineQuotes(assets, user?.uid) as any
-  
-  // Nuevos cálculos multi-moneda
-  const multiCurrencyData = useMultiCurrencyCalculations(assets, cryptoPrices, argQuotes, dolarData)
+  const { data: cryptoPrices, isLoading: loadingCrypto, isError: errorCrypto, error: cryptoError, refetch: refetchCrypto } = useCryptoPrices(cryptoIds, user?.uid)
+  const { data: dolarData, isLoading: loadingDolar, isError: errorDolar, error: dolarError, refetch: refetchDolar } = useDolarPrice(user?.uid)
+  const { data: argQuotes, isLoading: loadingArgQuotes, isError: errorArgQuotes, error: argQuotesError, refetch: refetchArgQuotes } = useArgentineQuotes(assets, user?.uid)
+
+  const multiCurrencyData = useMultiCurrencyCalculations(assets, cryptoPrices, argQuotes, dolarData, currencyPreference)
+  const priceContext = { cryptoPrices, argQuotes }
 
   const handleAddAsset = (newAsset: Asset) => {
     setAssets([...assets, newAsset])
@@ -75,33 +97,7 @@ function App({ user }: AppProps) {
     }
   }
 
-  const getCurrentPrice = (asset: Asset) => {
-    if (asset.type === ASSET_TYPES.CRYPTO) {
-      // cryptoPrices es un objeto con symbols como claves
-      const normalizedSymbol = String(asset.symbol || '').trim().toLowerCase()
-      const cryptoData = cryptoPrices?.[normalizedSymbol]
-      const price = cryptoData?.usd
-      return (typeof price === 'number' && price > 0) ? price : (asset.purchasePrice ?? 0)
-    } else if (asset.type === ASSET_TYPES.PLAZO_FIJO) {
-      // Para plazos fijos, calcular el valor actual basado en TNA y días transcurridos
-      const plazoFijoData = calculatePlazoFijo(
-        asset.amount,
-        asset.tna ?? 0,
-        asset.startDate ?? '',
-        asset.endDate ?? ''
-      )
-      // Retornar el precio por unidad (valor actual / cantidad)
-      return plazoFijoData.currentValue / asset.amount
-    } else if (asset.type === ASSET_TYPES.EFECTIVO) {
-      // Para efectivo, el precio actual es 1 (sin variación)
-      return 1
-    } else {
-      // argQuotes usa asset.id como clave
-      const quote = argQuotes?.[asset.id]
-      const price = quote?.price
-      return (typeof price === 'number' && price > 0) ? price : (asset.purchasePrice ?? 0)
-    }
-  }
+  const getAssetPrice = (asset: Asset) => getCurrentPrice(asset, priceContext)
 
   // Agrupar activos por tipo
   const cryptoAssets = assets.filter(a => a.type === ASSET_TYPES.CRYPTO)
@@ -109,60 +105,15 @@ function App({ user }: AppProps) {
   const plazoFijoAssets = assets.filter(a => a.type === ASSET_TYPES.PLAZO_FIJO)
   const efectivoAssets = assets.filter(a => a.type === ASSET_TYPES.EFECTIVO)
 
-  // Calcular ganancias/pérdidas por tipo de activo
-  const calculateAssetTypeStats = (assetList: Asset[]) => {
-    let totalValue = 0
-    let totalInvested = 0
-
-    assetList.forEach(asset => {
-      const currentPrice = getCurrentPrice(asset)
-      const assetCurrency = asset.currency || (asset.type === ASSET_TYPES.CRYPTO ? 'USD' : 'ARS')
-      
-      let value: number, invested: number
-      
-      if (asset.type === ASSET_TYPES.PLAZO_FIJO) {
-        const plazoFijoData = calculatePlazoFijo(
-          asset.amount,
-          asset.tna ?? 0,
-          asset.startDate ?? '',
-          asset.endDate ?? ''
-        )
-        value = plazoFijoData.currentValue
-        invested = plazoFijoData.capital
-      } else if (asset.type === ASSET_TYPES.EFECTIVO) {
-        value = asset.amount
-        invested = asset.amount
-      } else {
-        value = asset.amount * currentPrice
-        invested = asset.amount * (asset.purchasePrice ?? 0)
-      }
-      
-      // Convertir todo a ARS para totales
-      if (assetCurrency === 'USD' && dolarData?.blue) {
-        totalValue += value * dolarData.blue.venta
-        totalInvested += invested * dolarData.blue.venta
-      } else {
-        totalValue += value
-        totalInvested += invested
-      }
-    })
-
-    const profit = totalValue - totalInvested
-    const profitPercent = totalInvested > 0 ? ((totalValue - totalInvested) / totalInvested) * 100 : 0
-    const isProfit = profit >= 0
-
-    return { totalValue, totalInvested, profit, profitPercent, isProfit }
-  }
-
-  const cryptoStats = calculateAssetTypeStats(cryptoAssets)
-  const argentineStats = calculateAssetTypeStats(argentineAssets)
-  const plazoFijoStats = calculateAssetTypeStats(plazoFijoAssets)
-  const efectivoStats = calculateAssetTypeStats(efectivoAssets)
+  const cryptoStats = calculateAssetTypeStats(cryptoAssets, priceContext, currencyPreference, dolarData)
+  const argentineStats = calculateAssetTypeStats(argentineAssets, priceContext, currencyPreference, dolarData)
+  const plazoFijoStats = calculateAssetTypeStats(plazoFijoAssets, priceContext, currencyPreference, dolarData)
+  const efectivoStats = calculateAssetTypeStats(efectivoAssets, priceContext, currencyPreference, dolarData)
 
   // Ordenar activos alfabéticamente por ticker/símbolo cuando aplique
-  const getSortKey = (asset) => {
+  const getSortKey = (asset: Asset) => {
     // Preferir ticker; fallback a símbolo (crypto) o nombre
-    const key = asset.ticker || asset.symbol || asset.name || ''
+    const key = asset.symbol || asset.name || ''
     return typeof key === 'string' ? key.toUpperCase() : ''
   }
 
@@ -243,6 +194,20 @@ function App({ user }: AppProps) {
 
           <IOLSessionStatus />
 
+          {syncError && (
+            <div className="mb-4 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 flex items-center justify-between gap-2 text-amber-700 text-sm">
+              <span>{syncError}</span>
+              <button onClick={() => setSyncError(null)} className="text-amber-500 hover:text-amber-700">✕</button>
+            </div>
+          )}
+
+          {iolAuthError && (
+            <div className="mb-4 bg-rose-50 border border-rose-200 rounded-lg px-3 py-2 flex items-center justify-between gap-2 text-rose-600 text-sm">
+              <span>{iolAuthError}</span>
+              <button onClick={() => setIolAuthError(null)} className="text-rose-400 hover:text-rose-600">✕</button>
+            </div>
+          )}
+
           {assets.length > 0 && (
             <>
               {/* Nuevos totales multi-moneda */}
@@ -267,8 +232,10 @@ function App({ user }: AppProps) {
                 </h3>
                 
                 {/* Selector minimalista */}
-                <CurrencySelector 
+                <CurrencySelector
                   dolarData={dolarData}
+                  currencyPreference={currencyPreference}
+                  onCurrencyChange={setCurrencyPreference}
                 />
               </div>
               <DolarQuotes dolares={dolarData} isLoading={loadingDolar} fetchedAt={dolarData?._fetchedAt} />
@@ -321,14 +288,14 @@ function App({ user }: AppProps) {
                     <AssetCard 
                       key={asset.id}
                       asset={asset}
-                      currentPrice={getCurrentPrice(asset)}
+                      currentPrice={getAssetPrice(asset)}
                       onEdit={setEditingAsset}
                       onDelete={handleDeleteAsset}
                       dolarPrice={dolarData?.blue?.venta}
                       dolarMepPrice={dolarData?.bolsa?.venta}
                       conversionRate={multiCurrencyData.exchangeRate}
                       exchangeRateInfo={multiCurrencyData.exchangeRateInfo}
-                      fetchedAt={cryptoPrices?._fetchedAt}
+                      fetchedAt={typeof cryptoPrices?._fetchedAt === 'string' ? cryptoPrices._fetchedAt : undefined}
                     />
                   ))}
                 </div>
@@ -361,7 +328,7 @@ function App({ user }: AppProps) {
                     <AssetCard 
                       key={asset.id}
                       asset={asset}
-                      currentPrice={getCurrentPrice(asset)}
+                      currentPrice={getAssetPrice(asset)}
                       onEdit={setEditingAsset}
                       onDelete={handleDeleteAsset}
                       dolarPrice={dolarData?.blue?.venta}
@@ -401,7 +368,7 @@ function App({ user }: AppProps) {
                     <AssetCard 
                       key={asset.id}
                       asset={asset}
-                      currentPrice={getCurrentPrice(asset)}
+                      currentPrice={getAssetPrice(asset)}
                       onEdit={setEditingAsset}
                       onDelete={handleDeleteAsset}
                       dolarPrice={dolarData?.blue?.venta}
@@ -434,7 +401,7 @@ function App({ user }: AppProps) {
                     <AssetCard 
                       key={asset.id}
                       asset={asset}
-                      currentPrice={getCurrentPrice(asset)}
+                      currentPrice={getAssetPrice(asset)}
                       onEdit={setEditingAsset}
                       onDelete={handleDeleteAsset}
                       dolarPrice={dolarData?.blue?.venta}
@@ -456,9 +423,26 @@ function App({ user }: AppProps) {
           </div>
         )}
 
-        {errorCrypto && (
-          <div className="fixed bottom-4 right-4">
-            <ErrorMessage message={cryptoError.message} />
+        {(errorCrypto || errorDolar || errorArgQuotes) && (
+          <div className="fixed bottom-4 right-4 flex flex-col gap-2 max-w-sm z-50">
+            {errorCrypto && (
+              <ErrorMessage
+                message={cryptoError?.message || 'Error al obtener precios de criptomonedas'}
+                onRetry={() => refetchCrypto()}
+              />
+            )}
+            {errorDolar && (
+              <ErrorMessage
+                message={dolarError?.message || 'Error al obtener cotización del dólar'}
+                onRetry={() => refetchDolar()}
+              />
+            )}
+            {errorArgQuotes && (
+              <ErrorMessage
+                message={argQuotesError?.message || 'Error al obtener cotizaciones argentinas'}
+                onRetry={() => refetchArgQuotes()}
+              />
+            )}
           </div>
         )}
 

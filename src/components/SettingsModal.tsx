@@ -1,38 +1,32 @@
 import { useState, useEffect } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
+import { setIOLSession, clearIOLSession } from '../services/iolSession'
 
-export default function SettingsModal({ isOpen, onClose }) {
+interface SettingsModalProps {
+  isOpen: boolean
+  onClose: () => void
+}
+
+export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const [iolUser, setIolUser] = useState('')
   const [iolPass, setIolPass] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [isSaved, setIsSaved] = useState(false)
-  
+
   const queryClient = useQueryClient()
 
   useEffect(() => {
     if (isOpen) {
-      // No cargar credenciales (ya no se guardan)
-      // Solo limpiar el formulario
       setIolUser('')
       setIolPass('')
       setIsSaved(false)
-      
-      // Verificar si hay sesión activa
-      const sessionToken = localStorage.getItem('iol-session-token')
-      if (sessionToken) {
-        // En este caso, solo verificamos que existe el token
-        // El backend validará si es válido en cada request
-        console.log('Sesión existente encontrada')
-      }
     }
   }, [isOpen])
 
   const handleSave = async () => {
     if (iolUser.trim() && iolPass.trim()) {
       try {
-        // Login en el backend para crear sesión JWT
-        const base = import.meta.env.PROD ? '' : 'http://localhost:4000'
-        const response = await fetch(`${base}/api/iol/login`, {
+        const response = await fetch('/api/iol/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -42,14 +36,11 @@ export default function SettingsModal({ isOpen, onClose }) {
         })
 
         const result = await response.json()
-        
+
         if (response.ok && result.success) {
-          // Guardar solo el session token JWT (no las credenciales)
-          localStorage.setItem('iol-session-token', result.sessionToken)
-          
-          // Invalidar y refrescar cotizaciones argentinas
+          setIOLSession(result.sessionToken)
           queryClient.invalidateQueries({ queryKey: ['argentineQuotes'] })
-          
+
           setIsSaved(true)
           setTimeout(() => {
             setIsSaved(false)
@@ -66,17 +57,10 @@ export default function SettingsModal({ isOpen, onClose }) {
 
   const handleClear = async () => {
     if (confirm('¿Estás seguro de eliminar la sesión guardada?')) {
-      // Eliminar session token
-      localStorage.removeItem('iol-session-token')
-      
-      // Invalidar cotizaciones argentinas (ya no hay sesión válida)
+      clearIOLSession('logout')
       queryClient.invalidateQueries({ queryKey: ['argentineQuotes'] })
-      
       setIolUser('')
       setIolPass('')
-      
-      // Recargar página para refrescar con datos cacheados
-      window.location.reload()
     }
   }
 
@@ -87,8 +71,7 @@ export default function SettingsModal({ isOpen, onClose }) {
     }
 
     try {
-      const base = import.meta.env.PROD ? '' : 'http://localhost:4000'
-      const response = await fetch(`${base}/api/iol/test-credentials`, {
+      const response = await fetch('/api/iol/test-credentials', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -98,15 +81,9 @@ export default function SettingsModal({ isOpen, onClose }) {
       })
 
       const result = await response.json()
-      
+
       if (response.ok && result.success) {
         alert('✅ Conexión exitosa con IOL')
-        
-        // Si hay sesión activa, refrescar cotizaciones
-        const sessionToken = localStorage.getItem('iol-session-token')
-        if (sessionToken) {
-          queryClient.invalidateQueries({ queryKey: ['argentineQuotes'] })
-        }
       } else {
         alert(`❌ Error: ${result.error || 'Credenciales inválidas'}`)
       }
@@ -147,7 +124,7 @@ export default function SettingsModal({ isOpen, onClose }) {
               <div className="text-sm text-blue-300">
                 <p className="font-semibold mb-1">Credenciales Seguras</p>
                 <p className="text-blue-200">
-                  Tus credenciales se encriptan en un <strong>token JWT</strong> que se guarda localmente. 
+                  Tus credenciales se encriptan en un <strong>token JWT</strong> que se guarda localmente.
                   Las credenciales nunca se envían en texto plano después del login inicial.
                 </p>
               </div>
@@ -173,7 +150,7 @@ export default function SettingsModal({ isOpen, onClose }) {
             </label>
             <div className="relative">
               <input
-                type={showPassword ? "text" : "password"}
+                type={showPassword ? 'text' : 'password'}
                 value={iolPass}
                 onChange={(e) => setIolPass(e.target.value)}
                 placeholder="••••••••"

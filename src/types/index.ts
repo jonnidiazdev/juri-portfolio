@@ -28,7 +28,7 @@ export interface CryptoPriceData {
 }
 
 export interface CryptoPrices {
-  [coinId: string]: CryptoPriceData
+  [key: string]: CryptoPriceData | string | undefined
 }
 
 export interface DolarQuote {
@@ -115,4 +115,19 @@ export interface MultiCurrencyData {
   totalPLARS: number
   totalPLPctUSD: number
   totalPLPctARS: number
+}
+
+export interface ArgentineQuoteResult {
+  raw?: ArgentineQuote
+  price?: number | string
+  error?: string
+}
+
+export interface ArgentineQuotes {
+  [assetId: number]: ArgentineQuoteResult
+  _fetchedAt?: string
+}
+
+export type DolarPrices = Record<string, DolarQuote | undefined> & {
+  _fetchedAt?: string
 }

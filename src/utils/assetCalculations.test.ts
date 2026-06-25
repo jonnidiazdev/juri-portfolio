@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { computeAssetPL } from './assetCalculations'
+import { computeAssetPL, getCurrentPrice, calculateAssetTypeStats } from './assetCalculations'
 import { ASSET_TYPES } from '../config/constants'
 import type { Asset } from '../types'
 
@@ -172,7 +172,8 @@ describe('computeAssetPL', () => {
       type: ASSET_TYPES.CRYPTO,
       name: 'Cardano',
       amount: 1000,
-      purchasePrice: 0.5
+      purchasePrice: 0.5,
+      currency: 'USD',
     }
     
     const result = computeAssetPL(asset, 0.6, 1000)
@@ -188,7 +189,8 @@ describe('computeAssetPL', () => {
       type: ASSET_TYPES.STOCK,
       name: 'Test Stock',
       amount: 10,
-      purchasePrice: 100
+      purchasePrice: 100,
+      currency: 'ARS',
     }
     
     const result = computeAssetPL(asset, 120, 1000)
@@ -242,7 +244,8 @@ describe('computeAssetPL', () => {
       amount: 10000,
       tna: 50,
       startDate: '2026-01-01',
-      endDate: '2026-12-31'
+      endDate: '2026-12-31',
+      currency: 'ARS',
     }
     
     const result = computeAssetPL(asset, null, 1000)
@@ -250,5 +253,76 @@ describe('computeAssetPL', () => {
     // Should calculate properly with valid dates
     expect(result.investedARS).toBe(10000)
     expect(result.currentARS).toBeGreaterThan(10000)
+  })
+})
+
+describe('getCurrentPrice', () => {
+  it('returns crypto USD price from prices context', () => {
+    const asset: Asset = {
+      id: 1,
+      type: ASSET_TYPES.CRYPTO,
+      name: 'Bitcoin',
+      symbol: 'bitcoin',
+      amount: 1,
+      purchasePrice: 50000,
+      currency: 'USD',
+    }
+
+    const price = getCurrentPrice(asset, {
+      cryptoPrices: { bitcoin: { usd: 60000 } },
+    })
+
+    expect(price).toBe(60000)
+  })
+
+  it('falls back to purchase price when quote is missing', () => {
+    const asset: Asset = {
+      id: 2,
+      type: ASSET_TYPES.STOCK,
+      name: 'GGAL',
+      symbol: 'GGAL',
+      amount: 10,
+      purchasePrice: 1000,
+      currency: 'ARS',
+    }
+
+    const price = getCurrentPrice(asset, { argQuotes: {} })
+    expect(price).toBe(1000)
+  })
+})
+
+describe('calculateAssetTypeStats', () => {
+  it('uses selected currency preference for USD conversion', () => {
+    const assets: Asset[] = [{
+      id: 1,
+      type: ASSET_TYPES.CRYPTO,
+      name: 'Bitcoin',
+      symbol: 'bitcoin',
+      amount: 1,
+      purchasePrice: 100,
+      currency: 'USD',
+    }]
+
+    const dolarData = {
+      blue: { compra: 1000, venta: 1100, nombre: 'Blue', casa: 'blue' },
+      bolsa: { compra: 1050, venta: 1150, nombre: 'MEP', casa: 'bolsa' },
+    }
+
+    const blueStats = calculateAssetTypeStats(
+      assets,
+      { cryptoPrices: { bitcoin: { usd: 100 } } },
+      'blue',
+      dolarData
+    )
+
+    const mepStats = calculateAssetTypeStats(
+      assets,
+      { cryptoPrices: { bitcoin: { usd: 100 } } },
+      'bolsa',
+      dolarData
+    )
+
+    expect(blueStats.totalValue).toBe(110000)
+    expect(mepStats.totalValue).toBe(115000)
   })
 })

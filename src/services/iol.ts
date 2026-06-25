@@ -1,8 +1,9 @@
+import { clearIOLSession } from './iolSession'
+import { queryClient } from '../config/queryClient'
+
 // Servicio frontend para consumir el backend proxy de IOL
 export async function fetchArgentineQuote(tipo: string, simbolo: string) {
-  // En producción usa URL relativa, en desarrollo localhost
-  const base = import.meta.env.PROD ? '' : 'http://localhost:4000'
-  const url = `${base}/api/iol/quote/${tipo}/${simbolo}`
+  const url = `/api/iol/quote/${tipo}/${simbolo}`
   
   // Obtener session token desde localStorage
   const sessionToken = localStorage.getItem('iol-session-token')
@@ -19,9 +20,9 @@ export async function fetchArgentineQuote(tipo: string, simbolo: string) {
   if (!resp.ok) {
     const err = await resp.json().catch(() => ({}))
     
-    // Si es error de autenticación, limpiar token local
     if (resp.status === 401) {
-      localStorage.removeItem('iol-session-token')
+      clearIOLSession('expired')
+      queryClient.invalidateQueries({ queryKey: ['argentineQuotes'] })
     }
     
     throw new Error(err.error || 'Error obteniendo cotización')

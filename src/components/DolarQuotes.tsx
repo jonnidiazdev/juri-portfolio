@@ -2,8 +2,10 @@ import { useState } from 'react'
 import { DOLAR_TYPES, DOLAR_DESCRIPTIONS } from '../config/constants'
 import { getTimeAgo } from '../utils/formatters'
 
+import type { DolarPrices } from '../types'
+
 interface DolarQuotesProps {
-  dolares: Record<string, { compra?: number; venta?: number; nombre?: string; casa?: string }> | null | undefined
+  dolares: DolarPrices | null | undefined
   isLoading: boolean
   fetchedAt?: string | null
 }

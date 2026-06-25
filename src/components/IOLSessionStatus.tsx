@@ -1,28 +1,7 @@
-import { useState, useEffect } from 'react'
+import { useIOLSession } from '../hooks/useIOLSession'
 
 export default function IOLSessionStatus() {
-  const [hasSession, setHasSession] = useState(false)
-
-  useEffect(() => {
-    const checkSession = () => {
-      const sessionToken = localStorage.getItem('iol-session-token')
-      setHasSession(!!sessionToken)
-    }
-
-    // Verificar inicialmente
-    checkSession()
-
-    // Escuchar cambios en localStorage
-    window.addEventListener('storage', checkSession)
-    
-    // También verificar cada 30 segundos por si el token expira
-    const interval = setInterval(checkSession, 30000)
-
-    return () => {
-      window.removeEventListener('storage', checkSession)
-      clearInterval(interval)
-    }
-  }, [])
+  const hasSession = useIOLSession()
 
   if (!hasSession) {
     return (

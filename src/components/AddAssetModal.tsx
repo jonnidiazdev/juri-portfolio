@@ -37,7 +37,7 @@ export default function AddAssetModal({ isOpen, onClose, onAdd }: AddAssetModalP
       type: assetType,
       currency: assetType === ASSET_TYPES.CRYPTO ? 'USD' : currency,
       amount: parseFloat(formData.amount),
-      id: Date.now(),
+      id: Date.now() + Math.floor(Math.random() * 1000),
     }
 
     // Para efectivo, no hay precio de compra

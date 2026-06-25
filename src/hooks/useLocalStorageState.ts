@@ -1,6 +1,13 @@
 import { useEffect, useRef, useState, Dispatch, SetStateAction } from 'react'
 import { getFirestoreClient, isFirebaseConfigured } from '../config/firebase'
 
+export const PORTFOLIO_SYNC_ERROR = 'portfolio-sync-error'
+
+function notifySyncError(key: string, message: string): void {
+  if (typeof window === 'undefined') return
+  window.dispatchEvent(new CustomEvent(PORTFOLIO_SYNC_ERROR, { detail: { key, message } }))
+}
+
 function readLocalValue<T>(key: string, initialValue: T): T {
   if (typeof window === 'undefined') return initialValue
 
@@ -96,6 +103,7 @@ export function useLocalStorageState<T>(key: string, initialValue: T, ownerId: s
               { merge: true }
             ).catch((error: unknown) => {
               console.error('Error al migrar datos locales hacia Firebase', error)
+              notifySyncError(key, 'No se pudieron sincronizar los datos con Firebase')
             })
           } else {
             // No hay datos ni remotos ni locales, usar el valor inicial
@@ -106,6 +114,7 @@ export function useLocalStorageState<T>(key: string, initialValue: T, ownerId: s
         },
         (error: unknown) => {
           console.error('Error al leer estado desde Firebase. Se mantiene persistencia local.', error)
+          notifySyncError(key, 'No se pudieron cargar los datos desde Firebase')
           isRemoteHydrated.current = true
         }
       )
@@ -151,6 +160,7 @@ export function useLocalStorageState<T>(key: string, initialValue: T, ownerId: s
         { merge: true }
       ).catch((error: unknown) => {
         console.error('Error al sincronizar estado en Firebase', error)
+        notifySyncError(key, 'Error de sincronización. Los cambios se guardaron solo localmente.')
       })
     })
   }, [ownerId, key, value])

@@ -2,19 +2,19 @@ import { useQuery } from '@tanstack/react-query'
 import { fetchArgentineQuote } from '../services/iol'
 import { ASSET_TYPES, REFRESH_INTERVALS } from '../config/constants'
 import { getAllQuoteCache, buildCacheFieldKey, saveQuoteCache } from '../services/quoteCache'
-import type { Asset } from '../types'
+import type { Asset, ArgentineQuotes } from '../types'
 
 export function useArgentineQuotes(assets: Asset[], ownerId: string | null) {
-  const argAssets = assets.filter(a => 
-    a.type !== ASSET_TYPES.CRYPTO && 
-    a.type !== ASSET_TYPES.PLAZO_FIJO && 
+  const argAssets = assets.filter(a =>
+    a.type !== ASSET_TYPES.CRYPTO &&
+    a.type !== ASSET_TYPES.PLAZO_FIJO &&
     a.type !== ASSET_TYPES.EFECTIVO
   )
   const symbols = argAssets.map(a => `${a.type}:${a.symbol}`).join('|')
 
   return useQuery({
     queryKey: ['argentineQuotes', ownerId, symbols],
-    queryFn: async () => {
+    queryFn: async (): Promise<ArgentineQuotes> => {
       // Leer TODO el cache de una sola lectura (1 round-trip, no N)
       const allCache = await getAllQuoteCache({ ownerId })
 
@@ -31,7 +31,7 @@ export function useArgentineQuotes(assets: Asset[], ownerId: string | null) {
         }
       }
 
-      const results: Record<string | number, unknown> = {}
+      const results: ArgentineQuotes = {}
       let newestTimestamp: string | null = null
 
       for (const asset of argAssets) {
