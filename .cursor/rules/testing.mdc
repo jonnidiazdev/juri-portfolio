@@ -1,0 +1,35 @@
+---
+description: Vitest and testing conventions
+globs: src/**/*.test.ts
+alwaysApply: false
+---
+
+# Testing
+
+## Setup
+
+- Vitest + `@testing-library/react` + `jsdom`
+- Test files live next to source: `formatters.ts` → `formatters.test.ts`
+- Run: `npm run test:run` (single pass) or `npm test` (watch)
+
+## What to test
+
+- **Utils** (`src/utils/`): pure functions — formatters, calculations, edge cases
+- **Hooks/components**: only when logic is non-trivial; prefer testing extracted utils
+
+## Patterns
+
+```typescript
+import { describe, it, expect, vi } from 'vitest'
+
+describe('formatCurrency', () => {
+  it('formats ARS with locale separators', () => {
+    expect(formatCurrency(5000, 'ARS')).toContain('5.000,00')
+  })
+})
+```
+
+- Test behavior, not implementation details
+- Cover edge cases: zero, negatives, empty arrays, expired plazo fijo
+- Mock `fetch`/timers with `vi.fn()` / `vi.useFakeTimers()` when needed
+- No tests that only assert obvious constants or trivial wrappers
