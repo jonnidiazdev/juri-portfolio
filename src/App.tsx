@@ -72,9 +72,13 @@ function App({ user }: AppProps) {
     .map(a => a.symbol)
     .filter((s): s is string => !!s)
 
-  const { data: cryptoPrices, isLoading: loadingCrypto, isError: errorCrypto, error: cryptoError, refetch: refetchCrypto } = useCryptoPrices(cryptoIds, user?.uid)
-  const { data: dolarData, isLoading: loadingDolar, isError: errorDolar, error: dolarError, refetch: refetchDolar } = useDolarPrice(user?.uid)
-  const { data: argQuotes, isLoading: loadingArgQuotes, isError: errorArgQuotes, error: argQuotesError, refetch: refetchArgQuotes } = useArgentineQuotes(assets, user?.uid)
+  const { data: cryptoPrices, isFetching: fetchingCrypto, isError: errorCrypto, error: cryptoError, refetch: refetchCrypto } = useCryptoPrices(cryptoIds, user?.uid)
+  const { data: dolarData, isFetching: fetchingDolar, isError: errorDolar, error: dolarError, refetch: refetchDolar } = useDolarPrice(user?.uid)
+  const { data: argQuotes, isFetching: fetchingArgQuotes, isError: errorArgQuotes, error: argQuotesError, refetch: refetchArgQuotes } = useArgentineQuotes(assets, user?.uid)
+
+  const loadingCrypto = fetchingCrypto && !cryptoPrices
+  const loadingDolar = fetchingDolar && !dolarData
+  const loadingArgQuotes = fetchingArgQuotes && !argQuotes
 
   const multiCurrencyData = useMultiCurrencyCalculations(assets, cryptoPrices, argQuotes, dolarData, currencyPreference)
   const priceContext = { cryptoPrices, argQuotes }

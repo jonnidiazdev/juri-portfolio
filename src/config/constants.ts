@@ -56,6 +56,9 @@ export const REFRESH_INTERVALS = {
   slow: 300000, // 5 minutos
 }
 
+// Requests IOL en paralelo (tope para respetar rate limits)
+export const IOL_QUOTE_CONCURRENCY = 3
+
 // IDs populares de criptomonedas
 export const POPULAR_CRYPTOS = [
   'bitcoin', 'ethereum', 'tether', 'binancecoin', 'usd-coin',

@@ -31,7 +31,7 @@ export function useCryptoPrices(
         const data = await response.json() as Record<string, CryptoPriceData>
         const fetchedAt = new Date().toISOString()
         const result: CryptoPrices = { ...data, _fetchedAt: fetchedAt }
-        await saveQuoteCache({ ownerId, type: 'crypto', key: cacheKey, data: result })
+        saveQuoteCache({ ownerId, type: 'crypto', key: cacheKey, data: result })
         return result
       } catch (error) {
         const cached = await getQuoteCache({ ownerId, type: 'crypto', key: cacheKey })
@@ -71,7 +71,7 @@ export function useDolarPrice(ownerId: string | null): UseQueryResult<DolarPrice
 
         const fetchedAt = new Date().toISOString()
         dolares._fetchedAt = fetchedAt
-        await saveQuoteCache({ ownerId, type: 'dolar', key: 'all', data: dolares })
+        saveQuoteCache({ ownerId, type: 'dolar', key: 'all', data: dolares })
         return dolares
       } catch (error) {
         const cached = await getQuoteCache({ ownerId, type: 'dolar', key: 'all' })
