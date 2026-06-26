@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { isQuoteCacheFresh } from './quoteCache'
+import { isQuoteCacheFresh, saveQuoteCacheBatch, getLocalQuoteCache } from './quoteCache'
 
 describe('isQuoteCacheFresh', () => {
   beforeEach(() => {
@@ -23,5 +23,24 @@ describe('isQuoteCacheFresh', () => {
 
   it('returns false when fetchedAt is missing', () => {
     expect(isQuoteCacheFresh(null, 300_000)).toBe(false)
+  })
+})
+
+describe('saveQuoteCacheBatch', () => {
+  const ownerId = 'test-user'
+
+  beforeEach(() => {
+    localStorage.clear()
+  })
+
+  it('writes multiple entries to localStorage in one call', () => {
+    saveQuoteCacheBatch(ownerId, [
+      { type: 'arg', key: 'accion:GGAL', data: { price: 100 } },
+      { type: 'arg', key: 'cedear:AAPL', data: { price: 200 } },
+    ])
+
+    const cache = getLocalQuoteCache(ownerId)
+    expect(cache.arg_accion_ggal?.data).toEqual({ price: 100 })
+    expect(cache.arg_cedear_aapl?.data).toEqual({ price: 200 })
   })
 })

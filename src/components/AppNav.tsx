@@ -8,6 +8,15 @@ function TrendIcon() {
   )
 }
 
+function FlaskIcon() {
+  return (
+    <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 3h6v1.5l4 7.5a3 3 0 01-2.6 4.5H7.6A3 3 0 015 12l4-7.5V3z" />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 3h6M10 12h4" />
+    </svg>
+  )
+}
+
 export default function AppNav() {
   const linkClass = ({ isActive }: { isActive: boolean }) =>
     `px-4 py-2.5 text-sm font-medium rounded-md transition-colors inline-flex items-center gap-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-celeste ${
@@ -25,6 +34,10 @@ export default function AppNav() {
         <NavLink to="/evolucion" className={linkClass}>
           <TrendIcon />
           Evolución
+        </NavLink>
+        <NavLink to="/laboratorio" className={linkClass}>
+          <FlaskIcon />
+          Laboratorio
         </NavLink>
       </nav>
     </div>

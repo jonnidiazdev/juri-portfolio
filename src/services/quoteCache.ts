@@ -12,6 +12,12 @@ export interface CacheEntry {
   fetchedAt: string
 }
 
+interface CacheBatchItem {
+  type: string
+  key: string
+  data: unknown
+}
+
 function buildCacheFieldKey(type: string, key: string): string {
   const safeType = String(type || '').trim().toLowerCase().replace(/[^a-z0-9_-]/g, '_')
   const safeKey = String(key || '').trim().toLowerCase().replace(/[^a-z0-9_-]/g, '_')
@@ -82,37 +88,60 @@ async function readFirestoreQuoteCache(ownerId: string): Promise<Record<string, 
   }
 }
 
-// Guardar en localStorage + portfolios/{uid}.quoteCache.{field}
-export async function saveQuoteCache({ ownerId, type, key, data }: CacheParams): Promise<void> {
-  const cacheField = buildCacheFieldKey(type, key)
-  const entry: CacheEntry = {
-    data,
-    fetchedAt: new Date().toISOString(),
-  }
+function persistQuoteCacheToFirestore(
+  ownerId: string,
+  entries: Record<string, CacheEntry>
+): void {
+  void (async () => {
+    const client = await getFirestoreClient()
+    if (!client) return
+
+    const { db, doc, serverTimestamp, setDoc } = client
+    const updates: Record<string, unknown> = { updatedAt: serverTimestamp() }
+
+    for (const [field, entry] of Object.entries(entries)) {
+      updates[`quoteCache.${field}`] = entry
+    }
+
+    try {
+      await setDoc(doc(db, 'portfolios', ownerId), updates, { merge: true })
+    } catch (error) {
+      console.error('No se pudo guardar cache de cotizaciones en Firestore.', error)
+    }
+  })()
+}
+
+export function getLocalQuoteCache(ownerId: string | null): Record<string, CacheEntry> {
+  return readLocalQuoteCache(ownerId)
+}
+
+export function saveQuoteCacheBatch(ownerId: string | null, items: CacheBatchItem[]): void {
+  if (items.length === 0) return
 
   const localCache = readLocalQuoteCache(ownerId)
-  localCache[cacheField] = entry
+  const firestoreEntries: Record<string, CacheEntry> = {}
+
+  for (const { type, key, data } of items) {
+    const cacheField = buildCacheFieldKey(type, key)
+    const entry: CacheEntry = {
+      data,
+      fetchedAt: new Date().toISOString(),
+    }
+    localCache[cacheField] = entry
+    firestoreEntries[cacheField] = entry
+  }
+
   writeLocalQuoteCache(ownerId, localCache)
 
-  if (!ownerId || !isFirebaseConfigured) return
-
-  const client = await getFirestoreClient()
-  if (!client) return
-
-  const { db, doc, serverTimestamp, setDoc } = client
-
-  try {
-    await setDoc(
-      doc(db, 'portfolios', ownerId),
-      {
-        [`quoteCache.${cacheField}`]: entry,
-        updatedAt: serverTimestamp(),
-      },
-      { merge: true }
-    )
-  } catch (error) {
-    console.error('No se pudo guardar cache de cotizaciones en Firestore.', error)
+  if (ownerId && isFirebaseConfigured) {
+    persistQuoteCacheToFirestore(ownerId, firestoreEntries)
   }
+}
+
+// Guardar en localStorage (sync) + Firestore (background)
+export function saveQuoteCache({ ownerId, type, key, data }: CacheParams): void {
+  if (data === undefined) return
+  saveQuoteCacheBatch(ownerId, [{ type, key, data }])
 }
 
 export async function getQuoteCache({ ownerId, type, key }: CacheParams): Promise<CacheEntry | null> {

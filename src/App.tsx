@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
+import { useState, useEffect, useRef, useCallback, useMemo, lazy, Suspense } from 'react'
 import { Routes, Route } from 'react-router-dom'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { useCryptoPrices, useDolarPrice } from './hooks/useInvestments'
@@ -18,6 +18,11 @@ import EditAssetModal from './components/EditAssetModal'
 import SettingsModal from './components/SettingsModal'
 import ConfirmDialog from './components/ConfirmDialog'
 import ErrorMessage from './components/ErrorMessage'
+import LoadingSpinner from './components/LoadingSpinner'
+
+const LaboratorioLayout = lazy(() => import('./lab/LaboratorioLayout'))
+const LaboratorioPage = lazy(() => import('./lab/LaboratorioPage'))
+const InvestmentGardenPage = lazy(() => import('./lab/huerto/InvestmentGardenPage'))
 
 interface AppProps {
   user: { uid: string; displayName?: string; photoURL?: string; email?: string }
@@ -78,9 +83,13 @@ function App({ user }: AppProps) {
     [assets]
   )
 
-  const { data: cryptoPrices, isLoading: loadingCrypto, isError: errorCrypto, error: cryptoError, refetch: refetchCrypto } = useCryptoPrices(cryptoIds, user?.uid)
-  const { data: dolarData, isLoading: loadingDolar, isError: errorDolar, error: dolarError, refetch: refetchDolar } = useDolarPrice(user?.uid)
-  const { data: argQuotes, isLoading: loadingArgQuotes, isError: errorArgQuotes, error: argQuotesError, refetch: refetchArgQuotes } = useArgentineQuotes(assets, user?.uid)
+  const { data: cryptoPrices, isFetching: fetchingCrypto, isError: errorCrypto, error: cryptoError, refetch: refetchCrypto } = useCryptoPrices(cryptoIds, user?.uid)
+  const { data: dolarData, isFetching: fetchingDolar, isError: errorDolar, error: dolarError, refetch: refetchDolar } = useDolarPrice(user?.uid)
+  const { data: argQuotes, isFetching: fetchingArgQuotes, isError: errorArgQuotes, error: argQuotesError, refetch: refetchArgQuotes } = useArgentineQuotes(assets, user?.uid)
+
+  const loadingCrypto = fetchingCrypto && !cryptoPrices
+  const loadingDolar = fetchingDolar && !dolarData
+  const loadingArgQuotes = fetchingArgQuotes && !argQuotes
 
   const multiCurrencyData = useMultiCurrencyCalculations(assets, cryptoPrices, argQuotes, dolarData, currencyPreference)
 
@@ -204,6 +213,31 @@ function App({ user }: AppProps) {
         >
           <Route index element={<PortfolioView />} />
           <Route path="evolucion" element={<PortfolioEvolutionPage />} />
+          <Route
+            path="laboratorio"
+            element={
+              <Suspense fallback={<LoadingSpinner text="Cargando laboratorio…" />}>
+                <LaboratorioLayout />
+              </Suspense>
+            }
+          >
+            <Route
+              index
+              element={
+                <Suspense fallback={<LoadingSpinner text="Cargando laboratorio…" />}>
+                  <LaboratorioPage />
+                </Suspense>
+              }
+            />
+            <Route
+              path="huerto"
+              element={
+                <Suspense fallback={<LoadingSpinner text="Cargando huerto…" />}>
+                  <InvestmentGardenPage />
+                </Suspense>
+              }
+            />
+          </Route>
         </Route>
       </Routes>
 

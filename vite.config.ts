@@ -12,7 +12,8 @@ export default defineConfig({
       output: {
         manualChunks: {
           vendor: ['react', 'react-dom'],
-          query: ['@tanstack/react-query']
+          query: ['@tanstack/react-query'],
+          lab: ['three'],
         }
       }
     }
