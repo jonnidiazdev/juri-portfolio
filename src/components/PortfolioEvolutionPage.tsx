@@ -10,6 +10,7 @@ export default function PortfolioEvolutionPage() {
   const {
     user,
     assets,
+    isCloudSyncing,
     currencyPreference,
     multiCurrencyData,
     cryptoStats,
@@ -27,7 +28,7 @@ export default function PortfolioEvolutionPage() {
   const [saveError, setSaveError] = useState<string | null>(null)
 
   const quotesLoading = loadingCrypto || loadingDolar || loadingArgQuotes
-  const canSave = assets.length > 0 && !quotesLoading && !isSaving && !!multiCurrencyData.exchangeRate
+  const canSave = assets.length > 0 && !isCloudSyncing && !quotesLoading && !isSaving && !!multiCurrencyData.exchangeRate
 
   const lastSnapshot = snapshots.length > 0 ? snapshots[snapshots.length - 1] : null
   const lastSnapshotLabel = lastSnapshot
@@ -66,10 +67,10 @@ export default function PortfolioEvolutionPage() {
     }
   }
 
-  if (isLoading) {
+  if (isCloudSyncing || isLoading) {
     return (
       <div className="text-center py-16">
-        <LoadingSpinner text="Cargando historial..." />
+        <LoadingSpinner text={isCloudSyncing ? 'Cargando portfolio desde la nube...' : 'Cargando historial...'} />
       </div>
     )
   }

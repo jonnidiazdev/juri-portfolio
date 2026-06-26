@@ -46,57 +46,58 @@ export default function PortfolioView() {
 
   return (
     <>
-      {assets.length > 0 && (
-        <MultiCurrencySummary
-          totalsARS={multiCurrencyData.totalsARS}
-          totalsUSD={multiCurrencyData.totalsUSD}
-          exchangeRateInfo={multiCurrencyData.exchangeRateInfo}
-          className="mb-6"
-        />
-      )}
-
-      {dolarData && (
-        <div className="mb-8">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
-            <h3 className="text-sm font-mono-data uppercase tracking-widest text-muted">
-              Cotizaciones del dólar
-            </h3>
-            <CurrencySelector
-              dolarData={dolarData}
-              currencyPreference={currencyPreference}
-              onCurrencyChange={setCurrencyPreference}
-            />
-          </div>
-          <DolarQuotes dolares={dolarData} isLoading={loadingDolar} fetchedAt={dolarData?._fetchedAt} />
-        </div>
-      )}
-
-      {isCloudSyncing && assets.length === 0 ? (
+      {isCloudSyncing ? (
         <div className="text-center py-16">
           <LoadingSpinner text="Cargando portfolio desde la nube..." />
         </div>
-      ) : assets.length === 0 ? (
-        <div className="text-center py-16 animate-fade-in">
-          <div className="w-16 h-16 mx-auto mb-6 rounded-full border border-border flex items-center justify-center">
-            <svg className="w-8 h-8 text-subtle" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-            </svg>
-          </div>
-          <h3 className="font-display text-2xl font-semibold text-muted mb-2">Portfolio vacío</h3>
-          <p className="text-subtle mb-6">Agregá tu primer activo para empezar a seguir tus inversiones</p>
-          <button
-            onClick={onAddAsset}
-            disabled={isCloudSyncing}
-            className="btn-primary px-6 py-3 inline-flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-            </svg>
-            Agregar primer activo
-          </button>
-        </div>
       ) : (
         <>
+          {assets.length > 0 && (
+            <MultiCurrencySummary
+              totalsARS={multiCurrencyData.totalsARS}
+              totalsUSD={multiCurrencyData.totalsUSD}
+              exchangeRateInfo={multiCurrencyData.exchangeRateInfo}
+              className="mb-6"
+            />
+          )}
+
+          {dolarData && (
+            <div className="mb-8">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
+                <h3 className="text-sm font-mono-data uppercase tracking-widest text-muted">
+                  Cotizaciones del dólar
+                </h3>
+                <CurrencySelector
+                  dolarData={dolarData}
+                  currencyPreference={currencyPreference}
+                  onCurrencyChange={setCurrencyPreference}
+                />
+              </div>
+              <DolarQuotes dolares={dolarData} isLoading={loadingDolar} fetchedAt={dolarData?._fetchedAt} />
+            </div>
+          )}
+
+          {assets.length === 0 ? (
+            <div className="text-center py-16 animate-fade-in">
+              <div className="w-16 h-16 mx-auto mb-6 rounded-full border border-border flex items-center justify-center">
+                <svg className="w-8 h-8 text-subtle" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                </svg>
+              </div>
+              <h3 className="font-display text-2xl font-semibold text-muted mb-2">Portfolio vacío</h3>
+              <p className="text-subtle mb-6">Agregá tu primer activo para empezar a seguir tus inversiones</p>
+              <button
+                onClick={onAddAsset}
+                className="btn-primary px-6 py-3 inline-flex items-center gap-2"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+                Agregar primer activo
+              </button>
+            </div>
+          ) : (
+            <>
           {cryptoAssets.length > 0 && (
             <section className="mb-12">
               <div className="section-rule section-rule--crypto mb-4 sm:mb-6">
@@ -231,6 +232,8 @@ export default function PortfolioView() {
                 ))}
               </div>
             </section>
+          )}
+        </>
           )}
         </>
       )}

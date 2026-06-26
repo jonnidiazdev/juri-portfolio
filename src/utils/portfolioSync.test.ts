@@ -40,15 +40,27 @@ describe('portfolioSync', () => {
     expect(result.value).toEqual([])
   })
 
-  it('blocks pushing empty portfolio before user edits', () => {
-    expect(shouldPushToRemote([], [], true, false, false)).toBe(false)
-  })
-
-  it('allows pushing empty portfolio after explicit user edit', () => {
-    expect(shouldPushToRemote([], [], true, true, false)).toBe(true)
-  })
-
   it('blocks remote writes until sync is ready', () => {
-    expect(shouldPushToRemote([{ id: 1 }], [], false, true, false)).toBe(false)
+    expect(shouldPushToRemote(false, true, false)).toBe(false)
+  })
+
+  it('blocks push without explicit user edit even when local data exists', () => {
+    expect(shouldPushToRemote(true, false, false)).toBe(false)
+  })
+
+  it('allows push only after explicit user edit', () => {
+    expect(shouldPushToRemote(true, true, false)).toBe(true)
+  })
+
+  it('blocks push when skipRemoteWrite is set', () => {
+    expect(shouldPushToRemote(true, true, true)).toBe(false)
+  })
+
+  it('prefers remote empty array over stale local data', () => {
+    const staleLocal = [{ id: 99, name: 'STALE' }]
+    const result = resolveInitialSync([], staleLocal, [])
+
+    expect(result.action).toBe('apply_remote')
+    expect(result.value).toEqual([])
   })
 })

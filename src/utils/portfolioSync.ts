@@ -34,14 +34,11 @@ export function resolveInitialSync<T>(
   return { action: 'use_initial', value: initialValue }
 }
 
-export function shouldPushToRemote<T>(
-  value: T,
-  initialValue: T,
+export function shouldPushToRemote(
   syncReady: boolean,
   userEdited: boolean,
   skipRemoteWrite: boolean
 ): boolean {
-  if (!syncReady || skipRemoteWrite) return false
-  if (!userEdited && isEmptyValue(value, initialValue)) return false
+  if (!syncReady || skipRemoteWrite || !userEdited) return false
   return true
 }

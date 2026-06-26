@@ -58,6 +58,10 @@ function readScopedLocalValue<T>(key: string, ownerId: string | null, initialVal
   return initialValue
 }
 
+function shouldWaitForRemoteSync(ownerId: string | null): boolean {
+  return isFirebaseConfigured && !!ownerId
+}
+
 export interface LocalStorageSyncStatus {
   isSyncing: boolean
 }
@@ -69,13 +73,15 @@ export function useLocalStorageState<T>(
 ): [T, Dispatch<SetStateAction<T>>, LocalStorageSyncStatus] {
   const storageKey = getScopedStorageKey(key, ownerId)
   const initialValueRef = useRef(initialValue)
-  const syncReadyRef = useRef(!isFirebaseConfigured || !ownerId)
+  const syncReadyRef = useRef(!shouldWaitForRemoteSync(ownerId))
   const skipRemoteWriteRef = useRef(false)
   const userEditedRef = useRef(false)
 
-  const [isSyncing, setIsSyncing] = useState(() => isFirebaseConfigured && !!ownerId)
+  const [isSyncing, setIsSyncing] = useState(() => shouldWaitForRemoteSync(ownerId))
   const [value, setValueInternal] = useState<T>(() =>
-    readScopedLocalValue(key, ownerId, initialValue)
+    shouldWaitForRemoteSync(ownerId)
+      ? initialValue
+      : readScopedLocalValue(key, ownerId, initialValue)
   )
 
   const markSyncComplete = useCallback(() => {
@@ -85,18 +91,19 @@ export function useLocalStorageState<T>(
 
   const markSyncPending = useCallback(() => {
     syncReadyRef.current = false
-    if (isFirebaseConfigured && ownerId) {
+    if (shouldWaitForRemoteSync(ownerId)) {
       setIsSyncing(true)
     }
   }, [ownerId])
 
   const setValue: Dispatch<SetStateAction<T>> = useCallback((update) => {
+    if (shouldWaitForRemoteSync(ownerId) && !syncReadyRef.current) return
     userEditedRef.current = true
     setValueInternal(update)
-  }, [])
+  }, [ownerId])
 
   useEffect(() => {
-    if (!isFirebaseConfigured || !ownerId) {
+    if (!shouldWaitForRemoteSync(ownerId)) {
       syncReadyRef.current = true
       setIsSyncing(false)
       return
@@ -105,7 +112,7 @@ export function useLocalStorageState<T>(
     markSyncPending()
     userEditedRef.current = false
     skipRemoteWriteRef.current = true
-    setValueInternal(readScopedLocalValue(key, ownerId, initialValueRef.current))
+    setValueInternal(initialValueRef.current)
   }, [ownerId, key, markSyncPending])
 
   useEffect(() => {
@@ -132,8 +139,13 @@ export function useLocalStorageState<T>(
 
     const finishInitialSync = async () => {
       const client = await getFirestoreClient()
-      if (cancelled || !client) {
-        markSyncComplete()
+      if (cancelled) return
+
+      if (!client) {
+        notifySyncError(
+          key,
+          'No se pudieron cargar los datos desde Firebase. Reintentá refrescando la página.'
+        )
         return
       }
 
@@ -164,7 +176,11 @@ export function useLocalStorageState<T>(
         }
       } catch (error) {
         console.error('Error al leer estado desde el servidor Firebase', error)
-        notifySyncError(key, 'No se pudieron cargar los datos desde Firebase. No se sobrescribirán datos remotos.')
+        notifySyncError(
+          key,
+          'No se pudieron cargar los datos desde Firebase. Reintentá refrescando la página. Tus datos en la nube no se modificarán.'
+        )
+        return
       }
 
       if (cancelled) return
@@ -205,8 +221,6 @@ export function useLocalStorageState<T>(
     writeLocalValue(storageKey, value)
 
     if (!shouldPushToRemote(
-      value,
-      initialValueRef.current,
       syncReadyRef.current,
       userEditedRef.current,
       skipRemoteWriteRef.current
