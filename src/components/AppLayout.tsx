@@ -38,37 +38,39 @@ export default function AppLayout({
   return (
     <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-8 max-w-7xl">
       <header className="mb-8">
-        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-6">
-          <div>
-            <p className="text-celeste text-xs font-mono-data uppercase tracking-widest mb-2">Observatorio financiero</p>
-            <h1 className="font-display text-3xl sm:text-4xl font-semibold text-paper mb-1">
-              El Juri-Portfolio
-            </h1>
-            <p className="text-muted text-sm sm:text-base">
-              Gestión de inversiones del jurio
-            </p>
+        <div className="mb-4">
+          <p className="text-celeste text-xs font-mono-data uppercase tracking-widest mb-2">Observatorio financiero</p>
+          <h1 className="font-display text-3xl sm:text-4xl font-semibold text-paper mb-1">
+            El Juri-Portfolio
+          </h1>
+          <p className="text-muted text-sm sm:text-base">
+            Gestión de inversiones del jurio
+          </p>
+        </div>
+
+        <AppNav />
+
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+          <div className="hidden md:flex items-center gap-3 px-3 py-2 card max-w-xs">
+            {userPhoto ? (
+              <img
+                src={userPhoto}
+                alt={userName}
+                className="w-8 h-8 rounded-full"
+                referrerPolicy="no-referrer"
+              />
+            ) : (
+              <div className="w-8 h-8 rounded-full bg-celeste/15 text-celeste flex items-center justify-center text-xs font-bold">
+                {userName.slice(0, 1).toUpperCase()}
+              </div>
+            )}
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-paper truncate">{userName}</p>
+              <p className="text-xs text-subtle truncate">{userEmail}</p>
+            </div>
           </div>
 
-          <div className="flex flex-wrap gap-2">
-            <div className="hidden md:flex items-center gap-3 px-3 py-2 card max-w-xs">
-              {userPhoto ? (
-                <img
-                  src={userPhoto}
-                  alt={userName}
-                  className="w-8 h-8 rounded-full"
-                  referrerPolicy="no-referrer"
-                />
-              ) : (
-                <div className="w-8 h-8 rounded-full bg-celeste/15 text-celeste flex items-center justify-center text-xs font-bold">
-                  {userName.slice(0, 1).toUpperCase()}
-                </div>
-              )}
-              <div className="min-w-0">
-                <p className="text-sm font-semibold text-paper truncate">{userName}</p>
-                <p className="text-xs text-subtle truncate">{userEmail}</p>
-              </div>
-            </div>
-
+          <div className="flex flex-wrap gap-2 md:ml-auto">
             <button
               onClick={signOutGoogle}
               className="btn-ghost px-4 py-3"
@@ -100,10 +102,6 @@ export default function AppLayout({
               <span className="sm:hidden">Agregar</span>
             </button>
           </div>
-        </div>
-
-        <div className="mb-6">
-          <AppNav />
         </div>
 
         <IOLSessionStatus />

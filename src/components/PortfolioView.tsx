@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { ASSET_TYPES } from '../config/constants'
 import { usePortfolioOutletContext } from '../hooks/usePortfolioOutletContext'
 import { formatCurrency } from '../utils/formatters'
@@ -53,12 +54,25 @@ export default function PortfolioView() {
       ) : (
         <>
           {assets.length > 0 && (
-            <MultiCurrencySummary
-              totalsARS={multiCurrencyData.totalsARS}
-              totalsUSD={multiCurrencyData.totalsUSD}
-              exchangeRateInfo={multiCurrencyData.exchangeRateInfo}
-              className="mb-6"
-            />
+            <>
+              <MultiCurrencySummary
+                totalsARS={multiCurrencyData.totalsARS}
+                totalsUSD={multiCurrencyData.totalsUSD}
+                exchangeRateInfo={multiCurrencyData.exchangeRateInfo}
+                className="mb-3"
+              />
+              <div className="flex justify-end mb-6">
+                <Link
+                  to="/evolucion"
+                  className="btn-ghost px-4 py-2 inline-flex items-center gap-2 text-sm"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                  </svg>
+                  Ver evolución histórica
+                </Link>
+              </div>
+            </>
           )}
 
           {dolarData && (
