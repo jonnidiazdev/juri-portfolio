@@ -1,0 +1,44 @@
+---
+description: React and TypeScript patterns for this portfolio app
+globs: src/**/*.{ts,tsx}
+alwaysApply: false
+---
+
+# React & TypeScript
+
+## Components
+
+- Functional components only; `export default` for components, named exports for hooks/utils
+- Define props with `interface XxxProps` colocated in the same file
+- Import shared types with `import type { Asset } from '../types'`
+- No `import React` unless using React APIs directly (new JSX transform)
+
+## State & Data
+
+- Local persisted state: `useLocalStorageState<T>(key, initial, ownerId)`
+- Server/async data: TanStack React Query hooks in `src/hooks/`
+- Keep calculation logic in `src/utils/`, not inline in components
+
+## Styling
+
+- Tailwind utility classes; follow existing card/modal patterns in sibling components
+- Semantic HTML (`button`, `nav`, `main`) and keyboard-accessible controls
+
+## TypeScript
+
+- `strict: true`; prefer explicit interfaces over `any`
+- Add new shared types to `src/types/index.ts`
+- Use type guards for filters: `.filter((s): s is string => !!s)`
+
+## Asset types
+
+```typescript
+// Branch by ASSET_TYPES — don't hardcode type strings
+if (asset.type === ASSET_TYPES.PLAZO_FIJO) return <PlazoFijoCard ... />
+if (asset.type === ASSET_TYPES.EFECTIVO) return <EfectivoCard ... />
+```
+
+## Formatting
+
+- No semicolons, single quotes, no trailing commas required
+- Match import order: react → external libs → hooks → config/utils → types → components

@@ -1,0 +1,42 @@
+---
+description: Core context and conventions for juri-portfolio
+alwaysApply: true
+---
+
+# juri-portfolio
+
+Personal investment portfolio tracker (Argentina-focused: IOL, dólar, crypto).
+
+## Stack
+
+- React 19 + TypeScript + Vite 7 + Tailwind CSS 4
+- TanStack React Query for async data
+- Vitest + React Testing Library for tests
+- Firebase (auth + Firestore sync), Express proxy for IOL API
+
+## Structure
+
+| Path | Purpose |
+|------|---------|
+| `src/components/` | UI components (default export) |
+| `src/hooks/` | Custom hooks (named export) |
+| `src/utils/` | Pure logic + `.test.ts` siblings |
+| `src/services/` | API clients and caches |
+| `src/types/index.ts` | Shared interfaces |
+| `src/config/constants.ts` | `ASSET_TYPES`, `API_ENDPOINTS`, etc. |
+
+## Commands
+
+- `npm run dev:full` — backend + frontend (required for IOL quotes)
+- `npm run typecheck` — TypeScript check
+- `npm run test:run` — run tests once
+- `npm run lint` — ESLint
+
+## Conventions
+
+- UI text and user-facing messages in **Spanish**
+- Minimize scope: match existing patterns, no drive-by refactors
+- Persist user data via `useLocalStorageState(key, initial, user?.uid)`
+- Use `ASSET_TYPES` for asset discrimination; branch to specialized cards (`PlazoFijoCard`, `EfectivoCard`, etc.)
+- Env vars: `import.meta.env.VITE_*` only; never commit `.env`
+- IOL calls go through the Express backend proxy, not directly from the browser

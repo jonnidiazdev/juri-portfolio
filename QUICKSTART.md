@@ -6,9 +6,9 @@
 # 1. Instalar dependencias (solo primera vez)
 npm install
 
-# 2. Configurar credenciales IOL en .env
+# 2. Configurar variables de entorno
 cp .env.example .env
-# Editar .env con tus credenciales reales
+# Editar .env con JWT_SECRET y credenciales opcionales
 
 # 3. Iniciar aplicación completa
 npm run dev:full
@@ -17,18 +17,19 @@ npm run dev:full
 ## Acceso Rápido
 
 - 🌐 **Frontend**: http://localhost:5173
-- 🔧 **Backend API**: http://localhost:4000
+- 🔧 **Backend API (local)**: http://localhost:3000
 - 📊 **React Query DevTools**: Click en ícono inferior izquierdo
 
 ## Comandos Disponibles
 
 | Comando | Descripción |
 |---------|-------------|
-| `npm run dev:full` | ✅ Inicia backend + frontend (RECOMENDADO) |
+| `npm run dev:full` | ✅ Inicia API local + frontend (RECOMENDADO) |
 | `npm run dev` | Solo frontend (sin cotizaciones IOL) |
-| `npm run server` | Solo backend proxy IOL |
+| `npm run dev:api` | Solo API local (`scripts/dev-api.js`) |
+| `npm run dev:api:vercel` | API con Vercel CLI (requiere `vercel login`) |
 | `npm run build` | Build producción |
-| `./test-iol.sh` | Ejecutar tests de integración IOL |
+| `npm run test:run` | Ejecutar tests |
 
 ## ⚠️ Importante
 
@@ -71,28 +72,50 @@ Si usas solo `npm run dev`:
 
 | Archivo | Propósito |
 |---------|-----------|
-| `.env` | ⚠️ Credenciales IOL (NO subir a Git) |
-| `server/index.js` | Backend proxy seguro |
-| `src/App.jsx` | Lógica principal frontend |
+| `.env` | ⚠️ JWT_SECRET y credenciales (NO subir a Git) |
+| `api/` | Backend serverless IOL (dev + prod) |
+| `src/App.tsx` | Lógica principal frontend |
 | `README.md` | Documentación completa |
-| `TESTING.md` | Guía de pruebas detallada |
 
-## Credenciales IOL
+## Variables de Entorno
 
 Crear `.env` en la raíz:
 
 ```bash
-IOL_USER="tu_usuario_iol"
-IOL_PASS="tu_contraseña_iol"
-PORT=4000
+JWT_SECRET="tu-secreto-seguro"
+IOL_USER=""
+IOL_PASS=""
 ```
+
+## Red corporativa / certificados SSL
+
+`npm run dev:full` **no requiere `vercel login`**. El servidor local (`scripts/dev-api.js`) ejecuta los mismos handlers de `api/` sin conectarse a Vercel.
+
+Si necesitás usar `vercel login` o `npm run dev:api:vercel` en una máquina empresarial y ves `unable to get local issuer certificate`, es porque Node no confía en el certificado raíz de tu empresa (proxy SSL).
+
+**Opciones:**
+
+1. **Usar el servidor local (recomendado):** `npm run dev:full` — no hace falta Vercel CLI.
+2. **Agregar el CA corporativo a Node:**
+   ```bash
+   # Exportar el certificado raíz desde Acceso a Llaveros (macOS) como .pem
+   export NODE_EXTRA_CA_CERTS=/ruta/al/certificado-empresa.pem
+   vercel login
+   ```
+3. **Token manual** (desde otra red o el navegador en vercel.com/account/tokens):
+   ```bash
+   export NODE_EXTRA_CA_CERTS=/ruta/al/certificado-empresa.pem  # si aplica
+   vercel login --token TU_TOKEN
+   ```
+
+Consultá a IT el archivo `.pem` del certificado raíz si no lo tenés.
 
 ## Solución Rápida de Problemas
 
-**Servidor no levanta:**
+**API no levanta:**
 ```bash
 # Verificar puerto ocupado
-lsof -i :4000
+lsof -i :3000
 
 # Reiniciar
 npm run dev:full
@@ -100,8 +123,8 @@ npm run dev:full
 
 **Cotizaciones no actualizan:**
 ```bash
-# Verificar que backend esté corriendo
-curl http://localhost:4000/api/health
+# Verificar que el backend esté corriendo
+curl http://localhost:3000/api/health
 
 # Si no responde, reiniciar
 npm run dev:full
@@ -109,24 +132,22 @@ npm run dev:full
 
 **Error de credenciales IOL:**
 ```bash
-# Verificar .env
-cat .env
-
-# Actualizar credenciales y reiniciar
+# Configurar credenciales desde la UI (Configuración)
+# o verificar .env y reiniciar
 npm run dev:full
 ```
 
 ## Estructura Rápida
 
 ```
-mi-portfolio/
-├── server/index.js          # Backend proxy IOL
+juri-portfolio/
+├── api/                    # Backend Vercel Functions (IOL proxy)
 ├── src/
-│   ├── App.jsx             # UI principal
+│   ├── App.tsx             # UI principal
 │   ├── hooks/              # React Query hooks
 │   ├── components/         # Componentes UI
 │   └── services/           # API clients
-├── .env                    # ⚠️ Credenciales (local)
+├── .env                    # ⚠️ Variables locales
 ├── .env.example           # Plantilla
 └── package.json
 ```
@@ -134,10 +155,9 @@ mi-portfolio/
 ## Próximos Pasos
 
 1. ✅ Lee `README.md` para documentación completa
-2. ✅ Lee `TESTING.md` para casos de prueba
-3. ✅ Abre React Query DevTools para debugging
-4. ✅ Experimenta agregando diferentes activos
+2. ✅ Abre React Query DevTools para debugging
+3. ✅ Experimenta agregando diferentes activos
 
 ---
 
-**¿Problemas?** Revisa `TESTING.md` sección Troubleshooting
+**¿Problemas?** Revisa la sección de troubleshooting en `README.md`
