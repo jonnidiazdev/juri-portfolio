@@ -11,7 +11,7 @@ export default function PortfolioSyncBanner({ isSyncing }: PortfolioSyncBannerPr
       role="status"
       aria-live="polite"
     >
-      <div className="w-4 h-4 border-2 border-celeste border-t-transparent rounded-full animate-spin shrink-0" />
+      <div className="w-4 h-4 border-2 border-celeste border-t-transparent rounded-full animate-spin shrink-0" aria-hidden="true" />
       <span>Cargando portfolio desde la nube… No edites hasta que termine.</span>
     </div>
   )

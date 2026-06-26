@@ -19,13 +19,14 @@ export async function fetchArgentineQuote(tipo: string, simbolo: string) {
   const resp = await fetch(url, { headers })
   if (!resp.ok) {
     const err = await resp.json().catch(() => ({}))
-    
+
     if (resp.status === 401) {
       clearIOLSession('expired')
       queryClient.invalidateQueries({ queryKey: ['argentineQuotes'] })
     }
-    
-    throw new Error(err.error || 'Error obteniendo cotización')
+
+    const message = err.error || `Error obteniendo cotización (${resp.status})`
+    throw new Error(message)
   }
   const data = await resp.json()
   return data.data

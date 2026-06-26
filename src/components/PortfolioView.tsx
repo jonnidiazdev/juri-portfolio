@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { ASSET_TYPES } from '../config/constants'
 import { usePortfolioOutletContext } from '../hooks/usePortfolioOutletContext'
@@ -8,6 +9,7 @@ import CurrencySelector from './CurrencySelector'
 import AssetCard from './AssetCard'
 import LoadingSpinner from './LoadingSpinner'
 import DolarQuotes from './DolarQuotes'
+import ErrorMessage from './ErrorMessage'
 
 export default function PortfolioView() {
   const {
@@ -24,26 +26,51 @@ export default function PortfolioView() {
     argQuotes,
     dolarData,
     loadingDolar,
+    errorDolar,
+    refetchDolar,
     onAddAsset,
     onEditAsset,
     onDeleteAsset,
     getAssetPrice,
   } = usePortfolioOutletContext()
 
-  const cryptoAssets = assets.filter(a => a.type === ASSET_TYPES.CRYPTO)
-  const argentineAssets = assets.filter(a => a.type !== ASSET_TYPES.CRYPTO && a.type !== ASSET_TYPES.PLAZO_FIJO && a.type !== ASSET_TYPES.EFECTIVO)
-  const plazoFijoAssets = assets.filter(a => a.type === ASSET_TYPES.PLAZO_FIJO)
-  const efectivoAssets = assets.filter(a => a.type === ASSET_TYPES.EFECTIVO)
+  const cryptoAssets = useMemo(() => assets.filter(a => a.type === ASSET_TYPES.CRYPTO), [assets])
+  const argentineAssets = useMemo(
+    () => assets.filter(a => a.type !== ASSET_TYPES.CRYPTO && a.type !== ASSET_TYPES.PLAZO_FIJO && a.type !== ASSET_TYPES.EFECTIVO),
+    [assets]
+  )
+  const plazoFijoAssets = useMemo(() => assets.filter(a => a.type === ASSET_TYPES.PLAZO_FIJO), [assets])
+  const efectivoAssets = useMemo(() => assets.filter(a => a.type === ASSET_TYPES.EFECTIVO), [assets])
 
   const getSortKey = (asset: Asset) => {
     const key = asset.symbol || asset.name || ''
     return typeof key === 'string' ? key.toUpperCase() : ''
   }
 
-  const sortedCryptoAssets = [...cryptoAssets].sort((a, b) => getSortKey(a).localeCompare(getSortKey(b)))
-  const sortedArgentineAssets = [...argentineAssets].sort((a, b) => getSortKey(a).localeCompare(getSortKey(b)))
-  const sortedPlazoFijoAssets = [...plazoFijoAssets].sort((a, b) => getSortKey(a).localeCompare(getSortKey(b)))
-  const sortedEfectivoAssets = [...efectivoAssets].sort((a, b) => getSortKey(a).localeCompare(getSortKey(b)))
+  const sortedCryptoAssets = useMemo(
+    () => [...cryptoAssets].sort((a, b) => getSortKey(a).localeCompare(getSortKey(b))),
+    [cryptoAssets]
+  )
+  const sortedArgentineAssets = useMemo(
+    () => [...argentineAssets].sort((a, b) => getSortKey(a).localeCompare(getSortKey(b))),
+    [argentineAssets]
+  )
+  const sortedPlazoFijoAssets = useMemo(
+    () => [...plazoFijoAssets].sort((a, b) => getSortKey(a).localeCompare(getSortKey(b))),
+    [plazoFijoAssets]
+  )
+  const sortedEfectivoAssets = useMemo(
+    () => [...efectivoAssets].sort((a, b) => getSortKey(a).localeCompare(getSortKey(b))),
+    [efectivoAssets]
+  )
+
+  const assetPrices = useMemo(() => {
+    const prices: Record<number, number> = {}
+    for (const asset of assets) {
+      prices[asset.id] = getAssetPrice(asset)
+    }
+    return prices
+  }, [assets, getAssetPrice])
 
   return (
     <>
@@ -75,26 +102,35 @@ export default function PortfolioView() {
             </>
           )}
 
-          {dolarData && (
+          {(dolarData || errorDolar) && (
             <div className="mb-8">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
                 <h3 className="text-sm font-mono-data uppercase tracking-widest text-muted">
                   Cotizaciones del dólar
                 </h3>
-                <CurrencySelector
-                  dolarData={dolarData}
-                  currencyPreference={currencyPreference}
-                  onCurrencyChange={setCurrencyPreference}
-                />
+                {dolarData && (
+                  <CurrencySelector
+                    dolarData={dolarData}
+                    currencyPreference={currencyPreference}
+                    onCurrencyChange={setCurrencyPreference}
+                  />
+                )}
               </div>
-              <DolarQuotes dolares={dolarData} isLoading={loadingDolar} fetchedAt={dolarData?._fetchedAt} />
+              {dolarData ? (
+                <DolarQuotes dolares={dolarData} isLoading={loadingDolar} fetchedAt={dolarData?._fetchedAt} />
+              ) : (
+                <ErrorMessage
+                  message="No se pudieron cargar las cotizaciones del dólar"
+                  onRetry={() => refetchDolar()}
+                />
+              )}
             </div>
           )}
 
           {assets.length === 0 ? (
             <div className="text-center py-16 animate-fade-in">
               <div className="w-16 h-16 mx-auto mb-6 rounded-full border border-border flex items-center justify-center">
-                <svg className="w-8 h-8 text-subtle" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-8 h-8 text-subtle" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                 </svg>
               </div>
@@ -104,7 +140,7 @@ export default function PortfolioView() {
                 onClick={onAddAsset}
                 className="btn-primary px-6 py-3 inline-flex items-center gap-2"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                 </svg>
                 Agregar primer activo
@@ -133,7 +169,7 @@ export default function PortfolioView() {
                   <AssetCard
                     key={asset.id}
                     asset={asset}
-                    currentPrice={getAssetPrice(asset)}
+                    currentPrice={assetPrices[asset.id]}
                     onEdit={onEditAsset}
                     onDelete={onDeleteAsset}
                     dolarPrice={dolarData?.blue?.venta}
@@ -168,7 +204,7 @@ export default function PortfolioView() {
                   <AssetCard
                     key={asset.id}
                     asset={asset}
-                    currentPrice={getAssetPrice(asset)}
+                    currentPrice={assetPrices[asset.id]}
                     onEdit={onEditAsset}
                     onDelete={onDeleteAsset}
                     dolarPrice={dolarData?.blue?.venta}
@@ -203,7 +239,7 @@ export default function PortfolioView() {
                   <AssetCard
                     key={asset.id}
                     asset={asset}
-                    currentPrice={getAssetPrice(asset)}
+                    currentPrice={assetPrices[asset.id]}
                     onEdit={onEditAsset}
                     onDelete={onDeleteAsset}
                     dolarPrice={dolarData?.blue?.venta}
@@ -235,7 +271,7 @@ export default function PortfolioView() {
                   <AssetCard
                     key={asset.id}
                     asset={asset}
-                    currentPrice={getAssetPrice(asset)}
+                    currentPrice={assetPrices[asset.id]}
                     onEdit={onEditAsset}
                     onDelete={onDeleteAsset}
                     dolarPrice={dolarData?.blue?.venta}

@@ -56,6 +56,9 @@ export const REFRESH_INTERVALS = {
   slow: 300000, // 5 minutos
 }
 
+// Pausa entre requests a IOL para respetar rate limits
+export const IOL_QUOTE_FETCH_DELAY_MS = 450
+
 // IDs populares de criptomonedas
 export const POPULAR_CRYPTOS = [
   'bitcoin', 'ethereum', 'tether', 'binancecoin', 'usd-coin',

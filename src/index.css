@@ -198,6 +198,43 @@ body {
     justify-content: center;
     z-index: 50;
     padding: 1rem;
+    animation: modal-overlay-in 0.2s ease-out;
+  }
+
+  .modal-overlay--enter {
+    animation: modal-overlay-in 0.2s ease-out;
+  }
+
+  .modal-panel--enter {
+    animation: modal-panel-in 0.25s ease-out;
+  }
+
+  @keyframes modal-overlay-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes modal-panel-in {
+    from {
+      opacity: 0;
+      transform: translateY(0.5rem) scale(0.98);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  .asset-card {
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .asset-card:hover {
+    border-color: var(--color-border-light);
+  }
+
+  .modal-overlay--nested {
+    z-index: 60;
   }
 
   .modal-panel {

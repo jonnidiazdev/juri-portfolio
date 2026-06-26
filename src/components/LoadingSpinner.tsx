@@ -4,8 +4,13 @@ interface LoadingSpinnerProps {
 
 export default function LoadingSpinner({ text }: LoadingSpinnerProps) {
   return (
-    <div className="flex flex-col items-center justify-center p-12 gap-4">
-      <div className="w-10 h-10 border-2 border-border border-t-celeste rounded-full animate-spin" />
+    <div
+      className="flex flex-col items-center justify-center p-12 gap-4"
+      role="status"
+      aria-live="polite"
+      aria-busy="true"
+    >
+      <div className="w-10 h-10 border-2 border-border border-t-celeste rounded-full animate-spin" aria-hidden="true" />
       {text && <p className="text-sm text-muted">{text}</p>}
     </div>
   )
@@ -13,7 +18,7 @@ export default function LoadingSpinner({ text }: LoadingSpinnerProps) {
 
 export function LoadingCard() {
   return (
-    <div className="card p-5 animate-pulse">
+    <div className="card p-5 animate-pulse" aria-hidden="true">
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-surface-raised rounded-full" />
