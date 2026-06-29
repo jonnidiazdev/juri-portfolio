@@ -45,6 +45,15 @@ export default function PortfolioView() {
   const sortedPlazoFijoAssets = [...plazoFijoAssets].sort((a, b) => getSortKey(a).localeCompare(getSortKey(b)))
   const sortedEfectivoAssets = [...efectivoAssets].sort((a, b) => getSortKey(a).localeCompare(getSortKey(b)))
 
+  const categoryBreakdown = [
+    { id: 'crypto', label: 'Criptomonedas', totalValueARS: cryptoStats.totalValue, accentClass: 'section-rule--crypto', visible: cryptoAssets.length > 0 },
+    { id: 'argentine', label: 'Mercado argentino', totalValueARS: argentineStats.totalValue, accentClass: 'section-rule--argentine', visible: argentineAssets.length > 0 },
+    { id: 'plazo', label: 'Plazos fijos', totalValueARS: plazoFijoStats.totalValue, accentClass: 'section-rule--plazo', visible: plazoFijoAssets.length > 0 },
+    { id: 'efectivo', label: 'Efectivo/cuentas', totalValueARS: efectivoStats.totalValue, accentClass: 'section-rule--efectivo', visible: efectivoAssets.length > 0 },
+  ]
+    .filter(c => c.visible)
+    .map(({ id, label, totalValueARS, accentClass }) => ({ id, label, totalValueARS, accentClass }))
+
   return (
     <>
       {isCloudSyncing ? (
@@ -59,6 +68,8 @@ export default function PortfolioView() {
                 totalsARS={multiCurrencyData.totalsARS}
                 totalsUSD={multiCurrencyData.totalsUSD}
                 exchangeRateInfo={multiCurrencyData.exchangeRateInfo}
+                exchangeRate={multiCurrencyData.exchangeRate}
+                categories={categoryBreakdown}
                 className="mb-3"
               />
               <div className="flex justify-end mb-6">
