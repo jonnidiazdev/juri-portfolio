@@ -48,29 +48,31 @@ export default function AppLayout({
           </p>
         </div>
 
-        <AppNav />
-
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-          <div className="hidden md:flex items-center gap-3 px-3 py-2 card max-w-xs">
-            {userPhoto ? (
-              <img
-                src={userPhoto}
-                alt={userName}
-                className="w-8 h-8 rounded-full"
-                referrerPolicy="no-referrer"
-              />
-            ) : (
-              <div className="w-8 h-8 rounded-full bg-celeste/15 text-celeste flex items-center justify-center text-xs font-bold">
-                {userName.slice(0, 1).toUpperCase()}
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
+          <div className="flex flex-wrap items-center gap-3 min-w-0">
+            <div className="flex items-center gap-3 px-3 py-2 card max-w-xs min-w-0">
+              {userPhoto ? (
+                <img
+                  src={userPhoto}
+                  alt={userName}
+                  className="w-8 h-8 rounded-full shrink-0"
+                  referrerPolicy="no-referrer"
+                />
+              ) : (
+                <div className="w-8 h-8 rounded-full bg-celeste/15 text-celeste flex items-center justify-center text-xs font-bold shrink-0">
+                  {userName.slice(0, 1).toUpperCase()}
+                </div>
+              )}
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-paper truncate">{userName}</p>
+                <p className="text-xs text-subtle truncate">{userEmail}</p>
               </div>
-            )}
-            <div className="min-w-0">
-              <p className="text-sm font-semibold text-paper truncate">{userName}</p>
-              <p className="text-xs text-subtle truncate">{userEmail}</p>
             </div>
+
+            <AppNav />
           </div>
 
-          <div className="flex flex-wrap gap-2 md:ml-auto">
+          <div className="flex flex-wrap gap-2 lg:ml-auto">
             <button
               onClick={signOutGoogle}
               className="btn-ghost px-4 py-3"

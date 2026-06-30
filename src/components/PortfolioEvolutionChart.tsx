@@ -171,7 +171,7 @@ export default function PortfolioEvolutionChart({ snapshots }: PortfolioEvolutio
 
       <div className="h-72 sm:h-80 w-full">
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={chartData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+          <LineChart data={chartData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }} style={{ background: 'transparent' }}>
             <CartesianGrid stroke="var(--color-border)" strokeDasharray="3 3" vertical={false} />
             <XAxis
               dataKey="label"

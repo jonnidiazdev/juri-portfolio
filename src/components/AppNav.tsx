@@ -10,15 +10,14 @@ function TrendIcon() {
 
 export default function AppNav() {
   const linkClass = ({ isActive }: { isActive: boolean }) =>
-    `px-4 py-2.5 text-sm font-medium rounded-md transition-colors inline-flex items-center gap-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-celeste ${
+    `px-4 py-2.5 text-sm font-medium rounded-lg transition-colors inline-flex items-center gap-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-celeste ${
       isActive
         ? 'bg-celeste/15 text-celeste border border-celeste/30'
-        : 'text-paper/80 bg-surface border border-border hover:text-paper hover:border-border-light hover:bg-surface-raised'
+        : 'text-paper/80 border border-transparent hover:text-paper hover:bg-white/5 hover:border-celeste/10'
     }`
 
   return (
-    <div className="sticky top-0 z-30 -mx-3 sm:-mx-4 px-3 sm:px-4 py-3 mb-4 bg-ink/95 backdrop-blur-sm border-b border-border">
-      <nav className="flex gap-2" aria-label="Navegación principal">
+    <nav className="card inline-flex gap-2 p-2 shrink-0" aria-label="Navegación principal">
         <NavLink to="/" end className={linkClass}>
           Activos
         </NavLink>
@@ -27,6 +26,5 @@ export default function AppNav() {
           Evolución
         </NavLink>
       </nav>
-    </div>
   )
 }

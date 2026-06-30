@@ -17,6 +17,7 @@ import AddAssetModal from './components/AddAssetModal'
 import EditAssetModal from './components/EditAssetModal'
 import SettingsModal from './components/SettingsModal'
 import ErrorMessage from './components/ErrorMessage'
+import NightForestBackground from './components/NightForestBackground'
 
 interface AppProps {
   user: { uid: string; displayName?: string; photoURL?: string; email?: string }
@@ -143,7 +144,8 @@ function App({ user }: AppProps) {
   }
 
   return (
-    <div className="bg-ink min-h-screen text-paper">
+    <div className="relative min-h-screen text-paper">
+      <NightForestBackground />
       <Routes>
         <Route
           element={

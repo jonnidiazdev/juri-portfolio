@@ -86,7 +86,7 @@ export default function PortfolioCategoryPieChart({
   return (
     <div className="h-56 sm:h-64 w-full">
       <ResponsiveContainer width="100%" height="100%">
-        <PieChart>
+        <PieChart style={{ background: 'transparent' }}>
           <Pie
             data={chartData}
             dataKey="value"
@@ -97,7 +97,7 @@ export default function PortfolioCategoryPieChart({
             isAnimationActive={false}
           >
             {chartData.map((entry) => (
-              <Cell key={entry.id} fill={entry.color} stroke="var(--color-surface)" strokeWidth={2} />
+              <Cell key={entry.id} fill={entry.color} stroke="rgba(15, 26, 36, 0.5)" strokeWidth={2} />
             ))}
           </Pie>
           <Tooltip
