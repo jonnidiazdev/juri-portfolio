@@ -104,6 +104,21 @@ export const EFECTIVO_CONFIG = {
   ]
 }
 
+export const PORTFOLIO_CATEGORY_COLORS = {
+  crypto: '#a78bfa',
+  argentine: '#6badc9',
+  plazoFijo: '#c9a227',
+  plazo: '#c9a227',
+  efectivo: '#4ade80',
+} as const
+
+export const SNAPSHOT_BY_TYPE_SERIES = [
+  { dataKey: 'crypto' as const, name: 'Crypto' },
+  { dataKey: 'argentine' as const, name: 'Mercado AR' },
+  { dataKey: 'plazoFijo' as const, name: 'Plazo fijo' },
+  { dataKey: 'efectivo' as const, name: 'Efectivo' },
+]
+
 export const PLAZO_FIJO_CONFIG = {
   // Tasas típicas en Argentina (solo referencia, el usuario ingresa la real)
   TYPICAL_RATES: {

@@ -152,7 +152,7 @@ export default function PortfolioEvolutionPage() {
         </div>
       )}
 
-      <PortfolioEvolutionChart snapshots={snapshots} />
+      <PortfolioEvolutionChart snapshots={snapshots} userId={user.uid} />
     </div>
   )
 }

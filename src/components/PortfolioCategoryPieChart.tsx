@@ -8,14 +8,8 @@ import {
   ResponsiveContainer,
 } from 'recharts'
 import { formatCurrency } from '../utils/formatters'
+import { PORTFOLIO_CATEGORY_COLORS } from '../config/constants'
 import type { CategoryBreakdownItem } from './PortfolioCategoryBreakdown'
-
-const CATEGORY_CHART_COLORS: Record<string, string> = {
-  crypto: '#a78bfa',
-  argentine: '#6badc9',
-  plazo: '#c9a227',
-  efectivo: '#4ade80',
-}
 
 interface PieChartDatum {
   id: string
@@ -78,7 +72,7 @@ export default function PortfolioCategoryPieChart({
       id: category.id,
       name: category.label,
       value: category.totalValueARS,
-      color: CATEGORY_CHART_COLORS[category.id] ?? '#8b9aab',
+      color: PORTFOLIO_CATEGORY_COLORS[category.id as keyof typeof PORTFOLIO_CATEGORY_COLORS] ?? '#8b9aab',
     })),
     [categories]
   )
