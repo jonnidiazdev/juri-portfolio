@@ -1,5 +1,6 @@
 export type EvolutionYMetric = 'current' | 'invested' | 'profit' | 'profitPercent'
-export type EvolutionChartType = 'line' | 'stackedArea' | 'stackedPercent' | 'multiLine' | 'bar'
+export type EvolutionChartType = 'line' | 'stackedArea' | 'stackedPercent' | 'multiLine' | 'bar' | 'd3Combo'
+export type EvolutionLayoutMode = 'single' | 'compare'
 export type EvolutionScope = 'total' | 'byType'
 export type EvolutionDateFormat = 'short' | 'medium'
 export type EvolutionYScale = 'linear' | 'log'
@@ -16,6 +17,7 @@ export interface EvolutionViewDefinition {
 
 export interface EvolutionViewPrefs {
   viewId: string
+  layoutMode: EvolutionLayoutMode
   currency: EvolutionCurrency
   yMetric: EvolutionYMetric
   dateFormat: EvolutionDateFormat
@@ -72,10 +74,19 @@ export const EVOLUTION_VIEWS: EvolutionViewDefinition[] = [
     allowedYMetrics: ['current', 'invested', 'profit'],
     defaultYMetric: 'current',
   },
+  {
+    id: 'type-d3-combo',
+    label: 'Composición D3',
+    scope: 'byType',
+    chartType: 'd3Combo',
+    allowedYMetrics: ['current', 'invested', 'profit'],
+    defaultYMetric: 'current',
+  },
 ]
 
 export const DEFAULT_EVOLUTION_PREFS: EvolutionViewPrefs = {
   viewId: 'total-line',
+  layoutMode: 'single',
   currency: 'ARS',
   yMetric: 'current',
   dateFormat: 'short',
@@ -88,15 +99,24 @@ export function getEvolutionView(viewId: string): EvolutionViewDefinition {
   return EVOLUTION_VIEWS.find((view) => view.id === viewId) ?? EVOLUTION_VIEWS[0]
 }
 
+export function getCompareRechartsView(viewId: string): EvolutionViewDefinition {
+  if (viewId === 'type-d3-combo') {
+    return getEvolutionView('type-stacked')
+  }
+  return getEvolutionView(viewId)
+}
+
 export function sanitizeEvolutionPrefs(prefs: EvolutionViewPrefs): EvolutionViewPrefs {
   const view = getEvolutionView(prefs.viewId)
   const yMetric = view.allowedYMetrics.includes(prefs.yMetric)
     ? prefs.yMetric
     : view.defaultYMetric
+  const layoutMode = prefs.layoutMode === 'compare' ? 'compare' : 'single'
 
   return {
     ...prefs,
     viewId: view.id,
+    layoutMode,
     yMetric,
     hiddenSeries: prefs.hiddenSeries.filter((key) =>
       view.scope === 'total' ? key === 'total' : ['crypto', 'argentine', 'plazoFijo', 'efectivo'].includes(key)

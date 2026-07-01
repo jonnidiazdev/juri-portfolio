@@ -14,6 +14,7 @@ interface EvolutionChartToolbarProps {
   activeView: EvolutionViewDefinition
   logScaleDisabled: boolean
   onViewChange: (viewId: string) => void
+  onLayoutModeChange: (layoutMode: EvolutionViewPrefs['layoutMode']) => void
   onCurrencyChange: (currency: EvolutionCurrency) => void
   onYMetricChange: (yMetric: EvolutionYMetric) => void
   onDateFormatChange: (dateFormat: EvolutionDateFormat) => void
@@ -63,6 +64,7 @@ export default function EvolutionChartToolbar({
   activeView,
   logScaleDisabled,
   onViewChange,
+  onLayoutModeChange,
   onCurrencyChange,
   onYMetricChange,
   onDateFormatChange,
@@ -72,6 +74,21 @@ export default function EvolutionChartToolbar({
 }: EvolutionChartToolbarProps) {
   return (
     <div className="flex flex-col gap-4 mb-6">
+      <ToolbarGroup label="Disposición">
+        <ToolbarButton
+          active={prefs.layoutMode === 'single'}
+          onClick={() => onLayoutModeChange('single')}
+        >
+          Una vista
+        </ToolbarButton>
+        <ToolbarButton
+          active={prefs.layoutMode === 'compare'}
+          onClick={() => onLayoutModeChange('compare')}
+        >
+          Comparar
+        </ToolbarButton>
+      </ToolbarGroup>
+
       <ToolbarGroup label="Vista">
         {EVOLUTION_VIEWS.map((view) => (
           <ToolbarButton

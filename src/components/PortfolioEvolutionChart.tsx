@@ -65,6 +65,7 @@ export default function PortfolioEvolutionChart({ snapshots, userId }: Portfolio
         activeView={activeView}
         logScaleDisabled={logScaleDisabled}
         onViewChange={handleViewChange}
+        onLayoutModeChange={(layoutMode) => updatePrefs({ layoutMode })}
         onCurrencyChange={(currency) => updatePrefs({ currency })}
         onYMetricChange={(yMetric) => updatePrefs({ yMetric })}
         onDateFormatChange={(dateFormat) => updatePrefs({ dateFormat })}
