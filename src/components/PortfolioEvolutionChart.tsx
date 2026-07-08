@@ -15,6 +15,8 @@ interface PortfolioEvolutionChartProps {
   userId: string | null | undefined
 }
 
+const RESET_DOMAIN = { yDomainMin: null, yDomainMax: null } as const
+
 export default function PortfolioEvolutionChart({ snapshots, userId }: PortfolioEvolutionChartProps) {
   const { prefs, updatePrefs, toggleHiddenSeries } = useEvolutionViewPrefs(userId)
   const activeView = getEvolutionView(prefs.viewId)
@@ -34,6 +36,8 @@ export default function PortfolioEvolutionChart({ snapshots, userId }: Portfolio
     () => chartDataHasNonPositiveValues(fullChartData, activeView.scope),
     [fullChartData, activeView.scope]
   )
+
+  const yDomainDisabled = activeView.chartType === 'stackedPercent'
 
   if (snapshots.length === 0) {
     return (
@@ -55,6 +59,7 @@ export default function PortfolioEvolutionChart({ snapshots, userId }: Portfolio
       yMetric: view.allowedYMetrics.includes(prefs.yMetric) ? prefs.yMetric : view.defaultYMetric,
       hiddenSeries: [],
       brushRange: null,
+      ...RESET_DOMAIN,
     })
   }
 
@@ -64,14 +69,18 @@ export default function PortfolioEvolutionChart({ snapshots, userId }: Portfolio
         prefs={prefs}
         activeView={activeView}
         logScaleDisabled={logScaleDisabled}
+        yDomainDisabled={yDomainDisabled}
         onViewChange={handleViewChange}
-        onLayoutModeChange={(layoutMode) => updatePrefs({ layoutMode })}
-        onCurrencyChange={(currency) => updatePrefs({ currency })}
-        onYMetricChange={(yMetric) => updatePrefs({ yMetric })}
+        onCurrencyChange={(currency) => updatePrefs({ currency, ...RESET_DOMAIN })}
+        onYMetricChange={(yMetric) => updatePrefs({ yMetric, ...RESET_DOMAIN })}
         onDateFormatChange={(dateFormat) => updatePrefs({ dateFormat })}
         onYScaleChange={(yScale) => updatePrefs({ yScale: logScaleDisabled ? 'linear' : yScale })}
+        onYDomainMinChange={(yDomainMin) => updatePrefs({ yDomainMin })}
+        onYDomainMaxChange={(yDomainMax) => updatePrefs({ yDomainMax })}
         onResetBrush={() => updatePrefs({ brushRange: null })}
+        onResetYDomain={() => updatePrefs(RESET_DOMAIN)}
         showBrushReset={prefs.brushRange !== null}
+        showYDomainReset={prefs.yDomainMin !== null || prefs.yDomainMax !== null}
       />
 
       {singlePoint && (

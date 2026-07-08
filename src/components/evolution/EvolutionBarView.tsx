@@ -16,6 +16,8 @@ interface EvolutionBarViewProps {
   yMetric: EvolutionYMetric
   yScale: EvolutionYScale
   logScaleActive: boolean
+  yDomainMin: number | null
+  yDomainMax: number | null
   brush: ChartBrushProps
   onToggleSeries: (dataKey: string) => void
 }
@@ -29,6 +31,8 @@ export default function EvolutionBarView({
   yMetric,
   yScale,
   logScaleActive,
+  yDomainMin,
+  yDomainMax,
   brush,
   onToggleSeries,
 }: EvolutionBarViewProps) {
@@ -41,6 +45,8 @@ export default function EvolutionBarView({
         currency={currency}
         yScale={yScale}
         logScaleActive={logScaleActive}
+        yDomainMin={yDomainMin}
+        yDomainMax={yDomainMax}
       />
       <Tooltip content={<StackedAreaTooltip currency={currency} />} />
       <Legend content={<EvolutionChartLegend hiddenSeries={hiddenSeries} onToggleSeries={onToggleSeries} />} />

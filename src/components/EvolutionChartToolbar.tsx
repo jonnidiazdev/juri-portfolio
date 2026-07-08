@@ -13,14 +13,18 @@ interface EvolutionChartToolbarProps {
   prefs: EvolutionViewPrefs
   activeView: EvolutionViewDefinition
   logScaleDisabled: boolean
+  yDomainDisabled: boolean
   onViewChange: (viewId: string) => void
-  onLayoutModeChange: (layoutMode: EvolutionViewPrefs['layoutMode']) => void
   onCurrencyChange: (currency: EvolutionCurrency) => void
   onYMetricChange: (yMetric: EvolutionYMetric) => void
   onDateFormatChange: (dateFormat: EvolutionDateFormat) => void
   onYScaleChange: (yScale: EvolutionYScale) => void
+  onYDomainMinChange: (value: number | null) => void
+  onYDomainMaxChange: (value: number | null) => void
   onResetBrush: () => void
+  onResetYDomain: () => void
   showBrushReset: boolean
+  showYDomainReset: boolean
 }
 
 function ToolbarButton({
@@ -59,36 +63,32 @@ function ToolbarGroup({ label, children }: { label: string; children: ReactNode 
   )
 }
 
+function parseDomainInput(value: string): number | null {
+  const trimmed = value.trim()
+  if (!trimmed) return null
+  const parsed = Number(trimmed)
+  return Number.isFinite(parsed) ? parsed : null
+}
+
 export default function EvolutionChartToolbar({
   prefs,
   activeView,
   logScaleDisabled,
+  yDomainDisabled,
   onViewChange,
-  onLayoutModeChange,
   onCurrencyChange,
   onYMetricChange,
   onDateFormatChange,
   onYScaleChange,
+  onYDomainMinChange,
+  onYDomainMaxChange,
   onResetBrush,
+  onResetYDomain,
   showBrushReset,
+  showYDomainReset,
 }: EvolutionChartToolbarProps) {
   return (
     <div className="flex flex-col gap-4 mb-6">
-      <ToolbarGroup label="Disposición">
-        <ToolbarButton
-          active={prefs.layoutMode === 'single'}
-          onClick={() => onLayoutModeChange('single')}
-        >
-          Una vista
-        </ToolbarButton>
-        <ToolbarButton
-          active={prefs.layoutMode === 'compare'}
-          onClick={() => onLayoutModeChange('compare')}
-        >
-          Comparar
-        </ToolbarButton>
-      </ToolbarGroup>
-
       <ToolbarGroup label="Vista">
         {EVOLUTION_VIEWS.map((view) => (
           <ToolbarButton
@@ -157,6 +157,40 @@ export default function EvolutionChartToolbar({
               Log
             </ToolbarButton>
           </ToolbarGroup>
+
+          <ToolbarGroup label="Zoom eje Y">
+            <label className="flex items-center gap-1.5 text-xs font-mono-data text-muted">
+              <span>Mín</span>
+              <input
+                type="number"
+                disabled={yDomainDisabled}
+                value={prefs.yDomainMin ?? ''}
+                onChange={(event) => onYDomainMinChange(parseDomainInput(event.target.value))}
+                placeholder="Auto"
+                className="w-24 px-2 py-1.5 rounded-md border border-border bg-surface text-paper text-xs disabled:opacity-40"
+              />
+            </label>
+            <label className="flex items-center gap-1.5 text-xs font-mono-data text-muted">
+              <span>Máx</span>
+              <input
+                type="number"
+                disabled={yDomainDisabled}
+                value={prefs.yDomainMax ?? ''}
+                onChange={(event) => onYDomainMaxChange(parseDomainInput(event.target.value))}
+                placeholder="Auto"
+                className="w-24 px-2 py-1.5 rounded-md border border-border bg-surface text-paper text-xs disabled:opacity-40"
+              />
+            </label>
+            {showYDomainReset && (
+              <button
+                type="button"
+                onClick={onResetYDomain}
+                className="btn-ghost px-3 py-1.5 text-xs font-mono-data self-end"
+              >
+                Ajustar a datos
+              </button>
+            )}
+          </ToolbarGroup>
         </div>
 
         {showBrushReset && (
@@ -173,6 +207,12 @@ export default function EvolutionChartToolbar({
       {logScaleDisabled && prefs.yScale === 'linear' && (
         <p className="text-subtle text-xs">
           La escala logarítmica no está disponible cuando hay valores ≤ 0 en la serie.
+        </p>
+      )}
+
+      {!yDomainDisabled && (
+        <p className="text-subtle text-xs">
+          Por defecto el eje Y se ajusta al rango visible. Podés fijar min/máx para hacer zoom.
         </p>
       )}
     </div>

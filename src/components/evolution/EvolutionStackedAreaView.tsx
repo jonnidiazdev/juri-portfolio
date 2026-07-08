@@ -16,6 +16,8 @@ interface EvolutionStackedAreaViewProps {
   yMetric: EvolutionYMetric
   yScale: EvolutionYScale
   logScaleActive: boolean
+  yDomainMin: number | null
+  yDomainMax: number | null
   brush: ChartBrushProps
   onToggleSeries: (dataKey: string) => void
 }
@@ -29,6 +31,8 @@ export default function EvolutionStackedAreaView({
   yMetric,
   yScale,
   logScaleActive,
+  yDomainMin,
+  yDomainMax,
   brush,
   onToggleSeries,
 }: EvolutionStackedAreaViewProps) {
@@ -41,6 +45,8 @@ export default function EvolutionStackedAreaView({
         currency={currency}
         yScale={yScale}
         logScaleActive={logScaleActive}
+        yDomainMin={yDomainMin}
+        yDomainMax={yDomainMax}
       />
       <Tooltip content={<StackedAreaTooltip currency={currency} />} />
       <Legend content={<EvolutionChartLegend hiddenSeries={hiddenSeries} onToggleSeries={onToggleSeries} />} />

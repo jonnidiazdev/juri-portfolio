@@ -13,6 +13,8 @@ interface EvolutionLineViewProps {
   yMetric: EvolutionYMetric
   yScale: EvolutionYScale
   logScaleActive: boolean
+  yDomainMin: number | null
+  yDomainMax: number | null
   brush: ChartBrushProps
 }
 
@@ -23,6 +25,8 @@ export default function EvolutionLineView({
   yMetric,
   yScale,
   logScaleActive,
+  yDomainMin,
+  yDomainMax,
   brush,
 }: EvolutionLineViewProps) {
   return (
@@ -32,6 +36,8 @@ export default function EvolutionLineView({
         currency={currency}
         yScale={yScale}
         logScaleActive={logScaleActive}
+        yDomainMin={yDomainMin}
+        yDomainMax={yDomainMax}
       />
       <Tooltip content={<TotalChartTooltip currency={currency} yMetric={yMetric} />} />
       <Line

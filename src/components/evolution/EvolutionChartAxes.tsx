@@ -1,5 +1,6 @@
 import { CartesianGrid, XAxis, YAxis } from 'recharts'
 import type { EvolutionCurrency, EvolutionYMetric, EvolutionYScale } from '../../config/evolutionViews'
+import { resolveEvolutionYDomain } from '../../utils/evolutionYDomain'
 import { formatEvolutionAxisValue } from './evolutionChartFormatters'
 
 interface EvolutionChartAxesProps {
@@ -8,6 +9,8 @@ interface EvolutionChartAxesProps {
   yScale: EvolutionYScale
   isPercentStack?: boolean
   logScaleActive?: boolean
+  yDomainMin?: number | null
+  yDomainMax?: number | null
 }
 
 export default function EvolutionChartAxes({
@@ -16,8 +19,16 @@ export default function EvolutionChartAxes({
   yScale,
   isPercentStack = false,
   logScaleActive = false,
+  yDomainMin = null,
+  yDomainMax = null,
 }: EvolutionChartAxesProps) {
   const useLog = yScale === 'log' && logScaleActive && !isPercentStack
+  const domain = resolveEvolutionYDomain({
+    isPercentStack,
+    logScaleActive: useLog,
+    yDomainMin,
+    yDomainMax,
+  })
 
   return (
     <>
@@ -30,7 +41,8 @@ export default function EvolutionChartAxes({
       />
       <YAxis
         scale={useLog ? 'log' : 'linear'}
-        domain={isPercentStack ? [0, 100] : useLog ? ['auto', 'auto'] : undefined}
+        domain={domain}
+        allowDataOverflow={yDomainMin !== null || yDomainMax !== null}
         tickFormatter={(value) =>
           formatEvolutionAxisValue(Number(value), currency, yMetric, isPercentStack)
         }

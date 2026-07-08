@@ -325,22 +325,3 @@ body {
     box-shadow: 0 4px 24px rgba(15, 26, 36, 0.4);
   }
 }
-
-.evolution-d3-chart .tick text {
-  fill: var(--color-subtle);
-  font-family: var(--font-mono);
-  font-size: 11px;
-}
-
-.evolution-d3-chart .domain {
-  stroke: var(--color-border);
-}
-
-.evolution-d3-chart .grid .tick line {
-  stroke: var(--color-border);
-  stroke-opacity: 0.6;
-}
-
-.evolution-d3-chart .grid path {
-  stroke-width: 0;
-}

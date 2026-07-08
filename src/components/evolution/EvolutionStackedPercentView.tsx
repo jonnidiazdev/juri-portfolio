@@ -13,6 +13,8 @@ interface EvolutionStackedPercentViewProps {
   series: EvolutionSeries[]
   hiddenSeries: string[]
   currency: EvolutionCurrency
+  yDomainMin: number | null
+  yDomainMax: number | null
   brush: ChartBrushProps
   onToggleSeries: (dataKey: string) => void
 }
