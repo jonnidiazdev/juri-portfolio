@@ -7,7 +7,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts'
-import { formatCurrency } from '../utils/formatters'
+import { usePortfolioFormatters } from '../hooks/usePortfolioFormatters'
 import { PORTFOLIO_CATEGORY_COLORS } from '../config/constants'
 import type { CategoryBreakdownItem } from './PortfolioCategoryBreakdown'
 
@@ -35,6 +35,8 @@ function PieChartTooltip({
   totalCurrentARS: number
   exchangeRate: number | null
 }) {
+  const { formatCurrency, formatSharePercent } = usePortfolioFormatters()
+
   if (!active || !payload?.length) return null
 
   const entry = payload[0].payload
@@ -56,7 +58,7 @@ function PieChartTooltip({
         </p>
       )}
       <p className="font-mono-data text-subtle text-xs mt-1">
-        {percent.toFixed(1)}% del portfolio
+        {formatSharePercent(percent)} del portfolio
       </p>
     </div>
   )

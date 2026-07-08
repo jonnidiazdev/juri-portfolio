@@ -6,7 +6,7 @@ import {
   buildSnapshotChartPoints,
   chartDataHasNonPositiveValues,
 } from '../utils/portfolioSnapshot'
-import { formatCurrency } from '../utils/formatters'
+import { usePortfolioFormatters } from '../hooks/usePortfolioFormatters'
 import EvolutionChartToolbar from './EvolutionChartToolbar'
 import EvolutionChartRenderer from './evolution/EvolutionChartRenderer'
 
@@ -19,6 +19,7 @@ const RESET_DOMAIN = { yDomainMin: null, yDomainMax: null } as const
 
 export default function PortfolioEvolutionChart({ snapshots, userId }: PortfolioEvolutionChartProps) {
   const { prefs, updatePrefs, toggleHiddenSeries } = useEvolutionViewPrefs(userId)
+  const { formatCurrency, formatEvolutionPercent } = usePortfolioFormatters()
   const activeView = getEvolutionView(prefs.viewId)
 
   const fullChartData = useMemo(
@@ -88,7 +89,7 @@ export default function PortfolioEvolutionChart({ snapshots, userId }: Portfolio
           Necesitás al menos 2 snapshots para ver la tendencia. Valor actual:{' '}
           <span className="font-mono-data text-paper">
             {prefs.yMetric === 'profitPercent'
-              ? `${latestValue >= 0 ? '+' : ''}${latestValue.toFixed(2)}%`
+              ? formatEvolutionPercent(latestValue, true)
               : formatCurrency(latestValue, prefs.currency)}
           </span>
         </p>

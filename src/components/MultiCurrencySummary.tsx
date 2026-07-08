@@ -1,4 +1,4 @@
-import { formatCurrency, formatPercentage } from '../utils/formatters'
+import { usePortfolioFormatters } from '../hooks/usePortfolioFormatters'
 import PortfolioCategoryBreakdown, { type CategoryBreakdownItem } from './PortfolioCategoryBreakdown'
 
 interface MultiCurrencySummaryProps {
@@ -18,6 +18,7 @@ export default function MultiCurrencySummary({
   categories = [],
   className = '',
 }: MultiCurrencySummaryProps) {
+  const { formatCurrency, formatPercentage } = usePortfolioFormatters()
   const isPositiveARS = totalsARS.profit >= 0
   const isPositiveUSD = totalsUSD.profit >= 0
 

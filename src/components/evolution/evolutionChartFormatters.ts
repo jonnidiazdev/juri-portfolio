@@ -1,11 +1,18 @@
 import type { EvolutionCurrency, EvolutionYMetric } from '../../config/evolutionViews'
+import { HIDDEN_AMOUNT, HIDDEN_VALUE } from '../../utils/formatters'
 
 export function formatEvolutionAxisValue(
   value: number,
   currency: EvolutionCurrency,
   yMetric: EvolutionYMetric,
-  isPercentStack = false
+  isPercentStack = false,
+  hidden = false
 ): string {
+  if (hidden) {
+    if (isPercentStack || yMetric === 'profitPercent') return HIDDEN_VALUE
+    return HIDDEN_AMOUNT
+  }
+
   if (isPercentStack || yMetric === 'profitPercent') {
     return `${value.toFixed(1)}%`
   }

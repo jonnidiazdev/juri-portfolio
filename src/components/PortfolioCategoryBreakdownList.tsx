@@ -1,4 +1,4 @@
-import { formatCurrency } from '../utils/formatters'
+import { usePortfolioFormatters } from '../hooks/usePortfolioFormatters'
 import type { CategoryBreakdownItem } from './PortfolioCategoryBreakdown'
 
 interface PortfolioCategoryBreakdownListProps {
@@ -12,6 +12,8 @@ export default function PortfolioCategoryBreakdownList({
   totalCurrentARS,
   exchangeRate,
 }: PortfolioCategoryBreakdownListProps) {
+  const { formatCurrency, formatSharePercent } = usePortfolioFormatters()
+
   return (
     <ul className="space-y-3">
       {categories.map((category) => {
@@ -36,7 +38,7 @@ export default function PortfolioCategoryBreakdownList({
                 </span>
               )}
               <span className="font-mono-data text-xs text-subtle sm:ml-auto">
-                {percent.toFixed(1)}%
+                {formatSharePercent(percent)}
               </span>
             </div>
           </li>

@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import { ASSET_TYPES } from '../config/constants'
 import { usePortfolioOutletContext } from '../hooks/usePortfolioOutletContext'
-import { formatCurrency } from '../utils/formatters'
+import { usePortfolioFormatters } from '../hooks/usePortfolioFormatters'
 import type { Asset } from '../types'
 import MultiCurrencySummary from './MultiCurrencySummary'
 import CurrencySelector from './CurrencySelector'
@@ -29,6 +29,7 @@ export default function PortfolioView() {
     onDeleteAsset,
     getAssetPrice,
   } = usePortfolioOutletContext()
+  const { formatCurrency, formatPercentage } = usePortfolioFormatters()
 
   const cryptoAssets = assets.filter(a => a.type === ASSET_TYPES.CRYPTO)
   const argentineAssets = assets.filter(a => a.type !== ASSET_TYPES.CRYPTO && a.type !== ASSET_TYPES.PLAZO_FIJO && a.type !== ASSET_TYPES.EFECTIVO)
@@ -129,7 +130,7 @@ export default function PortfolioView() {
                 <h2 className="text-lg sm:text-xl font-semibold text-paper flex items-center gap-2 sm:gap-3 flex-wrap">
                   Criptomonedas
                   <span className={`text-xs font-mono-data font-medium px-2 py-0.5 rounded ${cryptoStats.isProfit ? 'badge-profit' : 'badge-loss'}`}>
-                    {cryptoStats.isProfit ? '+' : ''}{cryptoStats.profitPercent.toFixed(2)}%
+                    {formatPercentage(cryptoStats.profitPercent)}
                   </span>
                   <span className={`text-xs font-mono-data font-medium px-2 py-0.5 rounded ${cryptoStats.isProfit ? 'badge-profit' : 'badge-loss'}`}>
                     {cryptoStats.isProfit ? '+' : ''}{formatCurrency(cryptoStats.profit / (multiCurrencyData.exchangeRate ?? 1), 'USD')}
@@ -164,7 +165,7 @@ export default function PortfolioView() {
                 <h2 className="text-lg sm:text-xl font-semibold text-paper flex items-center gap-2 sm:gap-3 flex-wrap">
                   Mercado argentino
                   <span className={`text-xs font-mono-data font-medium px-2 py-0.5 rounded ${argentineStats.isProfit ? 'badge-profit' : 'badge-loss'}`}>
-                    {argentineStats.isProfit ? '+' : ''}{argentineStats.profitPercent.toFixed(2)}%
+                    {formatPercentage(argentineStats.profitPercent)}
                   </span>
                   <span className={`text-xs font-mono-data font-medium px-2 py-0.5 rounded ${argentineStats.isProfit ? 'badge-profit' : 'badge-loss'}`}>
                     {argentineStats.isProfit ? '+' : ''}{formatCurrency(argentineStats.profit / (multiCurrencyData.exchangeRate ?? 1), 'USD')}
@@ -199,7 +200,7 @@ export default function PortfolioView() {
                 <h2 className="text-lg sm:text-xl font-semibold text-paper flex items-center gap-2 sm:gap-3 flex-wrap">
                   Plazos fijos
                   <span className={`text-xs font-mono-data font-medium px-2 py-0.5 rounded ${plazoFijoStats.isProfit ? 'badge-profit' : 'badge-loss'}`}>
-                    {plazoFijoStats.isProfit ? '+' : ''}{plazoFijoStats.profitPercent.toFixed(2)}%
+                    {formatPercentage(plazoFijoStats.profitPercent)}
                   </span>
                   <span className={`text-xs font-mono-data font-medium px-2 py-0.5 rounded ${plazoFijoStats.isProfit ? 'badge-profit' : 'badge-loss'}`}>
                     {plazoFijoStats.isProfit ? '+' : ''}{formatCurrency(plazoFijoStats.profit / (multiCurrencyData.exchangeRate ?? 1), 'USD')}

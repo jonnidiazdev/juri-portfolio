@@ -1,5 +1,5 @@
 import type { EvolutionCurrency, EvolutionYMetric } from '../../config/evolutionViews'
-import { formatCurrency } from '../../utils/formatters'
+import { usePortfolioFormatters } from '../../hooks/usePortfolioFormatters'
 
 export function TotalChartTooltip({
   active,
@@ -14,6 +14,8 @@ export function TotalChartTooltip({
   currency: EvolutionCurrency
   yMetric: EvolutionYMetric
 }) {
+  const { formatCurrency, formatEvolutionPercent } = usePortfolioFormatters()
+
   if (!active || !payload?.length) return null
 
   const value = payload[0].value
@@ -23,7 +25,7 @@ export function TotalChartTooltip({
       <p className="text-muted text-xs font-mono-data mb-2">{label}</p>
       <p className="font-mono-data text-paper">
         {yMetric === 'profitPercent'
-          ? `${value >= 0 ? '+' : ''}${value.toFixed(2)}%`
+          ? formatEvolutionPercent(value, true)
           : formatCurrency(value, currency)}
       </p>
     </div>
@@ -43,6 +45,8 @@ export function StackedAreaTooltip({
   currency: EvolutionCurrency
   isPercentStack?: boolean
 }) {
+  const { formatCurrency, formatSharePercent } = usePortfolioFormatters()
+
   if (!active || !payload?.length) return null
 
   const total = payload.reduce((sum, entry) => sum + entry.value, 0)
@@ -57,10 +61,10 @@ export function StackedAreaTooltip({
             <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: entry.color }} />
             <span className="text-muted">{entry.name}:</span>
             {isPercentStack
-              ? `${entry.value.toFixed(1)}%`
+              ? formatSharePercent(entry.value)
               : formatCurrency(entry.value, currency)}
             {!isPercentStack && (
-              <span className="text-subtle text-xs">({percent.toFixed(1)}%)</span>
+              <span className="text-subtle text-xs">({formatSharePercent(percent)})</span>
             )}
           </p>
         )

@@ -1,4 +1,5 @@
-import { formatCurrency, getTimeAgo } from '../utils/formatters'
+import { getTimeAgo } from '../utils/formatters'
+import { usePortfolioFormatters } from '../hooks/usePortfolioFormatters'
 import { ASSET_TYPES } from '../config/constants'
 import { computeAssetPL } from '../utils/assetCalculations'
 import type { Asset } from '../types'
@@ -18,6 +19,8 @@ interface AssetCardProps {
 }
 
 export default function AssetCard({ asset, currentPrice, onEdit, onDelete, dolarPrice, dolarMepPrice, conversionRate, exchangeRateInfo, fetchedAt }: AssetCardProps) {
+  const { formatCurrency, formatPercentage, formatQuantity } = usePortfolioFormatters()
+
   if (asset.type === ASSET_TYPES.PLAZO_FIJO) {
     return <PlazoFijoCard asset={asset} onEdit={onEdit} onDelete={onDelete} />
   }
@@ -103,7 +106,7 @@ export default function AssetCard({ asset, currentPrice, onEdit, onDelete, dolar
         <div className="flex justify-between items-center">
           <span className="text-subtle text-sm">Cantidad</span>
           <span className="text-paper font-mono-data font-medium">
-            {asset.amount.toLocaleString('es-AR', { maximumFractionDigits: 8 })}
+            {formatQuantity(asset.amount)}
           </span>
         </div>
 
@@ -141,7 +144,7 @@ export default function AssetCard({ asset, currentPrice, onEdit, onDelete, dolar
               {formatCurrency(pl.plUSD, 'USD')} / {formatCurrency(pl.plARS, 'ARS')}
             </div>
             <div className={`text-sm font-mono-data ${pl.plUSD >= 0 ? 'text-profit' : 'text-loss'}`}>
-              {pl.plUSD >= 0 ? '+' : ''}{pl.plPctUSD.toFixed(2)}%
+              {formatPercentage(pl.plPctUSD)}
             </div>
           </div>
         </div>

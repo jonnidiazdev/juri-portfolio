@@ -1,7 +1,7 @@
 import { CartesianGrid, XAxis, YAxis } from 'recharts'
 import type { EvolutionCurrency, EvolutionYMetric, EvolutionYScale } from '../../config/evolutionViews'
+import { usePortfolioFormatters } from '../../hooks/usePortfolioFormatters'
 import { resolveEvolutionYDomain } from '../../utils/evolutionYDomain'
-import { formatEvolutionAxisValue } from './evolutionChartFormatters'
 
 interface EvolutionChartAxesProps {
   yMetric: EvolutionYMetric
@@ -22,6 +22,7 @@ export default function EvolutionChartAxes({
   yDomainMin = null,
   yDomainMax = null,
 }: EvolutionChartAxesProps) {
+  const { formatEvolutionAxisValue } = usePortfolioFormatters()
   const useLog = yScale === 'log' && logScaleActive && !isPercentStack
   const domain = resolveEvolutionYDomain({
     isPercentStack,
