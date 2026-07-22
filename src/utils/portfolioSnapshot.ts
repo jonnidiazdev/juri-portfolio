@@ -166,6 +166,46 @@ function formatSnapshotLabel(capturedAt: string, dateFormat: EvolutionDateFormat
   })
 }
 
+function formatSnapshotTime(capturedAt: string): string {
+  return new Date(capturedAt).toLocaleTimeString('es-AR', {
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+}
+
+function buildUniqueSnapshotLabels(
+  snapshots: PortfolioSnapshot[],
+  dateFormat: EvolutionDateFormat
+): string[] {
+  const baseLabels = snapshots.map((snapshot) =>
+    formatSnapshotLabel(snapshot.capturedAt, dateFormat)
+  )
+  const baseCounts = new Map<string, number>()
+  for (const label of baseLabels) {
+    baseCounts.set(label, (baseCounts.get(label) ?? 0) + 1)
+  }
+
+  const candidates = snapshots.map((snapshot, index) => {
+    const base = baseLabels[index]
+    if ((baseCounts.get(base) ?? 0) <= 1) return base
+    return `${base} · ${formatSnapshotTime(snapshot.capturedAt)}`
+  })
+
+  const candidateCounts = new Map<string, number>()
+  for (const candidate of candidates) {
+    candidateCounts.set(candidate, (candidateCounts.get(candidate) ?? 0) + 1)
+  }
+
+  const seen = new Map<string, number>()
+  return candidates.map((candidate) => {
+    if ((candidateCounts.get(candidate) ?? 0) <= 1) return candidate
+
+    const occurrence = (seen.get(candidate) ?? 0) + 1
+    seen.set(candidate, occurrence)
+    return occurrence === 1 ? candidate : `${candidate} (${occurrence})`
+  })
+}
+
 function readMetricValue(
   totals: SnapshotTotals,
   yMetric: EvolutionYMetric
@@ -178,9 +218,10 @@ export function buildSnapshotChartPoints(
   options: BuildChartPointsOptions
 ): SnapshotChartPoint[] {
   const { currency, scope, yMetric, dateFormat } = options
+  const labels = buildUniqueSnapshotLabels(snapshots, dateFormat)
 
-  return snapshots.map((snapshot) => {
-    const label = formatSnapshotLabel(snapshot.capturedAt, dateFormat)
+  return snapshots.map((snapshot, index) => {
+    const label = labels[index]
     const totals = currency === 'ARS' ? snapshot.totalsARS : snapshot.totalsUSD
     const byType = currency === 'ARS' ? snapshot.byTypeARS : snapshot.byTypeUSD
 

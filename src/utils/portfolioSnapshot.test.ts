@@ -217,6 +217,135 @@ describe('buildSnapshotChartPoints', () => {
     expect(normalized[0].argentine).toBeCloseTo(33.333, 2)
     expect((normalized[0].crypto ?? 0) + (normalized[0].argentine ?? 0)).toBeCloseTo(100, 2)
   })
+
+  const sameDayBase = {
+    currencyPreference: 'blue',
+    exchangeRate: 1000,
+    exchangeRateName: 'Dólar blue',
+    byTypeARS: {
+      crypto: { current: 0, invested: 0, profit: 0, profitPercent: 0 },
+      argentine: { current: 0, invested: 0, profit: 0, profitPercent: 0 },
+      plazoFijo: { current: 0, invested: 0, profit: 0, profitPercent: 0 },
+      efectivo: { current: 0, invested: 0, profit: 0, profitPercent: 0 },
+    },
+    byTypeUSD: {
+      crypto: { current: 0, invested: 0, profit: 0, profitPercent: 0 },
+      argentine: { current: 0, invested: 0, profit: 0, profitPercent: 0 },
+      plazoFijo: { current: 0, invested: 0, profit: 0, profitPercent: 0 },
+      efectivo: { current: 0, invested: 0, profit: 0, profitPercent: 0 },
+    },
+  } satisfies Omit<PortfolioSnapshot, 'id' | 'capturedAt' | 'totalsARS' | 'totalsUSD'>
+
+  it('assigns unique labels with time when multiple snapshots share a day', () => {
+    const sameDaySnapshots: PortfolioSnapshot[] = [
+      {
+        ...sameDayBase,
+        id: 'a',
+        capturedAt: '2026-07-22T13:00:00.000Z',
+        totalsARS: { current: 1000000, invested: 800000, profit: 200000, profitPercent: 25 },
+        totalsUSD: { current: 1000, invested: 800, profit: 200, profitPercent: 25 },
+      },
+      {
+        ...sameDayBase,
+        id: 'b',
+        capturedAt: '2026-07-22T21:00:00.000Z',
+        totalsARS: { current: 1100000, invested: 850000, profit: 250000, profitPercent: 29 },
+        totalsUSD: { current: 1100, invested: 850, profit: 250, profitPercent: 29 },
+      },
+    ]
+
+    const points = buildSnapshotChartPoints(sameDaySnapshots, {
+      currency: 'ARS',
+      scope: 'total',
+      yMetric: 'current',
+      dateFormat: 'short',
+    })
+
+    expect(points).toHaveLength(2)
+    expect(points[0].label).not.toBe(points[1].label)
+    expect(points[0].label).toContain(' · ')
+    expect(points[1].label).toContain(' · ')
+    expect(points[0].total).toBe(1000000)
+    expect(points[1].total).toBe(1100000)
+  })
+
+  it('keeps date-only labels when each snapshot is on a different day', () => {
+    const points = buildSnapshotChartPoints(snapshots, {
+      currency: 'ARS',
+      scope: 'total',
+      yMetric: 'current',
+      dateFormat: 'short',
+    })
+
+    for (const point of points) {
+      expect(point.label).not.toContain(' · ')
+    }
+  })
+
+  it('assigns three unique labels for three same-day snapshots', () => {
+    const tripleSameDay: PortfolioSnapshot[] = [
+      {
+        ...sameDayBase,
+        id: 'a',
+        capturedAt: '2026-07-22T13:00:00.000Z',
+        totalsARS: { current: 1000000, invested: 0, profit: 0, profitPercent: 0 },
+        totalsUSD: { current: 1000, invested: 0, profit: 0, profitPercent: 0 },
+      },
+      {
+        ...sameDayBase,
+        id: 'b',
+        capturedAt: '2026-07-22T17:00:00.000Z',
+        totalsARS: { current: 1050000, invested: 0, profit: 0, profitPercent: 0 },
+        totalsUSD: { current: 1050, invested: 0, profit: 0, profitPercent: 0 },
+      },
+      {
+        ...sameDayBase,
+        id: 'c',
+        capturedAt: '2026-07-22T21:00:00.000Z',
+        totalsARS: { current: 1100000, invested: 0, profit: 0, profitPercent: 0 },
+        totalsUSD: { current: 1100, invested: 0, profit: 0, profitPercent: 0 },
+      },
+    ]
+
+    const points = buildSnapshotChartPoints(tripleSameDay, {
+      currency: 'ARS',
+      scope: 'total',
+      yMetric: 'current',
+      dateFormat: 'short',
+    })
+
+    const labels = points.map((point) => point.label)
+    expect(new Set(labels).size).toBe(3)
+  })
+
+  it('adds numeric suffix when same-day snapshots share the same minute', () => {
+    const sameMinuteSnapshots: PortfolioSnapshot[] = [
+      {
+        ...sameDayBase,
+        id: 'a',
+        capturedAt: '2026-07-22T13:00:00.000Z',
+        totalsARS: { current: 1000000, invested: 0, profit: 0, profitPercent: 0 },
+        totalsUSD: { current: 1000, invested: 0, profit: 0, profitPercent: 0 },
+      },
+      {
+        ...sameDayBase,
+        id: 'b',
+        capturedAt: '2026-07-22T13:00:30.000Z',
+        totalsARS: { current: 1100000, invested: 0, profit: 0, profitPercent: 0 },
+        totalsUSD: { current: 1100, invested: 0, profit: 0, profitPercent: 0 },
+      },
+    ]
+
+    const points = buildSnapshotChartPoints(sameMinuteSnapshots, {
+      currency: 'ARS',
+      scope: 'total',
+      yMetric: 'current',
+      dateFormat: 'short',
+    })
+
+    expect(points[0].label).not.toBe(points[1].label)
+    expect(points[1].label).toMatch(/ \(2\)$/)
+  })
 })
 
 describe('getActiveByTypeSeries', () => {
