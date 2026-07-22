@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { isFirebaseConfigured, signInWithGoogle, subscribeToAuthChanges } from '../config/firebase'
 import LoadingSpinner from './LoadingSpinner'
+import NightForestBackground from './NightForestBackground'
 
 interface GoogleLoginGateProps {
   children: (user: { uid: string; displayName?: string; photoURL?: string; email?: string }) => React.ReactNode
@@ -45,7 +46,8 @@ export default function GoogleLoginGate({ children }: GoogleLoginGateProps) {
  
    if (isLoading) {
      return (
-       <div className="bg-ink min-h-screen flex items-center justify-center">
+       <div className="relative min-h-screen flex items-center justify-center">
+         <NightForestBackground />
          <LoadingSpinner text="Validando sesión…" />
        </div>
      )
@@ -53,7 +55,8 @@ export default function GoogleLoginGate({ children }: GoogleLoginGateProps) {
  
    if (!isFirebaseConfigured) {
      return (
-       <div className="bg-ink min-h-screen flex items-center justify-center px-4">
+       <div className="relative min-h-screen flex items-center justify-center px-4">
+         <NightForestBackground />
          <div className="max-w-lg w-full card p-8 text-center">
            <h1 className="font-display text-2xl font-semibold mb-3 text-paper">Configuración requerida</h1>
            <p className="text-muted">
@@ -66,7 +69,8 @@ export default function GoogleLoginGate({ children }: GoogleLoginGateProps) {
  
    if (!user) {
      return (
-       <div className="bg-ink min-h-screen flex items-center justify-center px-4">
+       <div className="relative min-h-screen flex items-center justify-center px-4">
+         <NightForestBackground />
          <div className="max-w-md w-full card p-8">
            <p className="text-celeste text-xs font-mono-data uppercase tracking-widest mb-3">Portfolio personal</p>
            <h1 className="font-display text-3xl font-semibold mb-2 text-paper">El Juri-Portfolio</h1>

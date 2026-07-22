@@ -1,18 +1,9 @@
 import { getFirestoreClient, isFirebaseConfigured } from '../config/firebase'
 import type { PortfolioSnapshot, PortfolioSnapshotPayload } from '../types'
+import { normalizeSnapshot } from '../utils/portfolioSnapshot'
 
 function mapDocToSnapshot(id: string, data: Record<string, unknown>): PortfolioSnapshot {
-  return {
-    id,
-    capturedAt: String(data.capturedAt ?? ''),
-    currencyPreference: String(data.currencyPreference ?? ''),
-    exchangeRate: Number(data.exchangeRate ?? 0),
-    exchangeRateName: String(data.exchangeRateName ?? ''),
-    totalsARS: data.totalsARS as PortfolioSnapshot['totalsARS'],
-    totalsUSD: data.totalsUSD as PortfolioSnapshot['totalsUSD'],
-    byTypeARS: data.byTypeARS as PortfolioSnapshot['byTypeARS'],
-    byTypeUSD: data.byTypeUSD as PortfolioSnapshot['byTypeUSD'],
-  }
+  return normalizeSnapshot(id, data)
 }
 
 export async function savePortfolioSnapshot(

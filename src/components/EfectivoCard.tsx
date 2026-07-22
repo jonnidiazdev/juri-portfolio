@@ -4,8 +4,10 @@ import {
   getEfectivoIcon, 
   getEfectivoColor 
 } from '../utils/efectivoCalculations'
+import { usePortfolioOutletContext } from '../hooks/usePortfolioOutletContext'
 
 export default function EfectivoCard({ asset, onEdit, onDelete }) {
+  const { hideValues } = usePortfolioOutletContext()
   const efectivoData = calculateEfectivo(
     asset.amount,
     asset.tipoEfectivo,
@@ -14,7 +16,7 @@ export default function EfectivoCard({ asset, onEdit, onDelete }) {
     asset.descripcion
   )
   
-  const formattedInfo = formatEfectivoInfo(efectivoData)
+  const formattedInfo = formatEfectivoInfo(efectivoData, hideValues)
   const icon = getEfectivoIcon(asset.tipoEfectivo)
   const colorClass = getEfectivoColor(asset.tipoEfectivo)
   

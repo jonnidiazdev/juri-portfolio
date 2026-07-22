@@ -1,4 +1,8 @@
-export const formatCurrency = (amount: number, currency: string = 'USD', decimals: number = 2): string => {
+export const HIDDEN_AMOUNT = '$ ••••••'
+export const HIDDEN_VALUE = '••••'
+
+export const formatCurrency = (amount: number, currency: string = 'USD', decimals: number = 2, hidden: boolean = false): string => {
+  if (hidden) return HIDDEN_AMOUNT
   return new Intl.NumberFormat('es-AR', {
     style: 'currency',
     currency: currency,
@@ -7,9 +11,19 @@ export const formatCurrency = (amount: number, currency: string = 'USD', decimal
   }).format(amount)
 }
 
-export const formatPercentage = (value: number): string => {
+export const formatPercentage = (value: number, hidden: boolean = false): string => {
+  if (hidden) return HIDDEN_VALUE
   const sign = value >= 0 ? '+' : ''
   return `${sign}${value.toFixed(2)}%`
+}
+
+export const formatQuantity = (
+  value: number,
+  options: Intl.NumberFormatOptions = { maximumFractionDigits: 8 },
+  hidden: boolean = false
+): string => {
+  if (hidden) return HIDDEN_VALUE
+  return value.toLocaleString('es-AR', options)
 }
 
 export const getTimeAgo = (isoDateString: string | null | undefined): string => {

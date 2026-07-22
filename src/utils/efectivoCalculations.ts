@@ -1,5 +1,6 @@
 import { EFECTIVO_CONFIG } from '../config/constants'
 import type { ValidationResult, EfectivoInfo } from '../types'
+import { HIDDEN_AMOUNT } from './formatters'
 
 const TIPOS_DESCRIPCIONES = EFECTIVO_CONFIG.TIPOS_DESCRIPCIONES as Record<string, string>
 const TIPOS_KEYS = Object.keys(EFECTIVO_CONFIG.TIPOS)
@@ -84,15 +85,17 @@ interface EfectivoFormatted {
   riesgo: string
 }
 
-export function formatEfectivoInfo(efectivoData: EfectivoInfo): EfectivoFormatted {
+export function formatEfectivoInfo(efectivoData: EfectivoInfo, hidden = false): EfectivoFormatted {
   return {
     titulo: efectivoData.tipoDescripcion,
     subtitulo: efectivoData.banco,
-    montoFormateado: new Intl.NumberFormat('es-AR', {
-      style: 'currency',
-      currency: efectivoData.currency,
-      minimumFractionDigits: 2
-    }).format(efectivoData.currentValue),
+    montoFormateado: hidden
+      ? HIDDEN_AMOUNT
+      : new Intl.NumberFormat('es-AR', {
+          style: 'currency',
+          currency: efectivoData.currency,
+          minimumFractionDigits: 2
+        }).format(efectivoData.currentValue),
     descripcion: efectivoData.descripcion,
     disponibilidad: 'Inmediata', // El efectivo está siempre disponible
     liquidez: 'Alta',

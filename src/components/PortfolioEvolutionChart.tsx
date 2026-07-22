@@ -1,112 +1,44 @@
-import { useMemo, useState } from 'react'
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Legend,
-} from 'recharts'
+import { useMemo } from 'react'
 import type { PortfolioSnapshot } from '../types'
-import { formatCurrency } from '../utils/formatters'
-
-type CurrencyMode = 'ARS' | 'USD'
-type MetricMode = 'total' | 'byType'
+import { getEvolutionView } from '../config/evolutionViews'
+import { useEvolutionViewPrefs } from '../hooks/useEvolutionViewPrefs'
+import {
+  buildSnapshotChartPoints,
+  chartDataHasNonPositiveValues,
+} from '../utils/portfolioSnapshot'
+import { usePortfolioFormatters } from '../hooks/usePortfolioFormatters'
+import EvolutionChartToolbar from './EvolutionChartToolbar'
+import EvolutionChartRenderer from './evolution/EvolutionChartRenderer'
 
 interface PortfolioEvolutionChartProps {
   snapshots: PortfolioSnapshot[]
+  userId: string | null | undefined
 }
 
-interface ChartPoint {
-  label: string
-  total?: number
-  crypto?: number
-  argentine?: number
-  plazoFijo?: number
-  efectivo?: number
-}
+const RESET_DOMAIN = { yDomainMin: null, yDomainMax: null } as const
 
-function formatAxisValue(value: number, currency: CurrencyMode): string {
-  if (currency === 'USD') {
-    return `$${Math.round(value).toLocaleString('es-AR')}`
-  }
-  if (value >= 1_000_000) return `$${(value / 1_000_000).toFixed(1)}M`
-  if (value >= 1_000) return `$${Math.round(value / 1_000)}K`
-  return `$${Math.round(value).toLocaleString('es-AR')}`
-}
+export default function PortfolioEvolutionChart({ snapshots, userId }: PortfolioEvolutionChartProps) {
+  const { prefs, updatePrefs, toggleHiddenSeries } = useEvolutionViewPrefs(userId)
+  const { formatCurrency, formatEvolutionPercent } = usePortfolioFormatters()
+  const activeView = getEvolutionView(prefs.viewId)
 
-function buildChartPoints(
-  snapshots: PortfolioSnapshot[],
-  currency: CurrencyMode,
-  metric: MetricMode
-): ChartPoint[] {
-  return snapshots.map((snapshot) => {
-    const label = new Date(snapshot.capturedAt).toLocaleDateString('es-AR', {
-      day: '2-digit',
-      month: 'short',
-    })
-    const totals = currency === 'ARS' ? snapshot.totalsARS : snapshot.totalsUSD
-    const byType = currency === 'ARS' ? snapshot.byTypeARS : snapshot.byTypeUSD
-
-    if (metric === 'total') {
-      return { label, total: totals.current }
-    }
-
-    return {
-      label,
-      crypto: byType.crypto.current,
-      argentine: byType.argentine.current,
-      plazoFijo: byType.plazoFijo.current,
-      efectivo: byType.efectivo.current,
-    }
-  })
-}
-
-function ChartTooltip({
-  active,
-  payload,
-  label,
-  currency,
-  metric,
-}: {
-  active?: boolean
-  payload?: Array<{ name: string; value: number; color: string }>
-  label?: string
-  currency: CurrencyMode
-  metric: MetricMode
-}) {
-  if (!active || !payload?.length) return null
-
-  return (
-    <div className="card px-3 py-2 text-sm shadow-lg">
-      <p className="text-muted text-xs font-mono-data mb-2">{label}</p>
-      {metric === 'total' ? (
-        <p className="font-mono-data text-paper">
-          {formatCurrency(payload[0].value, currency)}
-        </p>
-      ) : (
-        payload.map((entry) => (
-          <p key={entry.name} className="font-mono-data text-paper flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: entry.color }} />
-            <span className="text-muted">{entry.name}:</span>
-            {formatCurrency(entry.value, currency)}
-          </p>
-        ))
-      )}
-    </div>
+  const fullChartData = useMemo(
+    () =>
+      buildSnapshotChartPoints(snapshots, {
+        currency: prefs.currency,
+        scope: activeView.scope,
+        yMetric: prefs.yMetric,
+        dateFormat: prefs.dateFormat,
+      }),
+    [snapshots, prefs.currency, prefs.yMetric, prefs.dateFormat, activeView.scope]
   )
-}
 
-export default function PortfolioEvolutionChart({ snapshots }: PortfolioEvolutionChartProps) {
-  const [currency, setCurrency] = useState<CurrencyMode>('ARS')
-  const [metric, setMetric] = useState<MetricMode>('total')
-
-  const chartData = useMemo(
-    () => buildChartPoints(snapshots, currency, metric),
-    [snapshots, currency, metric]
+  const logScaleDisabled = useMemo(
+    () => chartDataHasNonPositiveValues(fullChartData, activeView.scope),
+    [fullChartData, activeView.scope]
   )
+
+  const yDomainDisabled = activeView.chartType === 'stackedPercent'
 
   if (snapshots.length === 0) {
     return (
@@ -118,102 +50,57 @@ export default function PortfolioEvolutionChart({ snapshots }: PortfolioEvolutio
 
   const singlePoint = snapshots.length === 1
   const latest = snapshots[snapshots.length - 1]
-  const latestTotals = currency === 'ARS' ? latest.totalsARS : latest.totalsUSD
+  const latestTotals = prefs.currency === 'ARS' ? latest.totalsARS : latest.totalsUSD
+  const latestValue = latestTotals[prefs.yMetric]
+
+  const handleViewChange = (viewId: string) => {
+    const view = getEvolutionView(viewId)
+    updatePrefs({
+      viewId,
+      yMetric: view.allowedYMetrics.includes(prefs.yMetric) ? prefs.yMetric : view.defaultYMetric,
+      hiddenSeries: [],
+      brushRange: null,
+      ...RESET_DOMAIN,
+    })
+  }
 
   return (
     <div className="card p-5 sm:p-7">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
-        <div className="flex gap-2">
-          {(['ARS', 'USD'] as CurrencyMode[]).map((option) => (
-            <button
-              key={option}
-              type="button"
-              onClick={() => setCurrency(option)}
-              className={`px-3 py-1.5 text-xs font-mono-data rounded-md border transition-colors ${
-                currency === option
-                  ? option === 'ARS'
-                    ? 'bg-peso/15 text-peso border-peso/30'
-                    : 'bg-celeste/15 text-celeste border-celeste/30'
-                  : 'text-muted border-border hover:text-paper'
-              }`}
-            >
-              {option}
-            </button>
-          ))}
-        </div>
-        <div className="flex gap-2">
-          {([
-            { id: 'total' as MetricMode, label: 'Valor total' },
-            { id: 'byType' as MetricMode, label: 'Por tipo' },
-          ]).map((option) => (
-            <button
-              key={option.id}
-              type="button"
-              onClick={() => setMetric(option.id)}
-              className={`px-3 py-1.5 text-xs font-mono-data rounded-md border transition-colors ${
-                metric === option.id
-                  ? 'bg-celeste/15 text-celeste border-celeste/30'
-                  : 'text-muted border-border hover:text-paper'
-              }`}
-            >
-              {option.label}
-            </button>
-          ))}
-        </div>
-      </div>
+      <EvolutionChartToolbar
+        prefs={prefs}
+        activeView={activeView}
+        logScaleDisabled={logScaleDisabled}
+        yDomainDisabled={yDomainDisabled}
+        onViewChange={handleViewChange}
+        onCurrencyChange={(currency) => updatePrefs({ currency, ...RESET_DOMAIN })}
+        onYMetricChange={(yMetric) => updatePrefs({ yMetric, ...RESET_DOMAIN })}
+        onDateFormatChange={(dateFormat) => updatePrefs({ dateFormat })}
+        onYScaleChange={(yScale) => updatePrefs({ yScale: logScaleDisabled ? 'linear' : yScale })}
+        onYDomainMinChange={(yDomainMin) => updatePrefs({ yDomainMin })}
+        onYDomainMaxChange={(yDomainMax) => updatePrefs({ yDomainMax })}
+        onResetBrush={() => updatePrefs({ brushRange: null })}
+        onResetYDomain={() => updatePrefs(RESET_DOMAIN)}
+        showBrushReset={prefs.brushRange !== null}
+        showYDomainReset={prefs.yDomainMin !== null || prefs.yDomainMax !== null}
+      />
 
       {singlePoint && (
         <p className="text-subtle text-sm mb-4">
           Necesitás al menos 2 snapshots para ver la tendencia. Valor actual:{' '}
-          <span className="font-mono-data text-paper">{formatCurrency(latestTotals.current, currency)}</span>
+          <span className="font-mono-data text-paper">
+            {prefs.yMetric === 'profitPercent'
+              ? formatEvolutionPercent(latestValue, true)
+              : formatCurrency(latestValue, prefs.currency)}
+          </span>
         </p>
       )}
 
-      <div className="h-72 sm:h-80 w-full">
-        <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={chartData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
-            <CartesianGrid stroke="var(--color-border)" strokeDasharray="3 3" vertical={false} />
-            <XAxis
-              dataKey="label"
-              tick={{ fill: 'var(--color-subtle)', fontSize: 11, fontFamily: 'var(--font-mono)' }}
-              axisLine={{ stroke: 'var(--color-border)' }}
-              tickLine={false}
-            />
-            <YAxis
-              tickFormatter={(value) => formatAxisValue(Number(value), currency)}
-              tick={{ fill: 'var(--color-subtle)', fontSize: 11, fontFamily: 'var(--font-mono)' }}
-              axisLine={false}
-              tickLine={false}
-              width={56}
-            />
-            <Tooltip
-              content={<ChartTooltip currency={currency} metric={metric} />}
-            />
-            {metric === 'total' ? (
-              <Line
-                type="monotone"
-                dataKey="total"
-                name="Total"
-                stroke="#6badc9"
-                strokeWidth={2}
-                dot={{ fill: '#6badc9', r: 3 }}
-                activeDot={{ r: 5 }}
-                isAnimationActive={false}
-              />
-            ) : (
-              <>
-                <Legend
-                  wrapperStyle={{ fontSize: 11, fontFamily: 'var(--font-mono)', color: 'var(--color-muted)' }}
-                />
-                <Line type="monotone" dataKey="crypto" name="Crypto" stroke="#a78bfa" strokeWidth={2} dot={false} isAnimationActive={false} />
-                <Line type="monotone" dataKey="argentine" name="Mercado AR" stroke="#6badc9" strokeWidth={2} dot={false} isAnimationActive={false} />
-                <Line type="monotone" dataKey="plazoFijo" name="Plazo fijo" stroke="#c9a227" strokeWidth={2} dot={false} isAnimationActive={false} />
-                <Line type="monotone" dataKey="efectivo" name="Efectivo" stroke="#4ade80" strokeWidth={2} dot={false} isAnimationActive={false} />
-              </>
-            )}
-          </LineChart>
-        </ResponsiveContainer>
-      </div>
+      <EvolutionChartRenderer
+        snapshots={snapshots}
+        prefs={prefs}
+        onBrushChange={(brushRange) => updatePrefs({ brushRange })}
+        onToggleSeries={toggleHiddenSeries}
+      />
     </div>
   )
 }

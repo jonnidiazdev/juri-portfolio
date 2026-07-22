@@ -15,6 +15,8 @@ export interface PortfolioOutletContext {
   isCloudSyncing: boolean
   currencyPreference: string
   setCurrencyPreference: (value: string) => void
+  hideValues: boolean
+  setHideValues: (value: boolean) => void
   multiCurrencyData: {
     totalsARS: MultiCurrencyTotals
     totalsUSD: MultiCurrencyTotals

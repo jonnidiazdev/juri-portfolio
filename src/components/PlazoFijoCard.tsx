@@ -1,7 +1,8 @@
-import { formatCurrency } from '../utils/formatters'
+import { usePortfolioFormatters } from '../hooks/usePortfolioFormatters'
 import { calculatePlazoFijo, formatPlazoFijoInfo } from '../utils/plazoFijoCalculations'
 
 export default function PlazoFijoCard({ asset, onEdit, onDelete }) {
+  const { formatCurrency } = usePortfolioFormatters()
   const plazoFijoData = calculatePlazoFijo(
     asset.amount,
     asset.tna,

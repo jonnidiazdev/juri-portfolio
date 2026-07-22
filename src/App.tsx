@@ -17,6 +17,7 @@ import AddAssetModal from './components/AddAssetModal'
 import EditAssetModal from './components/EditAssetModal'
 import SettingsModal from './components/SettingsModal'
 import ErrorMessage from './components/ErrorMessage'
+import NightForestBackground from './components/NightForestBackground'
 
 interface AppProps {
   user: { uid: string; displayName?: string; photoURL?: string; email?: string }
@@ -25,7 +26,8 @@ interface AppProps {
 function App({ user }: AppProps) {
   const [assets, setAssets, { isSyncing: isPortfolioSyncing }] = useLocalStorageState<Asset[]>('portfolio-assets', [], user?.uid)
   const [currencyPreference, setCurrencyPreference, { isSyncing: isPrefsSyncing }] = useLocalStorageState('portfolio-currency-preference', 'blue', user?.uid)
-  const isCloudSyncing = isPortfolioSyncing || isPrefsSyncing
+  const [hideValues, setHideValues, { isSyncing: isHideValuesSyncing }] = useLocalStorageState('portfolio-hide-values', false, user?.uid)
+  const isCloudSyncing = isPortfolioSyncing || isPrefsSyncing || isHideValuesSyncing
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
   const [editingAsset, setEditingAsset] = useState<Asset | null>(null)
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
@@ -116,6 +118,8 @@ function App({ user }: AppProps) {
     isCloudSyncing,
     currencyPreference,
     setCurrencyPreference,
+    hideValues,
+    setHideValues,
     multiCurrencyData,
     cryptoStats,
     argentineStats,
@@ -143,7 +147,8 @@ function App({ user }: AppProps) {
   }
 
   return (
-    <div className="bg-ink min-h-screen text-paper">
+    <div className="relative min-h-screen text-paper">
+      <NightForestBackground />
       <Routes>
         <Route
           element={
@@ -157,6 +162,8 @@ function App({ user }: AppProps) {
               onDismissIolError={() => setIolAuthError(null)}
               onOpenSettings={() => setIsSettingsOpen(true)}
               onOpenAddAsset={() => setIsAddModalOpen(true)}
+              hideValues={hideValues}
+              onToggleHideValues={() => setHideValues(!hideValues)}
               addButtonRef={addButtonRef}
             />
           }

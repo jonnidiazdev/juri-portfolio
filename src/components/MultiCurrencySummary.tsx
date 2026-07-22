@@ -1,11 +1,24 @@
-import { formatCurrency, formatPercentage } from '../utils/formatters'
+import { usePortfolioFormatters } from '../hooks/usePortfolioFormatters'
+import PortfolioCategoryBreakdown, { type CategoryBreakdownItem } from './PortfolioCategoryBreakdown'
 
-export default function MultiCurrencySummary({ 
-  totalsARS, 
-  totalsUSD, 
+interface MultiCurrencySummaryProps {
+  totalsARS: { invested: number; current: number; profit: number; profitPercent: number }
+  totalsUSD: { invested: number; current: number; profit: number; profitPercent: number }
+  exchangeRateInfo: { name: string; id: string; buy: number; sell: number } | null
+  exchangeRate?: number | null
+  categories?: CategoryBreakdownItem[]
+  className?: string
+}
+
+export default function MultiCurrencySummary({
+  totalsARS,
+  totalsUSD,
   exchangeRateInfo,
-  className = '' 
-}) {
+  exchangeRate = null,
+  categories = [],
+  className = '',
+}: MultiCurrencySummaryProps) {
+  const { formatCurrency, formatPercentage } = usePortfolioFormatters()
   const isPositiveARS = totalsARS.profit >= 0
   const isPositiveUSD = totalsUSD.profit >= 0
 
@@ -81,6 +94,13 @@ export default function MultiCurrencySummary({
           </div>
         </div>
       </div>
+      {categories.length > 0 && (
+        <PortfolioCategoryBreakdown
+          categories={categories}
+          totalCurrentARS={totalsARS.current}
+          exchangeRate={exchangeRate}
+        />
+      )}
     </div>
   )
 }

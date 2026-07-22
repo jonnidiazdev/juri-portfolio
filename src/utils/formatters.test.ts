@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from 'vitest'
 import {
   formatCurrency,
   formatPercentage,
+  formatQuantity,
   getTimeAgo,
   formatNumber,
   calculatePortfolioValue,
@@ -40,6 +41,15 @@ describe('formatCurrency', () => {
     const result = formatCurrency(1234567.89, 'USD')
     expect(result).toContain('1.234.567,89')
   })
+
+  it('masks amount when hidden', () => {
+    expect(formatCurrency(1234.56, 'USD', 2, true)).toBe('$ ••••••')
+  })
+
+  it('shows amount when hidden is false', () => {
+    const result = formatCurrency(1234.56, 'USD', 2, false)
+    expect(result).toContain('1.234,56')
+  })
 })
 
 describe('formatPercentage', () => {
@@ -62,6 +72,20 @@ describe('formatPercentage', () => {
 
   it('handles very small numbers', () => {
     expect(formatPercentage(0.001)).toBe('+0.00%')
+  })
+
+  it('masks percentage when hidden', () => {
+    expect(formatPercentage(5.25, true)).toBe('••••')
+  })
+})
+
+describe('formatQuantity', () => {
+  it('formats quantity with locale separators', () => {
+    expect(formatQuantity(1234.5678)).toContain('1.234,5678')
+  })
+
+  it('masks quantity when hidden', () => {
+    expect(formatQuantity(1.5, undefined, true)).toBe('••••')
   })
 })
 
