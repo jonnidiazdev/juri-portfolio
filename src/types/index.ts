@@ -146,6 +146,36 @@ export interface SnapshotByType {
   efectivo: SnapshotTotals
 }
 
+export type SnapshotPriceSource = 'live' | 'fallback'
+
+export interface SnapshotHolding {
+  assetId: number
+  type: string
+  name: string
+  symbol?: string
+  amount: number
+  purchasePrice?: number
+  currency: string
+  tna?: number
+  startDate?: string
+  endDate?: string
+  bank?: string
+  tipoEfectivo?: string
+  banco?: string
+  descripcion?: string
+  marketPrice: number
+  priceSource: SnapshotPriceSource
+  currentValueARS: number
+  currentValueUSD: number
+  investedARS: number
+  investedUSD: number
+  profitARS: number
+  profitUSD: number
+  profitPercent: number
+}
+
+export const SNAPSHOT_SCHEMA_VERSION = 2
+
 export interface PortfolioSnapshotPayload {
   capturedAt: string
   currencyPreference: string
@@ -155,6 +185,9 @@ export interface PortfolioSnapshotPayload {
   totalsUSD: SnapshotTotals
   byTypeARS: SnapshotByType
   byTypeUSD: SnapshotByType
+  schemaVersion?: number
+  assetCount?: number
+  holdings?: SnapshotHolding[]
 }
 
 export interface PortfolioSnapshot extends PortfolioSnapshotPayload {

@@ -2,9 +2,14 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { usePortfolioOutletContext } from '../hooks/usePortfolioOutletContext'
 import { usePortfolioSnapshots } from '../hooks/usePortfolioSnapshots'
+import { useEvolutionPageTab } from '../hooks/useEvolutionPageTab'
+import { useEvolutionViewPrefs } from '../hooks/useEvolutionViewPrefs'
 import { buildPortfolioSnapshot } from '../utils/portfolioSnapshot'
 import PortfolioEvolutionChart from './PortfolioEvolutionChart'
 import LoadingSpinner from './LoadingSpinner'
+import EvolutionPageTabs from './evolution/EvolutionPageTabs'
+import SnapshotChangesPanel from './evolution/SnapshotChangesPanel'
+import AssetEvolutionPanel from './evolution/AssetEvolutionPanel'
 
 export default function PortfolioEvolutionPage() {
   const {
@@ -17,6 +22,8 @@ export default function PortfolioEvolutionPage() {
     argentineStats,
     plazoFijoStats,
     efectivoStats,
+    cryptoPrices,
+    argQuotes,
     loadingCrypto,
     loadingDolar,
     loadingArgQuotes,
@@ -24,6 +31,8 @@ export default function PortfolioEvolutionPage() {
   } = usePortfolioOutletContext()
 
   const { snapshots, isLoading, error, saveSnapshot, isSaving } = usePortfolioSnapshots(user.uid)
+  const { tab, setTab } = useEvolutionPageTab(user.uid)
+  const { prefs, updatePrefs } = useEvolutionViewPrefs(user.uid)
   const [saveMessage, setSaveMessage] = useState<string | null>(null)
   const [saveError, setSaveError] = useState<string | null>(null)
 
@@ -58,6 +67,8 @@ export default function PortfolioEvolutionPage() {
         argentineStats,
         plazoFijoStats,
         efectivoStats,
+        assets,
+        priceContext: { cryptoPrices, argQuotes },
       })
       await saveSnapshot(payload)
       setSaveMessage('Snapshot guardado')
@@ -152,7 +163,36 @@ export default function PortfolioEvolutionPage() {
         </div>
       )}
 
-      <PortfolioEvolutionChart snapshots={snapshots} userId={user.uid} />
+      <EvolutionPageTabs activeTab={tab} onTabChange={setTab} />
+
+      {(tab === 'changes' || tab === 'asset') && (
+        <div className="flex gap-2 mb-6">
+          {(['ARS', 'USD'] as const).map((option) => (
+            <button
+              key={option}
+              type="button"
+              onClick={() => updatePrefs({ currency: option })}
+              className={`px-3 py-1.5 text-xs font-mono-data rounded-md border transition-colors ${
+                prefs.currency === option
+                  ? 'bg-celeste/15 text-celeste border-celeste/30'
+                  : 'text-muted border-border hover:text-paper'
+              }`}
+            >
+              {option}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {tab === 'evolution' && <PortfolioEvolutionChart snapshots={snapshots} userId={user.uid} />}
+
+      {tab === 'changes' && (
+        <SnapshotChangesPanel snapshots={snapshots} currency={prefs.currency} />
+      )}
+
+      {tab === 'asset' && (
+        <AssetEvolutionPanel snapshots={snapshots} currency={prefs.currency} />
+      )}
     </div>
   )
 }

@@ -1,11 +1,24 @@
-import { SNAPSHOT_BY_TYPE_SERIES } from '../config/constants'
+import { SNAPSHOT_BY_TYPE_SERIES, ASSET_TYPES } from '../config/constants'
 import type {
   EvolutionDateFormat,
   EvolutionScope,
   EvolutionYMetric,
   EvolutionCurrency,
 } from '../config/evolutionViews'
-import type { AssetTypeStats } from './assetCalculations'
+import type { Asset, CryptoPriceData, SnapshotHolding, SnapshotPriceSource } from '../types'
+import { SNAPSHOT_SCHEMA_VERSION } from '../types'
+import type {
+  PortfolioSnapshot,
+  PortfolioSnapshotPayload,
+  SnapshotByType,
+  SnapshotTotals,
+} from '../types'
+import {
+  computeAssetPL,
+  getCurrentPrice,
+  type AssetTypeStats,
+  type PriceContext,
+} from './assetCalculations'
 
 export type SnapshotCurrencyMode = EvolutionCurrency
 export type SnapshotMetricMode = EvolutionScope
@@ -36,35 +49,6 @@ const EMPTY_SNAPSHOT_TOTALS: SnapshotTotals = {
   profitPercent: 0,
 }
 
-export interface SnapshotTotals {
-  current: number
-  invested: number
-  profit: number
-  profitPercent: number
-}
-
-export interface SnapshotByType {
-  crypto: SnapshotTotals
-  argentine: SnapshotTotals
-  plazoFijo: SnapshotTotals
-  efectivo: SnapshotTotals
-}
-
-export interface PortfolioSnapshotPayload {
-  capturedAt: string
-  currencyPreference: string
-  exchangeRate: number
-  exchangeRateName: string
-  totalsARS: SnapshotTotals
-  totalsUSD: SnapshotTotals
-  byTypeARS: SnapshotByType
-  byTypeUSD: SnapshotByType
-}
-
-export interface PortfolioSnapshot extends PortfolioSnapshotPayload {
-  id: string
-}
-
 interface MultiCurrencyTotals {
   invested: number
   current: number
@@ -82,6 +66,8 @@ interface BuildSnapshotInput {
   argentineStats: AssetTypeStats
   plazoFijoStats: AssetTypeStats
   efectivoStats: AssetTypeStats
+  assets?: Asset[]
+  priceContext?: PriceContext
   capturedAt?: string
 }
 
@@ -137,7 +123,51 @@ function normalizeSnapshotByType(value: unknown): SnapshotByType {
   }
 }
 
+function normalizeSnapshotHolding(value: unknown): SnapshotHolding | null {
+  if (!value || typeof value !== 'object') return null
+  const holding = value as Record<string, unknown>
+  const assetId = Number(holding.assetId ?? 0)
+  if (!assetId) return null
+
+  return {
+    assetId,
+    type: String(holding.type ?? ''),
+    name: String(holding.name ?? ''),
+    symbol: holding.symbol != null ? String(holding.symbol) : undefined,
+    amount: Number(holding.amount ?? 0),
+    purchasePrice: holding.purchasePrice != null ? Number(holding.purchasePrice) : undefined,
+    currency: String(holding.currency ?? 'ARS'),
+    tna: holding.tna != null ? Number(holding.tna) : undefined,
+    startDate: holding.startDate != null ? String(holding.startDate) : undefined,
+    endDate: holding.endDate != null ? String(holding.endDate) : undefined,
+    bank: holding.bank != null ? String(holding.bank) : undefined,
+    tipoEfectivo: holding.tipoEfectivo != null ? String(holding.tipoEfectivo) : undefined,
+    banco: holding.banco != null ? String(holding.banco) : undefined,
+    descripcion: holding.descripcion != null ? String(holding.descripcion) : undefined,
+    marketPrice: Number(holding.marketPrice ?? 0),
+    priceSource: holding.priceSource === 'fallback' ? 'fallback' : 'live',
+    currentValueARS: Number(holding.currentValueARS ?? 0),
+    currentValueUSD: Number(holding.currentValueUSD ?? 0),
+    investedARS: Number(holding.investedARS ?? 0),
+    investedUSD: Number(holding.investedUSD ?? 0),
+    profitARS: Number(holding.profitARS ?? 0),
+    profitUSD: Number(holding.profitUSD ?? 0),
+    profitPercent: Number(holding.profitPercent ?? 0),
+  }
+}
+
+function normalizeHoldings(value: unknown): SnapshotHolding[] | undefined {
+  if (!Array.isArray(value)) return undefined
+  const holdings = value
+    .map((entry) => normalizeSnapshotHolding(entry))
+    .filter((entry): entry is SnapshotHolding => entry !== null)
+  return holdings.length > 0 ? holdings : undefined
+}
+
 export function normalizeSnapshot(id: string, data: Record<string, unknown>): PortfolioSnapshot {
+  const schemaVersion = Number(data.schemaVersion ?? 1)
+  const holdings = normalizeHoldings(data.holdings)
+
   return {
     id,
     capturedAt: String(data.capturedAt ?? ''),
@@ -148,7 +178,83 @@ export function normalizeSnapshot(id: string, data: Record<string, unknown>): Po
     totalsUSD: normalizeSnapshotTotals(data.totalsUSD),
     byTypeARS: normalizeSnapshotByType(data.byTypeARS),
     byTypeUSD: normalizeSnapshotByType(data.byTypeUSD),
+    schemaVersion: schemaVersion > 1 ? schemaVersion : holdings ? SNAPSHOT_SCHEMA_VERSION : undefined,
+    assetCount: typeof data.assetCount === 'number' ? data.assetCount : holdings?.length,
+    holdings,
   }
+}
+
+function resolvePriceSource(asset: Asset, prices: PriceContext): SnapshotPriceSource {
+  if (asset.type === ASSET_TYPES.CRYPTO) {
+    const symbol = String(asset.symbol || '').trim().toLowerCase()
+    const data = prices.cryptoPrices?.[symbol]
+    if (data && typeof data === 'object' && 'usd' in data) {
+      const price = (data as CryptoPriceData).usd
+      if (typeof price === 'number' && price > 0) return 'live'
+    }
+    return 'fallback'
+  }
+
+  if (asset.type === ASSET_TYPES.PLAZO_FIJO || asset.type === ASSET_TYPES.EFECTIVO) {
+    return 'live'
+  }
+
+  const quote = prices.argQuotes?.[asset.id]
+  if (typeof quote?.price === 'number' && quote.price > 0) return 'live'
+  return 'fallback'
+}
+
+export function buildSnapshotHoldings(
+  assets: Asset[],
+  prices: PriceContext,
+  exchangeRate: number
+): SnapshotHolding[] {
+  const rate = exchangeRate > 0 ? exchangeRate : 1
+
+  return assets.map((asset) => {
+    const marketPrice = getCurrentPrice(asset, prices)
+    const pl = computeAssetPL(asset, marketPrice, rate)
+    const investedARS = pl.investedARS
+    const currentARS = pl.currentARS
+    const profitARS = pl.plARS
+    const profitPercent = investedARS > 0 ? (profitARS / investedARS) * 100 : 0
+
+    return {
+      assetId: asset.id,
+      type: asset.type,
+      name: asset.name,
+      symbol: asset.symbol,
+      amount: asset.amount,
+      purchasePrice: asset.purchasePrice,
+      currency: asset.currency,
+      tna: asset.tna,
+      startDate: asset.startDate,
+      endDate: asset.endDate,
+      bank: asset.bank,
+      tipoEfectivo: asset.tipoEfectivo,
+      banco: asset.banco,
+      descripcion: asset.descripcion,
+      marketPrice,
+      priceSource: resolvePriceSource(asset, prices),
+      currentValueARS: currentARS,
+      currentValueUSD: pl.currentUSD,
+      investedARS,
+      investedUSD: pl.investedUSD,
+      profitARS,
+      profitUSD: pl.plUSD,
+      profitPercent,
+    }
+  })
+}
+
+export function formatSnapshotDateTime(capturedAt: string): string {
+  return new Date(capturedAt).toLocaleString('es-AR', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
 }
 
 function formatSnapshotLabel(capturedAt: string, dateFormat: EvolutionDateFormat): string {
@@ -306,10 +412,12 @@ export function buildPortfolioSnapshot(input: BuildSnapshotInput): PortfolioSnap
     argentineStats,
     plazoFijoStats,
     efectivoStats,
+    assets,
+    priceContext,
     capturedAt = new Date().toISOString(),
   } = input
 
-  return {
+  const payload: PortfolioSnapshotPayload = {
     capturedAt,
     currencyPreference,
     exchangeRate,
@@ -329,4 +437,13 @@ export function buildPortfolioSnapshot(input: BuildSnapshotInput): PortfolioSnap
       efectivo: statsToSnapshotTotalsUSD(efectivoStats, exchangeRate),
     },
   }
+
+  if (assets && priceContext && assets.length > 0) {
+    const holdings = buildSnapshotHoldings(assets, priceContext, exchangeRate)
+    payload.schemaVersion = SNAPSHOT_SCHEMA_VERSION
+    payload.assetCount = holdings.length
+    payload.holdings = holdings
+  }
+
+  return payload
 }
