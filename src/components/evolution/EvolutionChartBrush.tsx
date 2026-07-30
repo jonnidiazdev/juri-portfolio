@@ -10,8 +10,11 @@ interface EvolutionChartBrushProps {
 export default function EvolutionChartBrush({ fullData, brush }: EvolutionChartBrushProps) {
   if (!brush.enabled || fullData.length < 3) return null
 
-  const startIndex = brush.range?.[0] ?? 0
-  const endIndex = brush.range?.[1] ?? fullData.length - 1
+  const maxIndex = fullData.length - 1
+  const rawStart = brush.range?.[0] ?? 0
+  const rawEnd = brush.range?.[1] ?? maxIndex
+  const startIndex = Math.max(0, Math.min(rawStart, maxIndex))
+  const endIndex = Math.max(startIndex, Math.min(rawEnd, maxIndex))
 
   return (
     <Brush
@@ -27,7 +30,16 @@ export default function EvolutionChartBrush({ fullData, brush }: EvolutionChartB
           brush.onChange(null)
           return
         }
-        brush.onChange([range.startIndex, range.endIndex])
+
+        const nextStart = Math.max(0, Math.min(range.startIndex, maxIndex))
+        const nextEnd = Math.max(nextStart, Math.min(range.endIndex, maxIndex))
+
+        if (nextStart === 0 && nextEnd === maxIndex) {
+          brush.onChange(null)
+          return
+        }
+
+        brush.onChange([nextStart, nextEnd])
       }}
     />
   )

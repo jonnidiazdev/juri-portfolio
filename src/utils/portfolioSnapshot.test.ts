@@ -7,7 +7,7 @@ import {
   normalizeToPercentStack,
 } from './portfolioSnapshot'
 import type { AssetTypeStats } from './assetCalculations'
-import type { PortfolioSnapshot } from '../types'
+import type { Asset, PortfolioSnapshot } from '../types'
 
 const emptyStats: AssetTypeStats = {
   totalValue: 0,
@@ -57,6 +57,80 @@ describe('buildPortfolioSnapshot', () => {
     expect(result.byTypeARS.argentine.invested).toBe(400000)
     expect(result.byTypeUSD.crypto.current).toBe(1000)
     expect(result.byTypeUSD.argentine.profit).toBe(100)
+  })
+
+  it('includes holdings when assets and price context are provided', () => {
+    const assets: Asset[] = [
+      {
+        id: 1,
+        type: 'accion',
+        name: 'Galicia',
+        symbol: 'GGAL',
+        amount: 10,
+        purchasePrice: 100,
+        currency: 'ARS',
+      },
+    ]
+
+    const result = buildPortfolioSnapshot({
+      currencyPreference: 'blue',
+      exchangeRate: 1000,
+      exchangeRateName: 'Dólar blue',
+      totalsARS: { current: 1500000, invested: 1200000, profit: 300000, profitPercent: 25 },
+      totalsUSD: { current: 1500, invested: 1200, profit: 300, profitPercent: 25 },
+      cryptoStats,
+      argentineStats,
+      plazoFijoStats: emptyStats,
+      efectivoStats: emptyStats,
+      assets,
+      priceContext: {
+        argQuotes: {
+          1: { price: 110 },
+        },
+      },
+      capturedAt: '2026-06-25T12:00:00.000Z',
+    })
+
+    expect(result.schemaVersion).toBe(2)
+    expect(result.holdings).toHaveLength(1)
+    expect(result.holdings?.[0]).toMatchObject({
+      assetId: 1,
+      symbol: 'GGAL',
+      marketPrice: 110,
+      currentValueARS: 1100,
+    })
+  })
+
+  it('normalizes holdings from firestore payload', () => {
+    const result = normalizeSnapshot('snap-v2', {
+      capturedAt: '2026-06-25T12:00:00.000Z',
+      schemaVersion: 2,
+      assetCount: 1,
+      holdings: [
+        {
+          assetId: 1,
+          type: 'accion',
+          name: 'Galicia',
+          symbol: 'GGAL',
+          amount: 10,
+          purchasePrice: 100,
+          currency: 'ARS',
+          marketPrice: 110,
+          priceSource: 'live',
+          currentValueARS: 1100,
+          currentValueUSD: 1.1,
+          investedARS: 1000,
+          investedUSD: 1,
+          profitARS: 100,
+          profitUSD: 0.1,
+          profitPercent: 10,
+        },
+      ],
+    })
+
+    expect(result.holdings).toHaveLength(1)
+    expect(result.schemaVersion).toBe(2)
+    expect(result.assetCount).toBe(1)
   })
 
   it('uses current time when capturedAt is omitted', () => {
