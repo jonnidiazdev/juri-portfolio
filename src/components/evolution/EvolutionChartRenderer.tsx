@@ -5,7 +5,6 @@ import { getEvolutionView } from '../../config/evolutionViews'
 import type { EvolutionViewDefinition, EvolutionViewPrefs } from '../../config/evolutionViews'
 import type { PortfolioSnapshot } from '../../types'
 import {
-  applyBrushRange,
   buildSnapshotChartPoints,
   chartDataHasNonPositiveValues,
   getActiveByTypeSeries,
@@ -135,11 +134,6 @@ export default function EvolutionChartRenderer({
     return points
   }, [snapshots, prefs.currency, prefs.yMetric, prefs.dateFormat, view.scope, view.chartType])
 
-  const chartData = useMemo(
-    () => applyBrushRange(fullChartData, prefs.brushRange),
-    [fullChartData, prefs.brushRange]
-  )
-
   const activeByTypeSeries = useMemo(
     () => buildSeries(getActiveByTypeSeries(snapshots, prefs.currency, prefs.yMetric)),
     [snapshots, prefs.currency, prefs.yMetric]
@@ -163,7 +157,7 @@ export default function EvolutionChartRenderer({
       <ResponsiveContainer width="100%" height="100%">
         <RechartsEvolutionView
           view={view}
-          chartData={chartData}
+          chartData={fullChartData}
           fullChartData={fullChartData}
           activeByTypeSeries={activeByTypeSeries}
           prefs={prefs}
