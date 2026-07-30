@@ -45,7 +45,7 @@ export default function PortfolioView() {
     onDeleteAsset,
     getAssetPrice,
   } = usePortfolioOutletContext()
-  const { formatCurrency } = usePortfolioFormatters()
+  const { formatCurrency, formatPercentage } = usePortfolioFormatters()
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>('all')
 
   const getSortKey = (asset: Asset) => {
@@ -121,6 +121,9 @@ export default function PortfolioView() {
               <p className="text-subtle text-xs mb-0.5">Resultado total</p>
               <p className={`font-mono-data font-semibold ${isProfit ? 'text-profit' : 'text-loss'}`}>
                 {formatCurrency(multiCurrencyData.totalsARS.profit, 'ARS')}
+              </p>
+              <p className={`font-mono-data text-sm ${isProfit ? 'text-profit' : 'text-loss'}`}>
+                ≈ {formatCurrency(multiCurrencyData.totalsUSD.profit, 'USD')} · {formatPercentage(multiCurrencyData.totalsARS.profitPercent)}
               </p>
             </div>
             <Link to="/evolucion" className="btn-ghost px-3 py-1.5 text-xs inline-flex items-center gap-1.5">

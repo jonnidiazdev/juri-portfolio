@@ -108,7 +108,7 @@ export default function AddAssetModal({ isOpen, onClose, onAdd }: AddAssetModalP
     <div className="modal-overlay">
       <div className="modal-panel max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="font-display text-2xl font-semibold text-paper">Agregar activo</h2>
+          <h2 className="font-chalk text-2xl text-paper">Agregar activo</h2>
           <button
             onClick={handleClose}
             className="text-subtle hover:text-paper transition-colors"

@@ -44,7 +44,7 @@ export default function AppLayout({
       <header className="mb-8">
         <div className="mb-4">
           <p className="text-celeste text-xs font-mono-data uppercase tracking-widest mb-2">Observatorio financiero</p>
-          <h1 className="font-display text-3xl sm:text-4xl font-semibold text-paper mb-1">
+          <h1 className="font-chalk text-3xl sm:text-4xl text-paper mb-1">
             El Juri-Portfolio
           </h1>
           <p className="text-muted text-sm sm:text-base">
@@ -133,14 +133,22 @@ export default function AppLayout({
         {syncError && (
           <div className="status-banner mb-4 bg-peso/10 border border-peso/25 text-peso justify-between">
             <span>{syncError}</span>
-            <button onClick={onDismissSyncError} className="text-peso/70 hover:text-peso shrink-0">✕</button>
+            <button onClick={onDismissSyncError} aria-label="Descartar aviso" className="text-peso/70 hover:text-peso shrink-0">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
           </div>
         )}
 
         {iolAuthError && (
           <div className="status-banner mb-4 bg-loss/10 border border-loss/25 text-loss justify-between">
             <span>{iolAuthError}</span>
-            <button onClick={onDismissIolError} className="text-loss/70 hover:text-loss shrink-0">✕</button>
+            <button onClick={onDismissIolError} aria-label="Descartar aviso" className="text-loss/70 hover:text-loss shrink-0">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
           </div>
         )}
       </header>

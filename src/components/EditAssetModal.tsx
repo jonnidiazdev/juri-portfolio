@@ -94,7 +94,7 @@ export default function EditAssetModal({ isOpen, onClose, onSave, asset }) {
     <div className="modal-overlay">
       <div className="modal-panel">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="font-display text-2xl font-semibold text-paper">Editar activo</h2>
+          <h2 className="font-chalk text-2xl text-paper">Editar activo</h2>
           <button
             onClick={handleClose}
             className="text-subtle hover:text-paper transition-colors"

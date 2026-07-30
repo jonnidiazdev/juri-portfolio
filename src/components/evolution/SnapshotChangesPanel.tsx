@@ -115,7 +115,7 @@ export default function SnapshotChangesPanel({ snapshots, currency }: SnapshotCh
 
           {comparison.rotations.length > 0 && (
             <div className="mt-6">
-              <h3 className="font-display text-lg text-paper mb-3">Rotaciones detectadas</h3>
+              <h3 className="font-chalk text-lg text-paper mb-3">Rotaciones detectadas</h3>
               <ul className="space-y-2">
                 {comparison.rotations.map((rotation, index) => (
                   <li key={`${rotation.closed.assetId}-${rotation.opened.assetId}-${index}`} className="card px-4 py-3">

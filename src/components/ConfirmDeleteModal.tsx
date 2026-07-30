@@ -20,7 +20,7 @@ export default function ConfirmDeleteModal({ isOpen, asset, onConfirm, onCancel 
             </svg>
           </div>
           <div>
-            <h2 className="font-display text-lg font-semibold text-paper">Eliminar activo</h2>
+            <h2 className="font-chalk text-lg text-paper">Eliminar activo</h2>
             <p className="text-subtle text-sm">Esta acción se puede deshacer por unos segundos.</p>
           </div>
         </div>
