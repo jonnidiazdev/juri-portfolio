@@ -1,13 +1,31 @@
+import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ASSET_TYPES } from '../config/constants'
+import { ASSET_TYPES, PORTFOLIO_CATEGORY_COLORS } from '../config/constants'
 import { usePortfolioOutletContext } from '../hooks/usePortfolioOutletContext'
 import { usePortfolioFormatters } from '../hooks/usePortfolioFormatters'
 import type { Asset } from '../types'
-import MultiCurrencySummary from './MultiCurrencySummary'
+import ChalkHeroNumber from './ChalkHeroNumber'
 import CurrencySelector from './CurrencySelector'
-import AssetCard from './AssetCard'
+import HoldingRow from './HoldingRow'
+import PortfolioCategoryBreakdown from './PortfolioCategoryBreakdown'
 import LoadingSpinner from './LoadingSpinner'
 import DolarQuotes from './DolarQuotes'
+
+type CategoryFilter = 'all' | 'crypto' | 'argentine' | 'plazo' | 'efectivo'
+
+const CATEGORY_META: Record<Exclude<CategoryFilter, 'all'>, { label: string; color: string }> = {
+  crypto: { label: 'Cripto', color: PORTFOLIO_CATEGORY_COLORS.crypto },
+  argentine: { label: 'Argentino', color: PORTFOLIO_CATEGORY_COLORS.argentine },
+  plazo: { label: 'Plazo fijo', color: PORTFOLIO_CATEGORY_COLORS.plazo },
+  efectivo: { label: 'Efectivo', color: PORTFOLIO_CATEGORY_COLORS.efectivo },
+}
+
+function getCategory(asset: Asset): Exclude<CategoryFilter, 'all'> {
+  if (asset.type === ASSET_TYPES.CRYPTO) return 'crypto'
+  if (asset.type === ASSET_TYPES.PLAZO_FIJO) return 'plazo'
+  if (asset.type === ASSET_TYPES.EFECTIVO) return 'efectivo'
+  return 'argentine'
+}
 
 export default function PortfolioView() {
   const {
@@ -20,8 +38,6 @@ export default function PortfolioView() {
     argentineStats,
     plazoFijoStats,
     efectivoStats,
-    cryptoPrices,
-    argQuotes,
     dolarData,
     loadingDolar,
     onAddAsset,
@@ -29,239 +45,171 @@ export default function PortfolioView() {
     onDeleteAsset,
     getAssetPrice,
   } = usePortfolioOutletContext()
-  const { formatCurrency, formatPercentage } = usePortfolioFormatters()
-
-  const cryptoAssets = assets.filter(a => a.type === ASSET_TYPES.CRYPTO)
-  const argentineAssets = assets.filter(a => a.type !== ASSET_TYPES.CRYPTO && a.type !== ASSET_TYPES.PLAZO_FIJO && a.type !== ASSET_TYPES.EFECTIVO)
-  const plazoFijoAssets = assets.filter(a => a.type === ASSET_TYPES.PLAZO_FIJO)
-  const efectivoAssets = assets.filter(a => a.type === ASSET_TYPES.EFECTIVO)
+  const { formatCurrency } = usePortfolioFormatters()
+  const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>('all')
 
   const getSortKey = (asset: Asset) => {
     const key = asset.symbol || asset.name || ''
     return typeof key === 'string' ? key.toUpperCase() : ''
   }
 
-  const sortedCryptoAssets = [...cryptoAssets].sort((a, b) => getSortKey(a).localeCompare(getSortKey(b)))
-  const sortedArgentineAssets = [...argentineAssets].sort((a, b) => getSortKey(a).localeCompare(getSortKey(b)))
-  const sortedPlazoFijoAssets = [...plazoFijoAssets].sort((a, b) => getSortKey(a).localeCompare(getSortKey(b)))
-  const sortedEfectivoAssets = [...efectivoAssets].sort((a, b) => getSortKey(a).localeCompare(getSortKey(b)))
+  const sortedAssets = useMemo(
+    () => [...assets].sort((a, b) => getSortKey(a).localeCompare(getSortKey(b))),
+    [assets]
+  )
+
+  const visibleCategories = useMemo(() => {
+    const present = new Set(assets.map(getCategory))
+    return (Object.keys(CATEGORY_META) as Exclude<CategoryFilter, 'all'>[]).filter(id => present.has(id))
+  }, [assets])
+
+  const filteredAssets = categoryFilter === 'all'
+    ? sortedAssets
+    : sortedAssets.filter(asset => getCategory(asset) === categoryFilter)
 
   const categoryBreakdown = [
-    { id: 'crypto', label: 'Criptomonedas', totalValueARS: cryptoStats.totalValue, accentClass: 'section-rule--crypto', visible: cryptoAssets.length > 0 },
-    { id: 'argentine', label: 'Mercado argentino', totalValueARS: argentineStats.totalValue, accentClass: 'section-rule--argentine', visible: argentineAssets.length > 0 },
-    { id: 'plazo', label: 'Plazos fijos', totalValueARS: plazoFijoStats.totalValue, accentClass: 'section-rule--plazo', visible: plazoFijoAssets.length > 0 },
-    { id: 'efectivo', label: 'Efectivo/cuentas', totalValueARS: efectivoStats.totalValue, accentClass: 'section-rule--efectivo', visible: efectivoAssets.length > 0 },
+    { id: 'crypto', label: 'Criptomonedas', totalValueARS: cryptoStats.totalValue, accentClass: 'section-rule--crypto', visible: assets.some(a => getCategory(a) === 'crypto') },
+    { id: 'argentine', label: 'Mercado argentino', totalValueARS: argentineStats.totalValue, accentClass: 'section-rule--argentine', visible: assets.some(a => getCategory(a) === 'argentine') },
+    { id: 'plazo', label: 'Plazos fijos', totalValueARS: plazoFijoStats.totalValue, accentClass: 'section-rule--plazo', visible: assets.some(a => getCategory(a) === 'plazo') },
+    { id: 'efectivo', label: 'Efectivo/cuentas', totalValueARS: efectivoStats.totalValue, accentClass: 'section-rule--efectivo', visible: assets.some(a => getCategory(a) === 'efectivo') },
   ]
     .filter(c => c.visible)
     .map(({ id, label, totalValueARS, accentClass }) => ({ id, label, totalValueARS, accentClass }))
 
-  return (
-    <>
-      {isCloudSyncing ? (
-        <div className="text-center py-16">
-          <LoadingSpinner text="Cargando portfolio desde la nube..." />
+  if (isCloudSyncing) {
+    return (
+      <div className="text-center py-16">
+        <LoadingSpinner text="Cargando portfolio desde la nube..." />
+      </div>
+    )
+  }
+
+  if (assets.length === 0) {
+    return (
+      <div className="text-center py-16 animate-fade-in">
+        <div className="w-16 h-16 mx-auto mb-6 rounded-full border border-border flex items-center justify-center">
+          <svg className="w-8 h-8 text-subtle" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+          </svg>
         </div>
-      ) : (
-        <>
-          {assets.length > 0 && (
-            <>
-              <MultiCurrencySummary
-                totalsARS={multiCurrencyData.totalsARS}
-                totalsUSD={multiCurrencyData.totalsUSD}
-                exchangeRateInfo={multiCurrencyData.exchangeRateInfo}
-                exchangeRate={multiCurrencyData.exchangeRate}
-                categories={categoryBreakdown}
-                className="mb-3"
+        <h3 className="font-chalk text-2xl text-muted mb-2">Portfolio vacío</h3>
+        <p className="text-subtle mb-6">Agregá tu primer activo para empezar a seguir tus inversiones</p>
+        <button onClick={onAddAsset} className="btn-primary px-6 py-3 inline-flex items-center gap-2">
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+          </svg>
+          Agregar primer activo
+        </button>
+      </div>
+    )
+  }
+
+  const isProfit = multiCurrencyData.totalsARS.profit >= 0
+
+  return (
+    <div className="space-y-6">
+      {/* Hero: la pizarra */}
+      <div className="card p-6 sm:p-8">
+        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+          <ChalkHeroNumber
+            label="Tenés hoy"
+            value={formatCurrency(multiCurrencyData.totalsARS.current, 'ARS')}
+            secondaryValue={`≈ ${formatCurrency(multiCurrencyData.totalsUSD.current, 'USD')}`}
+          />
+          <div className="flex flex-col items-start sm:items-end gap-2 shrink-0">
+            <div className="text-right">
+              <p className="text-subtle text-xs mb-0.5">Resultado total</p>
+              <p className={`font-mono-data font-semibold ${isProfit ? 'text-profit' : 'text-loss'}`}>
+                {formatCurrency(multiCurrencyData.totalsARS.profit, 'ARS')}
+              </p>
+            </div>
+            <Link to="/evolucion" className="btn-ghost px-3 py-1.5 text-xs inline-flex items-center gap-1.5">
+              Ver evolución histórica
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+              </svg>
+            </Link>
+          </div>
+        </div>
+
+        {dolarData && (
+          <div className="mt-6 pt-5 border-t border-border">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
+              <span className="text-subtle text-[10px] font-mono-data uppercase tracking-widest">
+                Cotizaciones del dólar
+              </span>
+              <CurrencySelector
+                dolarData={dolarData}
+                currencyPreference={currencyPreference}
+                onCurrencyChange={setCurrencyPreference}
               />
-              <div className="flex justify-end mb-6">
-                <Link
-                  to="/evolucion"
-                  className="btn-ghost px-4 py-2 inline-flex items-center gap-2 text-sm"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                  </svg>
-                  Ver evolución histórica
-                </Link>
-              </div>
-            </>
-          )}
-
-          {dolarData && (
-            <div className="mb-8">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
-                <h3 className="text-sm font-mono-data uppercase tracking-widest text-muted">
-                  Cotizaciones del dólar
-                </h3>
-                <CurrencySelector
-                  dolarData={dolarData}
-                  currencyPreference={currencyPreference}
-                  onCurrencyChange={setCurrencyPreference}
-                />
-              </div>
-              <DolarQuotes dolares={dolarData} isLoading={loadingDolar} fetchedAt={dolarData?._fetchedAt} />
             </div>
-          )}
+            <DolarQuotes dolares={dolarData} isLoading={loadingDolar} fetchedAt={dolarData?._fetchedAt} />
+          </div>
+        )}
+      </div>
 
-          {assets.length === 0 ? (
-            <div className="text-center py-16 animate-fade-in">
-              <div className="w-16 h-16 mx-auto mb-6 rounded-full border border-border flex items-center justify-center">
-                <svg className="w-8 h-8 text-subtle" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                </svg>
-              </div>
-              <h3 className="font-display text-2xl font-semibold text-muted mb-2">Portfolio vacío</h3>
-              <p className="text-subtle mb-6">Agregá tu primer activo para empezar a seguir tus inversiones</p>
+      {/* Chips de categoría */}
+      {visibleCategories.length > 1 && (
+        <div className="flex items-center gap-2 flex-wrap">
+          <button
+            type="button"
+            onClick={() => setCategoryFilter('all')}
+            aria-pressed={categoryFilter === 'all'}
+            className={`px-3 py-1.5 text-xs font-mono-data rounded-full border transition-colors ${
+              categoryFilter === 'all'
+                ? 'bg-celeste/15 text-celeste border-celeste/30'
+                : 'text-muted border-border hover:text-paper'
+            }`}
+          >
+            Todos
+          </button>
+          {visibleCategories.map(id => {
+            const meta = CATEGORY_META[id]
+            const active = categoryFilter === id
+            return (
               <button
-                onClick={onAddAsset}
-                className="btn-primary px-6 py-3 inline-flex items-center gap-2"
+                key={id}
+                type="button"
+                onClick={() => setCategoryFilter(id)}
+                aria-pressed={active}
+                className={`px-3 py-1.5 text-xs font-mono-data rounded-full border transition-colors inline-flex items-center gap-1.5 ${
+                  active ? 'border-celeste/30 text-paper' : 'text-muted border-border hover:text-paper'
+                }`}
+                style={active ? { backgroundColor: `${meta.color}22` } : undefined}
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                </svg>
-                Agregar primer activo
+                <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: meta.color }} />
+                {meta.label}
               </button>
-            </div>
-          ) : (
-            <>
-          {cryptoAssets.length > 0 && (
-            <section className="mb-12">
-              <div className="section-rule section-rule--crypto mb-4 sm:mb-6">
-                <h2 className="text-lg sm:text-xl font-semibold text-paper">Criptomonedas</h2>
-                <div className="flex items-center gap-2 flex-wrap mt-1.5">
-                  <span className={`text-xs font-mono-data font-medium px-2 py-0.5 rounded ${cryptoStats.isProfit ? 'badge-profit' : 'badge-loss'}`}>
-                    {formatPercentage(cryptoStats.profitPercent)}
-                  </span>
-                  <span className={`text-xs font-mono-data font-medium px-2 py-0.5 rounded ${cryptoStats.isProfit ? 'badge-profit' : 'badge-loss'}`}>
-                    {cryptoStats.isProfit ? '+' : ''}{formatCurrency(cryptoStats.profit / (multiCurrencyData.exchangeRate ?? 1), 'USD')}
-                  </span>
-                  <span className="text-xs text-subtle font-mono-data">
-                    {formatCurrency(cryptoStats.totalInvested, 'ARS')} → {formatCurrency(cryptoStats.totalValue, 'ARS')}
-                  </span>
-                </div>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-                {sortedCryptoAssets.map(asset => (
-                  <AssetCard
-                    key={asset.id}
-                    asset={asset}
-                    currentPrice={getAssetPrice(asset)}
-                    onEdit={onEditAsset}
-                    onDelete={onDeleteAsset}
-                    dolarPrice={dolarData?.blue?.venta}
-                    dolarMepPrice={dolarData?.bolsa?.venta}
-                    conversionRate={multiCurrencyData.exchangeRate}
-                    exchangeRateInfo={multiCurrencyData.exchangeRateInfo}
-                    fetchedAt={typeof cryptoPrices?._fetchedAt === 'string' ? cryptoPrices._fetchedAt : undefined}
-                  />
-                ))}
-              </div>
-            </section>
-          )}
-
-          {argentineAssets.length > 0 && (
-            <section className="mb-12">
-              <div className="section-rule section-rule--argentine mb-4 sm:mb-6">
-                <h2 className="text-lg sm:text-xl font-semibold text-paper">Mercado argentino</h2>
-                <div className="flex items-center gap-2 flex-wrap mt-1.5">
-                  <span className={`text-xs font-mono-data font-medium px-2 py-0.5 rounded ${argentineStats.isProfit ? 'badge-profit' : 'badge-loss'}`}>
-                    {formatPercentage(argentineStats.profitPercent)}
-                  </span>
-                  <span className={`text-xs font-mono-data font-medium px-2 py-0.5 rounded ${argentineStats.isProfit ? 'badge-profit' : 'badge-loss'}`}>
-                    {argentineStats.isProfit ? '+' : ''}{formatCurrency(argentineStats.profit / (multiCurrencyData.exchangeRate ?? 1), 'USD')}
-                  </span>
-                  <span className="text-xs text-subtle font-mono-data">
-                    {formatCurrency(argentineStats.totalInvested, 'ARS')} → {formatCurrency(argentineStats.totalValue, 'ARS')}
-                  </span>
-                </div>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-                {sortedArgentineAssets.map(asset => (
-                  <AssetCard
-                    key={asset.id}
-                    asset={asset}
-                    currentPrice={getAssetPrice(asset)}
-                    onEdit={onEditAsset}
-                    onDelete={onDeleteAsset}
-                    dolarPrice={dolarData?.blue?.venta}
-                    dolarMepPrice={dolarData?.bolsa?.venta}
-                    conversionRate={multiCurrencyData.exchangeRate}
-                    exchangeRateInfo={multiCurrencyData.exchangeRateInfo}
-                    fetchedAt={argQuotes?._fetchedAt}
-                  />
-                ))}
-              </div>
-            </section>
-          )}
-
-          {plazoFijoAssets.length > 0 && (
-            <section className="mb-12">
-              <div className="section-rule section-rule--plazo mb-4 sm:mb-6">
-                <h2 className="text-lg sm:text-xl font-semibold text-paper">Plazos fijos</h2>
-                <div className="flex items-center gap-2 flex-wrap mt-1.5">
-                  <span className={`text-xs font-mono-data font-medium px-2 py-0.5 rounded ${plazoFijoStats.isProfit ? 'badge-profit' : 'badge-loss'}`}>
-                    {formatPercentage(plazoFijoStats.profitPercent)}
-                  </span>
-                  <span className={`text-xs font-mono-data font-medium px-2 py-0.5 rounded ${plazoFijoStats.isProfit ? 'badge-profit' : 'badge-loss'}`}>
-                    {plazoFijoStats.isProfit ? '+' : ''}{formatCurrency(plazoFijoStats.profit / (multiCurrencyData.exchangeRate ?? 1), 'USD')}
-                  </span>
-                  <span className="text-xs text-subtle font-mono-data">
-                    {formatCurrency(plazoFijoStats.totalInvested, 'ARS')} → {formatCurrency(plazoFijoStats.totalValue, 'ARS')}
-                  </span>
-                </div>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-                {sortedPlazoFijoAssets.map(asset => (
-                  <AssetCard
-                    key={asset.id}
-                    asset={asset}
-                    currentPrice={getAssetPrice(asset)}
-                    onEdit={onEditAsset}
-                    onDelete={onDeleteAsset}
-                    dolarPrice={dolarData?.blue?.venta}
-                    dolarMepPrice={dolarData?.bolsa?.venta}
-                    conversionRate={multiCurrencyData.exchangeRate}
-                    exchangeRateInfo={multiCurrencyData.exchangeRateInfo}
-                  />
-                ))}
-              </div>
-            </section>
-          )}
-
-          {efectivoAssets.length > 0 && (
-            <section>
-              <div className="section-rule section-rule--efectivo mb-4 sm:mb-6">
-                <h2 className="text-lg sm:text-xl font-semibold text-paper">
-                  <span className="hidden sm:inline">Efectivo y cuentas</span>
-                  <span className="sm:hidden">Efectivo</span>
-                </h2>
-                <div className="flex items-center gap-2 flex-wrap mt-1.5">
-                  <span className="text-xs text-subtle font-mono-data">
-                    Disponible: {formatCurrency(efectivoStats.totalValue, 'ARS')}
-                  </span>
-                </div>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-                {sortedEfectivoAssets.map(asset => (
-                  <AssetCard
-                    key={asset.id}
-                    asset={asset}
-                    currentPrice={getAssetPrice(asset)}
-                    onEdit={onEditAsset}
-                    onDelete={onDeleteAsset}
-                    dolarPrice={dolarData?.blue?.venta}
-                    dolarMepPrice={dolarData?.bolsa?.venta}
-                    conversionRate={multiCurrencyData.exchangeRate}
-                    exchangeRateInfo={multiCurrencyData.exchangeRateInfo}
-                  />
-                ))}
-              </div>
-            </section>
-          )}
-        </>
-          )}
-        </>
+            )
+          })}
+        </div>
       )}
-    </>
+
+      {/* Lista unificada de holdings */}
+      <div className="card overflow-hidden">
+        {filteredAssets.map(asset => (
+          <HoldingRow
+            key={asset.id}
+            asset={asset}
+            currentPrice={getAssetPrice(asset)}
+            conversionRate={multiCurrencyData.exchangeRate}
+            categoryColor={CATEGORY_META[getCategory(asset)].color}
+            onEdit={onEditAsset}
+            onDelete={onDeleteAsset}
+          />
+        ))}
+      </div>
+
+      {categoryBreakdown.length > 1 && (
+        <div className="card overflow-hidden">
+          <PortfolioCategoryBreakdown
+            categories={categoryBreakdown}
+            totalCurrentARS={multiCurrencyData.totalsARS.current}
+            exchangeRate={multiCurrencyData.exchangeRate}
+          />
+        </div>
+      )}
+    </div>
   )
 }

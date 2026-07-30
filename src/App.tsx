@@ -19,7 +19,7 @@ import SettingsModal from './components/SettingsModal'
 import ConfirmDeleteModal from './components/ConfirmDeleteModal'
 import UndoToast from './components/UndoToast'
 import ErrorMessage from './components/ErrorMessage'
-import NightForestBackground from './components/NightForestBackground'
+import PizarraBackground from './components/PizarraBackground'
 
 const DELETE_UNDO_WINDOW_MS = 6000
 
@@ -187,7 +187,7 @@ function App({ user }: AppProps) {
 
   return (
     <div className="relative min-h-screen text-paper">
-      <NightForestBackground />
+      <PizarraBackground />
       <Routes>
         <Route
           element={

@@ -74,7 +74,7 @@ export default function PortfolioCategoryPieChart({
       id: category.id,
       name: category.label,
       value: category.totalValueARS,
-      color: PORTFOLIO_CATEGORY_COLORS[category.id as keyof typeof PORTFOLIO_CATEGORY_COLORS] ?? '#8b9aab',
+      color: PORTFOLIO_CATEGORY_COLORS[category.id as keyof typeof PORTFOLIO_CATEGORY_COLORS] ?? '#a8a290',
     })),
     [categories]
   )

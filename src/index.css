@@ -1,26 +1,23 @@
 @import "tailwindcss";
 
 @theme {
-  --color-ink: #0e1217;
-  --color-surface: #171e26;
-  --color-surface-raised: #1f2833;
-  --color-paper: #f5f0e8;
+  --color-ink: #14150f;
+  --color-surface: #1b1c14;
+  --color-surface-raised: #24261c;
+  --color-paper: #e8e4d4;
   --color-celeste: #6badc9;
   --color-celeste-dim: #4a8fad;
   --color-peso: #c9a227;
-  --color-profit: #4ade80;
-  --color-loss: #f87171;
-  --color-muted: #8b9aab;
-  --color-subtle: #5c6b7a;
-  --color-border: #2a3544;
-  --color-border-light: #354052;
+  --color-profit: #8fd4a8;
+  --color-loss: #d97a5f;
+  --color-muted: #a8a290;
+  --color-subtle: #6b6858;
+  --color-border: #33352a;
+  --color-border-light: #40422f;
 
-  --color-forest-warm: #3d2e1f;
-  --color-forest-amber: #c4956a;
-  --color-forest-teal: #2a4a5e;
-  --color-forest-deep: #0f1a24;
-  --color-forest-mist: #4a6a7a;
-  --color-surface-glass: rgba(15, 26, 36, 0.72);
+  --color-chalk-dust: #e8e4d4;
+  --color-slate-deep: #0e0f0a;
+  --color-surface-glass: rgba(20, 21, 15, 0.72);
 
   --font-display: "Fraunces", Georgia, serif;
   --font-body: "DM Sans", system-ui, sans-serif;
@@ -41,11 +38,18 @@
 }
 
 body {
-  background-color: var(--color-forest-deep);
+  background-color: var(--color-slate-deep);
   color: var(--color-paper);
   font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+.font-chalk {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 600;
+  letter-spacing: 0.01em;
 }
 
 @keyframes fadeIn {
@@ -68,23 +72,25 @@ body {
   }
 }
 
-@keyframes twinkle {
-  0%, 100% {
-    opacity: 0.3;
+@keyframes chalk-draw {
+  from {
+    stroke-dashoffset: var(--chalk-dash-length, 1200);
+    opacity: 0.4;
   }
-  50% {
+  to {
+    stroke-dashoffset: 0;
     opacity: 1;
   }
 }
 
-@keyframes firefly {
-  0%, 100% {
-    opacity: 0.2;
-    transform: translateY(0);
+@keyframes chalk-dust-in {
+  from {
+    opacity: 0;
+    filter: blur(2px);
   }
-  50% {
-    opacity: 0.8;
-    transform: translateY(-4px);
+  to {
+    opacity: 1;
+    filter: blur(0);
   }
 }
 
@@ -100,12 +106,13 @@ body {
   animation: ticker 40s linear infinite;
 }
 
-.animate-twinkle {
-  animation: twinkle 3s ease-in-out infinite;
+.chalk-figure {
+  stroke-dasharray: var(--chalk-dash-length, 1200);
+  animation: chalk-draw 1.1s ease-out forwards;
 }
 
-.animate-firefly {
-  animation: firefly 4s ease-in-out infinite;
+.chalk-dust-in {
+  animation: chalk-dust-in 0.5s ease-out forwards;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -113,11 +120,31 @@ body {
     animation: none;
   }
 
-  .animate-twinkle,
-  .animate-firefly {
+  .chalk-figure {
     animation: none;
-    opacity: 0.6;
+    stroke-dashoffset: 0;
+    opacity: 1;
   }
+
+  .chalk-dust-in {
+    animation: none;
+    opacity: 1;
+    filter: none;
+  }
+}
+
+.chalk-texture {
+  position: relative;
+}
+
+.chalk-texture::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.05;
+  mix-blend-mode: screen;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
 ::-webkit-scrollbar {
@@ -157,7 +184,7 @@ body {
   }
 
   .card-raised {
-    background-color: rgba(31, 40, 51, 0.75);
+    background-color: rgba(36, 38, 28, 0.75);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     border: 1px solid rgba(107, 173, 201, 0.15);
@@ -215,7 +242,7 @@ body {
 
   .field-input {
     width: 100%;
-    background-color: rgba(15, 26, 36, 0.6);
+    background-color: rgba(14, 15, 10, 0.6);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
     border: 1px solid rgba(107, 173, 201, 0.15);
@@ -261,12 +288,12 @@ body {
   }
 
   .badge-profit {
-    background-color: rgba(74, 222, 128, 0.12);
+    background-color: rgba(143, 212, 168, 0.14);
     color: var(--color-profit);
   }
 
   .badge-loss {
-    background-color: rgba(248, 113, 113, 0.12);
+    background-color: rgba(217, 122, 95, 0.14);
     color: var(--color-loss);
   }
 
@@ -322,6 +349,6 @@ body {
 
   .asset-card:hover {
     border-color: rgba(107, 173, 201, 0.25) !important;
-    box-shadow: 0 4px 24px rgba(15, 26, 36, 0.4);
+    box-shadow: 0 4px 24px rgba(14, 15, 10, 0.4);
   }
 }

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { isFirebaseConfigured, signInWithGoogle, subscribeToAuthChanges } from '../config/firebase'
 import LoadingSpinner from './LoadingSpinner'
-import NightForestBackground from './NightForestBackground'
+import PizarraBackground from './PizarraBackground'
 
 interface GoogleLoginGateProps {
   children: (user: { uid: string; displayName?: string; photoURL?: string; email?: string }) => React.ReactNode
@@ -47,18 +47,18 @@ export default function GoogleLoginGate({ children }: GoogleLoginGateProps) {
    if (isLoading) {
      return (
        <div className="relative min-h-screen flex items-center justify-center">
-         <NightForestBackground />
-         <LoadingSpinner text="Validando sesión…" />
+        <PizarraBackground />
+        <LoadingSpinner text="Validando sesión…" />
        </div>
      )
    }
  
    if (!isFirebaseConfigured) {
      return (
-       <div className="relative min-h-screen flex items-center justify-center px-4">
-         <NightForestBackground />
-         <div className="max-w-lg w-full card p-8 text-center">
-           <h1 className="font-display text-2xl font-semibold mb-3 text-paper">Configuración requerida</h1>
+      <div className="relative min-h-screen flex items-center justify-center px-4">
+        <PizarraBackground />
+        <div className="max-w-lg w-full card p-8 text-center">
+          <h1 className="font-chalk text-2xl mb-3 text-paper">Configuración requerida</h1>
            <p className="text-muted">
              Este entorno requiere autenticación con Google. Configura las variables <strong className="text-paper">VITE_FIREBASE_*</strong> para habilitar el acceso.
            </p>
@@ -69,11 +69,11 @@ export default function GoogleLoginGate({ children }: GoogleLoginGateProps) {
  
    if (!user) {
      return (
-       <div className="relative min-h-screen flex items-center justify-center px-4">
-         <NightForestBackground />
-         <div className="max-w-md w-full card p-8">
-           <p className="text-celeste text-xs font-mono-data uppercase tracking-widest mb-3">Portfolio personal</p>
-           <h1 className="font-display text-3xl font-semibold mb-2 text-paper">El Juri-Portfolio</h1>
+      <div className="relative min-h-screen flex items-center justify-center px-4">
+        <PizarraBackground />
+        <div className="max-w-md w-full card p-8">
+          <p className="text-celeste text-xs font-mono-data uppercase tracking-widest mb-3">Portfolio personal</p>
+          <h1 className="font-chalk text-3xl mb-2 text-paper">El Juri-Portfolio</h1>
            <p className="text-muted mb-8">Iniciá sesión con Google para acceder a tu portfolio desde cualquier dispositivo.</p>
  
            <button
