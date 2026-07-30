@@ -127,18 +127,18 @@ export default function PortfolioView() {
           {cryptoAssets.length > 0 && (
             <section className="mb-12">
               <div className="section-rule section-rule--crypto mb-4 sm:mb-6">
-                <h2 className="text-lg sm:text-xl font-semibold text-paper flex items-center gap-2 sm:gap-3 flex-wrap">
-                  Criptomonedas
+                <h2 className="text-lg sm:text-xl font-semibold text-paper">Criptomonedas</h2>
+                <div className="flex items-center gap-2 flex-wrap mt-1.5">
                   <span className={`text-xs font-mono-data font-medium px-2 py-0.5 rounded ${cryptoStats.isProfit ? 'badge-profit' : 'badge-loss'}`}>
                     {formatPercentage(cryptoStats.profitPercent)}
                   </span>
                   <span className={`text-xs font-mono-data font-medium px-2 py-0.5 rounded ${cryptoStats.isProfit ? 'badge-profit' : 'badge-loss'}`}>
                     {cryptoStats.isProfit ? '+' : ''}{formatCurrency(cryptoStats.profit / (multiCurrencyData.exchangeRate ?? 1), 'USD')}
                   </span>
-                  <span className="text-xs text-subtle basis-full sm:basis-auto font-mono-data">
+                  <span className="text-xs text-subtle font-mono-data">
                     {formatCurrency(cryptoStats.totalInvested, 'ARS')} → {formatCurrency(cryptoStats.totalValue, 'ARS')}
                   </span>
-                </h2>
+                </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                 {sortedCryptoAssets.map(asset => (
@@ -162,18 +162,18 @@ export default function PortfolioView() {
           {argentineAssets.length > 0 && (
             <section className="mb-12">
               <div className="section-rule section-rule--argentine mb-4 sm:mb-6">
-                <h2 className="text-lg sm:text-xl font-semibold text-paper flex items-center gap-2 sm:gap-3 flex-wrap">
-                  Mercado argentino
+                <h2 className="text-lg sm:text-xl font-semibold text-paper">Mercado argentino</h2>
+                <div className="flex items-center gap-2 flex-wrap mt-1.5">
                   <span className={`text-xs font-mono-data font-medium px-2 py-0.5 rounded ${argentineStats.isProfit ? 'badge-profit' : 'badge-loss'}`}>
                     {formatPercentage(argentineStats.profitPercent)}
                   </span>
                   <span className={`text-xs font-mono-data font-medium px-2 py-0.5 rounded ${argentineStats.isProfit ? 'badge-profit' : 'badge-loss'}`}>
                     {argentineStats.isProfit ? '+' : ''}{formatCurrency(argentineStats.profit / (multiCurrencyData.exchangeRate ?? 1), 'USD')}
                   </span>
-                  <span className="text-xs text-subtle basis-full sm:basis-auto font-mono-data">
+                  <span className="text-xs text-subtle font-mono-data">
                     {formatCurrency(argentineStats.totalInvested, 'ARS')} → {formatCurrency(argentineStats.totalValue, 'ARS')}
                   </span>
-                </h2>
+                </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                 {sortedArgentineAssets.map(asset => (
@@ -197,18 +197,18 @@ export default function PortfolioView() {
           {plazoFijoAssets.length > 0 && (
             <section className="mb-12">
               <div className="section-rule section-rule--plazo mb-4 sm:mb-6">
-                <h2 className="text-lg sm:text-xl font-semibold text-paper flex items-center gap-2 sm:gap-3 flex-wrap">
-                  Plazos fijos
+                <h2 className="text-lg sm:text-xl font-semibold text-paper">Plazos fijos</h2>
+                <div className="flex items-center gap-2 flex-wrap mt-1.5">
                   <span className={`text-xs font-mono-data font-medium px-2 py-0.5 rounded ${plazoFijoStats.isProfit ? 'badge-profit' : 'badge-loss'}`}>
                     {formatPercentage(plazoFijoStats.profitPercent)}
                   </span>
                   <span className={`text-xs font-mono-data font-medium px-2 py-0.5 rounded ${plazoFijoStats.isProfit ? 'badge-profit' : 'badge-loss'}`}>
                     {plazoFijoStats.isProfit ? '+' : ''}{formatCurrency(plazoFijoStats.profit / (multiCurrencyData.exchangeRate ?? 1), 'USD')}
                   </span>
-                  <span className="text-xs text-subtle basis-full sm:basis-auto font-mono-data">
+                  <span className="text-xs text-subtle font-mono-data">
                     {formatCurrency(plazoFijoStats.totalInvested, 'ARS')} → {formatCurrency(plazoFijoStats.totalValue, 'ARS')}
                   </span>
-                </h2>
+                </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                 {sortedPlazoFijoAssets.map(asset => (
@@ -231,16 +231,15 @@ export default function PortfolioView() {
           {efectivoAssets.length > 0 && (
             <section>
               <div className="section-rule section-rule--efectivo mb-4 sm:mb-6">
-                <h2 className="text-lg sm:text-xl font-semibold text-paper flex items-center gap-2 sm:gap-3 flex-wrap">
+                <h2 className="text-lg sm:text-xl font-semibold text-paper">
                   <span className="hidden sm:inline">Efectivo y cuentas</span>
                   <span className="sm:hidden">Efectivo</span>
-                  <span className="text-xs font-mono-data font-medium px-2 py-0.5 rounded bg-surface-raised text-subtle">
-                    0.00%
-                  </span>
-                  <span className="text-xs text-subtle basis-full sm:basis-auto font-mono-data">
+                </h2>
+                <div className="flex items-center gap-2 flex-wrap mt-1.5">
+                  <span className="text-xs text-subtle font-mono-data">
                     Disponible: {formatCurrency(efectivoStats.totalValue, 'ARS')}
                   </span>
-                </h2>
+                </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                 {sortedEfectivoAssets.map(asset => (

@@ -13,6 +13,7 @@ interface AddAssetModalProps {
 export default function AddAssetModal({ isOpen, onClose, onAdd }: AddAssetModalProps) {
   const [assetType, setAssetType] = useState(ASSET_TYPES.CRYPTO)
   const [currency, setCurrency] = useState('USD') // USD o ARS
+  const [formErrors, setFormErrors] = useState<string[]>([])
   const [formData, setFormData] = useState({
     symbol: '',
     name: '',
@@ -31,7 +32,8 @@ export default function AddAssetModal({ isOpen, onClose, onAdd }: AddAssetModalP
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    
+    setFormErrors([])
+
     const assetData: Record<string, any> = {
       ...formData,
       type: assetType,
@@ -54,7 +56,7 @@ export default function AddAssetModal({ isOpen, onClose, onAdd }: AddAssetModalP
       
       const validation = validatePlazoFijo(assetData)
       if (!validation.isValid) {
-        alert('Errores en el plazo fijo:\n' + validation.errors.join('\n'))
+        setFormErrors(validation.errors)
         return
       }
     }
@@ -67,7 +69,7 @@ export default function AddAssetModal({ isOpen, onClose, onAdd }: AddAssetModalP
       
       const validation = validateEfectivo(assetData)
       if (!validation.isValid) {
-        alert('Errores en el efectivo:\n' + validation.errors.join('\n'))
+        setFormErrors(validation.errors)
         return
       }
     }
@@ -87,11 +89,17 @@ export default function AddAssetModal({ isOpen, onClose, onAdd }: AddAssetModalP
       descripcion: '',
     })
     setCurrency('USD')
+    setFormErrors([])
     onClose()
   }
 
   const handleChange = (field, value) => {
     setFormData({ ...formData, [field]: value })
+  }
+
+  const handleClose = () => {
+    setFormErrors([])
+    onClose()
   }
 
   if (!isOpen) return null
@@ -102,7 +110,7 @@ export default function AddAssetModal({ isOpen, onClose, onAdd }: AddAssetModalP
         <div className="flex justify-between items-center mb-6">
           <h2 className="font-display text-2xl font-semibold text-paper">Agregar activo</h2>
           <button
-            onClick={onClose}
+            onClick={handleClose}
             className="text-subtle hover:text-paper transition-colors"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -110,6 +118,19 @@ export default function AddAssetModal({ isOpen, onClose, onAdd }: AddAssetModalP
             </svg>
           </button>
         </div>
+
+        {formErrors.length > 0 && (
+          <div className="status-banner bg-loss/10 border border-loss/25 text-loss mb-4 items-start">
+            <svg className="w-5 h-5 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <ul className="space-y-0.5">
+              {formErrors.map((err, i) => (
+                <li key={i}>{err}</li>
+              ))}
+            </ul>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
@@ -368,7 +389,7 @@ export default function AddAssetModal({ isOpen, onClose, onAdd }: AddAssetModalP
           <div className="flex gap-3 pt-4">
             <button
               type="button"
-              onClick={onClose}
+              onClick={handleClose}
               className="btn-ghost flex-1 px-4 py-3"
             >
               Cancelar

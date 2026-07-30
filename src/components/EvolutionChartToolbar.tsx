@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 import type {
   EvolutionCurrency,
   EvolutionDateFormat,
@@ -87,6 +87,11 @@ export default function EvolutionChartToolbar({
   showBrushReset,
   showYDomainReset,
 }: EvolutionChartToolbarProps) {
+  const [advancedOpen, setAdvancedOpen] = useState(false)
+
+  const advancedIsCustomized =
+    prefs.dateFormat !== 'short' || prefs.yScale !== 'linear' || prefs.yDomainMin != null || prefs.yDomainMax != null
+
   return (
     <div className="flex flex-col gap-4 mb-6">
       <ToolbarGroup label="Vista">
@@ -127,70 +132,6 @@ export default function EvolutionChartToolbar({
             ))}
           </ToolbarGroup>
 
-          <ToolbarGroup label="Fecha (eje X)">
-            <ToolbarButton
-              active={prefs.dateFormat === 'short'}
-              onClick={() => onDateFormatChange('short')}
-            >
-              Corto
-            </ToolbarButton>
-            <ToolbarButton
-              active={prefs.dateFormat === 'medium'}
-              onClick={() => onDateFormatChange('medium')}
-            >
-              Medio
-            </ToolbarButton>
-          </ToolbarGroup>
-
-          <ToolbarGroup label="Escala Y">
-            <ToolbarButton
-              active={prefs.yScale === 'linear'}
-              onClick={() => onYScaleChange('linear')}
-            >
-              Lineal
-            </ToolbarButton>
-            <ToolbarButton
-              active={prefs.yScale === 'log'}
-              onClick={() => onYScaleChange('log')}
-              disabled={logScaleDisabled}
-            >
-              Log
-            </ToolbarButton>
-          </ToolbarGroup>
-
-          <ToolbarGroup label="Zoom eje Y">
-            <label className="flex items-center gap-1.5 text-xs font-mono-data text-muted">
-              <span>Mín</span>
-              <input
-                type="number"
-                disabled={yDomainDisabled}
-                value={prefs.yDomainMin ?? ''}
-                onChange={(event) => onYDomainMinChange(parseDomainInput(event.target.value))}
-                placeholder="Auto"
-                className="w-24 px-2 py-1.5 rounded-md border border-border bg-surface text-paper text-xs disabled:opacity-40"
-              />
-            </label>
-            <label className="flex items-center gap-1.5 text-xs font-mono-data text-muted">
-              <span>Máx</span>
-              <input
-                type="number"
-                disabled={yDomainDisabled}
-                value={prefs.yDomainMax ?? ''}
-                onChange={(event) => onYDomainMaxChange(parseDomainInput(event.target.value))}
-                placeholder="Auto"
-                className="w-24 px-2 py-1.5 rounded-md border border-border bg-surface text-paper text-xs disabled:opacity-40"
-              />
-            </label>
-            {showYDomainReset && (
-              <button
-                type="button"
-                onClick={onResetYDomain}
-                className="btn-ghost px-3 py-1.5 text-xs font-mono-data self-end"
-              >
-                Ajustar a datos
-              </button>
-            )}
-          </ToolbarGroup>
         </div>
 
         {showBrushReset && (
@@ -204,17 +145,108 @@ export default function EvolutionChartToolbar({
         )}
       </div>
 
-      {logScaleDisabled && prefs.yScale === 'linear' && (
-        <p className="text-subtle text-xs">
-          La escala logarítmica no está disponible cuando hay valores ≤ 0 en la serie.
-        </p>
-      )}
+      <div>
+        <button
+          type="button"
+          onClick={() => setAdvancedOpen((open) => !open)}
+          aria-expanded={advancedOpen}
+          className="flex items-center gap-1.5 text-xs font-mono-data text-subtle hover:text-muted transition-colors"
+        >
+          <svg
+            className={`w-3.5 h-3.5 transition-transform ${advancedOpen ? 'rotate-90' : ''}`}
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+          Opciones avanzadas
+          {advancedIsCustomized && !advancedOpen && (
+            <span className="w-1.5 h-1.5 rounded-full bg-celeste" title="Hay opciones avanzadas personalizadas" />
+          )}
+        </button>
 
-      {!yDomainDisabled && (
-        <p className="text-subtle text-xs">
-          Por defecto el eje Y se ajusta al rango visible. Podés fijar min/máx para hacer zoom.
-        </p>
-      )}
+        {advancedOpen && (
+          <div className="flex flex-col sm:flex-row sm:flex-wrap gap-4 mt-3 pt-3 border-t border-border">
+            <ToolbarGroup label="Fecha (eje X)">
+              <ToolbarButton
+                active={prefs.dateFormat === 'short'}
+                onClick={() => onDateFormatChange('short')}
+              >
+                Corto
+              </ToolbarButton>
+              <ToolbarButton
+                active={prefs.dateFormat === 'medium'}
+                onClick={() => onDateFormatChange('medium')}
+              >
+                Medio
+              </ToolbarButton>
+            </ToolbarGroup>
+
+            <ToolbarGroup label="Escala Y">
+              <ToolbarButton
+                active={prefs.yScale === 'linear'}
+                onClick={() => onYScaleChange('linear')}
+              >
+                Lineal
+              </ToolbarButton>
+              <ToolbarButton
+                active={prefs.yScale === 'log'}
+                onClick={() => onYScaleChange('log')}
+                disabled={logScaleDisabled}
+              >
+                Log
+              </ToolbarButton>
+            </ToolbarGroup>
+
+            <ToolbarGroup label="Zoom eje Y">
+              <label className="flex items-center gap-1.5 text-xs font-mono-data text-muted">
+                <span>Mín</span>
+                <input
+                  type="number"
+                  disabled={yDomainDisabled}
+                  value={prefs.yDomainMin ?? ''}
+                  onChange={(event) => onYDomainMinChange(parseDomainInput(event.target.value))}
+                  placeholder="Auto"
+                  className="w-24 px-2 py-1.5 rounded-md border border-border bg-surface text-paper text-xs disabled:opacity-40"
+                />
+              </label>
+              <label className="flex items-center gap-1.5 text-xs font-mono-data text-muted">
+                <span>Máx</span>
+                <input
+                  type="number"
+                  disabled={yDomainDisabled}
+                  value={prefs.yDomainMax ?? ''}
+                  onChange={(event) => onYDomainMaxChange(parseDomainInput(event.target.value))}
+                  placeholder="Auto"
+                  className="w-24 px-2 py-1.5 rounded-md border border-border bg-surface text-paper text-xs disabled:opacity-40"
+                />
+              </label>
+              {showYDomainReset && (
+                <button
+                  type="button"
+                  onClick={onResetYDomain}
+                  className="btn-ghost px-3 py-1.5 text-xs font-mono-data self-end"
+                >
+                  Ajustar a datos
+                </button>
+              )}
+            </ToolbarGroup>
+          </div>
+        )}
+
+        {advancedOpen && logScaleDisabled && prefs.yScale === 'linear' && (
+          <p className="text-subtle text-xs mt-2">
+            La escala logarítmica no está disponible cuando hay valores ≤ 0 en la serie.
+          </p>
+        )}
+
+        {advancedOpen && !yDomainDisabled && (
+          <p className="text-subtle text-xs mt-2">
+            Por defecto el eje Y se ajusta al rango visible. Podés fijar min/máx para hacer zoom.
+          </p>
+        )}
+      </div>
     </div>
   )
 }
