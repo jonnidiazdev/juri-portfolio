@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { ASSET_TYPES, PLAZO_FIJO_CONFIG, EFECTIVO_CONFIG } from '../config/constants'
 import { validatePlazoFijo } from '../utils/plazoFijoCalculations'
 import { validateEfectivo } from '../utils/efectivoCalculations'
+import ModalHeader from './ModalHeader'
 
 export default function EditAssetModal({ isOpen, onClose, onSave, asset }) {
   const [formErrors, setFormErrors] = useState<string[]>([])
@@ -93,23 +94,16 @@ export default function EditAssetModal({ isOpen, onClose, onSave, asset }) {
   return (
     <div className="modal-overlay">
       <div className="modal-panel">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="font-chalk text-2xl text-paper">Editar activo</h2>
-          <button
-            onClick={handleClose}
-            className="text-subtle hover:text-paper transition-colors"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+        <ModalHeader
+          icon={
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
             </svg>
-          </button>
-        </div>
-
-        <div className="mb-4 p-3 card-raised">
-          <div className="text-xs text-subtle font-mono-data uppercase tracking-wide">Activo</div>
-          <div className="text-lg font-semibold text-paper">{asset.name}</div>
-          <div className="text-sm text-muted font-mono-data uppercase">{asset.symbol}</div>
-        </div>
+          }
+          title="Editar activo"
+          subtitle={asset.symbol ? `${asset.name} · ${String(asset.symbol).toUpperCase()}` : asset.name}
+          onClose={handleClose}
+        />
 
         {formErrors.length > 0 && (
           <div className="status-banner bg-loss/10 border border-loss/25 text-loss mb-4 items-start">
@@ -127,6 +121,8 @@ export default function EditAssetModal({ isOpen, onClose, onSave, asset }) {
         <form onSubmit={handleSubmit} className="space-y-4">
           {isPlazoFijo && (
             <>
+              <p className="field-section-label">Detalles del plazo fijo</p>
+
               <div>
                 <label className="field-label">Banco/Institución</label>
                 <select
@@ -205,6 +201,8 @@ export default function EditAssetModal({ isOpen, onClose, onSave, asset }) {
 
           {isEfectivo && (
             <>
+              <p className="field-section-label">Detalles de la tenencia</p>
+
               <div>
                 <label className="field-label">Tipo de Tenencia</label>
                 <select
@@ -272,6 +270,8 @@ export default function EditAssetModal({ isOpen, onClose, onSave, asset }) {
 
           {!isPlazoFijo && !isEfectivo && (
             <>
+              <p className="field-section-label">Cantidad y precio</p>
+
               {!isCrypto && (
                 <div>
                   <label className="field-label">Moneda del activo</label>
