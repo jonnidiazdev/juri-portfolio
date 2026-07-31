@@ -42,7 +42,7 @@ export default function HoldingRow({ asset, currentPrice, conversionRate, catego
         type="button"
         onClick={() => setExpanded(!expanded)}
         aria-expanded={expanded}
-        className="w-full flex items-center gap-3 sm:gap-4 px-3 sm:px-4 py-3 transition-colors hover:bg-surface-raised/40 text-left"
+        className="w-full flex flex-wrap sm:flex-nowrap items-center gap-y-2 gap-x-3 sm:gap-4 px-3 sm:px-4 py-3 transition-colors hover:bg-surface-raised/40 text-left"
       >
         <span
           className="w-2 h-2 rounded-full shrink-0"
@@ -59,28 +59,35 @@ export default function HoldingRow({ asset, currentPrice, conversionRate, catego
           <p className="text-muted text-xs font-mono-data">{formatQuantity(asset.amount)}</p>
         </div>
 
-        {!isEfectivo && (
-          <div className={`text-right shrink-0 w-20 font-mono-data text-sm font-semibold ${isProfit ? 'text-profit' : 'text-loss'}`}>
-            {formatPercentage(pl.plPctARS)}
-          </div>
-        )}
+        {/* Numbers cluster: wraps onto its own full-width, right-aligned line on mobile;
+            on sm+ it dissolves (display: contents) back into the original single-line row. */}
+        <div className="w-full sm:contents flex items-center justify-end gap-3 sm:gap-4">
+          {!isEfectivo && (
+            <div className={`text-right shrink-0 w-20 font-mono-data text-sm font-semibold ${isProfit ? 'text-profit' : 'text-loss'}`}>
+              {formatPercentage(pl.plPctARS)}
+            </div>
+          )}
 
-        <div className="text-right shrink-0 w-28 sm:w-32">
-          <p className="text-paper font-mono-data font-semibold">{formatCurrency(pl.currentARS, 'ARS')}</p>
-          <p className="text-subtle text-[11px] font-mono-data">≈ {formatCurrency(pl.currentUSD, 'USD')}</p>
+          <div className="text-right shrink-0 sm:w-32">
+            <p className="text-paper font-mono-data font-semibold flex items-baseline justify-end gap-1.5 sm:block">
+              {formatCurrency(pl.currentARS, 'ARS')}
+              <span className="text-subtle text-[11px] font-mono-data sm:hidden">≈ {formatCurrency(pl.currentUSD, 'USD')}</span>
+            </p>
+            <p className="hidden sm:block text-subtle text-[11px] font-mono-data">≈ {formatCurrency(pl.currentUSD, 'USD')}</p>
+          </div>
+
+          <svg
+            className={`w-4 h-4 text-subtle shrink-0 transition-transform ${expanded ? 'rotate-180' : ''}`}
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
         </div>
 
-        <svg
-          className={`w-4 h-4 text-subtle shrink-0 transition-transform ${expanded ? 'rotate-180' : ''}`}
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-        </svg>
-
         <div
-          className="asset-card-actions flex gap-1 shrink-0"
+          className="asset-card-actions hidden sm:flex gap-1 shrink-0"
           onClick={(e) => e.stopPropagation()}
         >
           <span
@@ -111,7 +118,29 @@ export default function HoldingRow({ asset, currentPrice, conversionRate, catego
       </button>
 
       {expanded && (
-        <div className="px-3 sm:px-4 pb-4 animate-fadeIn">
+        <div className="px-3 sm:px-4 pb-4 animate-fadeIn space-y-3">
+          <div className="flex sm:hidden gap-2" onClick={(e) => e.stopPropagation()}>
+            <button
+              type="button"
+              onClick={() => onEdit(asset)}
+              className="flex-1 min-h-11 inline-flex items-center justify-center gap-1.5 text-sm font-medium text-celeste bg-celeste/10 active:bg-celeste/20 rounded-lg transition-colors"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+              Editar
+            </button>
+            <button
+              type="button"
+              onClick={() => onDelete(asset.id)}
+              className="flex-1 min-h-11 inline-flex items-center justify-center gap-1.5 text-sm font-medium text-loss bg-loss/10 active:bg-loss/20 rounded-lg transition-colors"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+              Eliminar
+            </button>
+          </div>
           {isPlazoFijo && <PlazoFijoDetail asset={asset} formatCurrency={formatCurrency} />}
           {isEfectivo && <EfectivoDetail asset={asset} hideValues={hideValues} />}
           {!isPlazoFijo && !isEfectivo && (
