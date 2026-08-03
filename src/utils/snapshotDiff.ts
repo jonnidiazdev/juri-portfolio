@@ -95,9 +95,19 @@ function approxEqual(a: number, b: number, tolerance = 0.01): boolean {
   return Math.abs(a - b) <= tolerance
 }
 
+function sumCashAmount(holdings: SnapshotHolding[], currency: 'ARS' | 'USD'): number {
+  return holdings
+    .filter((holding) => isEfectivo(holding) && (holding.currency || 'ARS') === currency)
+    .reduce((sum, holding) => sum + holding.amount, 0)
+}
+
+function sumCashValue(holdings: SnapshotHolding[], key: 'currentValueARS' | 'currentValueUSD'): number {
+  return holdings.filter(isEfectivo).reduce((sum, holding) => sum + holding[key], 0)
+}
+
 export function compareSnapshots(prev: PortfolioSnapshot, curr: PortfolioSnapshot): SnapshotComparison {
-  const prevHoldings = prev.holdings ?? []
-  const currHoldings = curr.holdings ?? []
+  const prevHoldings = (prev.holdings ?? []).filter((holding) => !isEfectivo(holding))
+  const currHoldings = (curr.holdings ?? []).filter((holding) => !isEfectivo(holding))
   const prevIndex = indexHoldings(prevHoldings)
   const currIndex = indexHoldings(currHoldings)
   const events: SnapshotEvent[] = []
@@ -112,6 +122,60 @@ export function compareSnapshots(prev: PortfolioSnapshot, curr: PortfolioSnapsho
   const matchedPrev = new Set<string>()
   const matchedCurr = new Set<string>()
 
+  // El efectivo no tiene un ticker estable: en vez de emparejar cuenta por cuenta
+  // (frágil ante ediciones o ids que cambian), se agrupa por moneda y se compara
+  // el monto nativo total. Así un movimiento de tipo de cambio entre snapshots no
+  // se confunde con un depósito/retiro real.
+  const prevCashARS = sumCashAmount(prev.holdings ?? [], 'ARS')
+  const currCashARS = sumCashAmount(curr.holdings ?? [], 'ARS')
+  const prevCashUSD = sumCashAmount(prev.holdings ?? [], 'USD')
+  const currCashUSD = sumCashAmount(curr.holdings ?? [], 'USD')
+
+  const deltaCashARS = currCashARS - prevCashARS
+  const deltaCashUSD = currCashUSD - prevCashUSD
+  const rateForConversion = curr.exchangeRate > 0 ? curr.exchangeRate : prev.exchangeRate > 0 ? prev.exchangeRate : 1
+
+  if (!approxEqual(deltaCashARS, 0)) {
+    events.push({
+      kind: deltaCashARS > 0 ? 'deposit' : 'withdraw',
+      name: 'Efectivo en pesos',
+      type: ASSET_TYPES.EFECTIVO,
+      detail: `${deltaCashARS > 0 ? '+' : ''}${formatAmount(deltaCashARS)} efectivo`,
+      impactARS: deltaCashARS,
+      impactUSD: deltaCashARS / rateForConversion,
+    })
+    capitalFlowsARS += deltaCashARS
+    capitalFlowsUSD += deltaCashARS / rateForConversion
+  }
+
+  if (!approxEqual(deltaCashUSD, 0)) {
+    events.push({
+      kind: deltaCashUSD > 0 ? 'deposit' : 'withdraw',
+      name: 'Efectivo en dólares',
+      type: ASSET_TYPES.EFECTIVO,
+      detail: `${deltaCashUSD > 0 ? '+' : ''}${formatAmount(deltaCashUSD)} USD efectivo`,
+      impactARS: deltaCashUSD * rateForConversion,
+      impactUSD: deltaCashUSD,
+    })
+    capitalFlowsARS += deltaCashUSD * rateForConversion
+    capitalFlowsUSD += deltaCashUSD
+  }
+
+  // El resto del valor de efectivo (currentValueARS/USD) que no vino de un cambio
+  // de monto nativo es puramente valuación cambiaria: va a "mercado", no a capital.
+  const prevCashValueARS = sumCashValue(prev.holdings ?? [], 'currentValueARS')
+  const currCashValueARS = sumCashValue(curr.holdings ?? [], 'currentValueARS')
+  const prevCashValueUSD = sumCashValue(prev.holdings ?? [], 'currentValueUSD')
+  const currCashValueUSD = sumCashValue(curr.holdings ?? [], 'currentValueUSD')
+  const cashValueDeltaARS = currCashValueARS - prevCashValueARS
+  const cashValueDeltaUSD = currCashValueUSD - prevCashValueUSD
+  const cashFxGainARS = cashValueDeltaARS - capitalFlowsARS
+  const cashFxGainUSD = cashValueDeltaUSD - capitalFlowsUSD
+  if (!approxEqual(cashFxGainARS, 0)) {
+    marketGainARS += cashFxGainARS
+    marketGainUSD += cashFxGainUSD
+  }
+
   for (const prevHolding of prevHoldings) {
     const currHolding = matchHolding(prevHolding, prevIndex, currIndex, 'prev')
     if (!currHolding) continue
@@ -120,26 +184,6 @@ export function compareSnapshots(prev: PortfolioSnapshot, curr: PortfolioSnapsho
 
     const qtyDelta = currHolding.amount - prevHolding.amount
     const priceDelta = currHolding.marketPrice - prevHolding.marketPrice
-
-    if (isEfectivo(prevHolding)) {
-      const deltaARS = currHolding.currentValueARS - prevHolding.currentValueARS
-      const deltaUSD = currHolding.currentValueUSD - prevHolding.currentValueUSD
-      if (!approxEqual(deltaARS, 0)) {
-        events.push({
-          kind: deltaARS > 0 ? 'deposit' : 'withdraw',
-          assetId: prevHolding.assetId,
-          name: prevHolding.name,
-          symbol: prevHolding.symbol,
-          type: prevHolding.type,
-          detail: `${deltaARS > 0 ? '+' : ''}${formatAmount(deltaARS)} efectivo`,
-          impactARS: deltaARS,
-          impactUSD: deltaUSD,
-        })
-        capitalFlowsARS += deltaARS
-        capitalFlowsUSD += deltaUSD
-      }
-      continue
-    }
 
     if (!approxEqual(prevHolding.purchasePrice ?? 0, currHolding.purchasePrice ?? 0) && approxEqual(qtyDelta, 0)) {
       events.push({
@@ -249,15 +293,13 @@ export function compareSnapshots(prev: PortfolioSnapshot, curr: PortfolioSnapsho
       name: prevHolding.name,
       symbol: prevHolding.symbol,
       type: prevHolding.type,
-      detail: isEfectivo(prevHolding) ? 'Retiro de efectivo' : 'Posición cerrada',
+      detail: 'Posición cerrada',
       impactARS: exitARS,
       impactUSD: exitUSD,
     })
 
-    if (!isEfectivo(prevHolding)) {
-      realizedGainARS += realizedARS
-      realizedGainUSD += realizedUSD
-    }
+    realizedGainARS += realizedARS
+    realizedGainUSD += realizedUSD
     capitalFlowsARS -= exitARS
     capitalFlowsUSD -= exitUSD
   }
@@ -273,7 +315,7 @@ export function compareSnapshots(prev: PortfolioSnapshot, curr: PortfolioSnapsho
       name: currHolding.name,
       symbol: currHolding.symbol,
       type: currHolding.type,
-      detail: isEfectivo(currHolding) ? 'Depósito de efectivo' : 'Posición nueva',
+      detail: 'Posición nueva',
       impactARS: -currHolding.investedARS,
       impactUSD: -currHolding.investedUSD,
     })
@@ -282,11 +324,9 @@ export function compareSnapshots(prev: PortfolioSnapshot, curr: PortfolioSnapsho
   }
 
   const rotations: SnapshotRotation[] = []
-  const tradableClosed = closedHoldings.filter((h) => !isEfectivo(h))
-  const tradableOpened = openedHoldings.filter((h) => !isEfectivo(h))
-  const pairCount = Math.min(tradableClosed.length, tradableOpened.length)
+  const pairCount = Math.min(closedHoldings.length, openedHoldings.length)
   for (let i = 0; i < pairCount; i += 1) {
-    rotations.push({ closed: tradableClosed[i], opened: tradableOpened[i] })
+    rotations.push({ closed: closedHoldings[i], opened: openedHoldings[i] })
   }
 
   const totalDeltaARS = curr.totalsARS.current - prev.totalsARS.current
