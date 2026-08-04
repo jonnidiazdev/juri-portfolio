@@ -100,8 +100,13 @@ describe('compareSnapshots', () => {
     ], 1200)
 
     const result = compareSnapshots(prev, curr)
-    expect(result.events.some((event) => event.kind === 'closed')).toBe(true)
-    expect(result.events.some((event) => event.kind === 'opened')).toBe(true)
+    const closedEvent = result.events.find((event) => event.kind === 'closed')
+    const openedEvent = result.events.find((event) => event.kind === 'opened')
+    expect(closedEvent).toBeDefined()
+    expect(openedEvent).toBeDefined()
+    // Compra suma el monto invertido; venta resta el monto que sale de la posición.
+    expect(openedEvent?.impactARS).toBeCloseTo(1100, 5)
+    expect(closedEvent?.impactARS).toBeCloseTo(-1000, 5)
     expect(result.rotations).toHaveLength(1)
   })
 
@@ -132,6 +137,40 @@ describe('compareSnapshots', () => {
     const result = compareSnapshots(prev, curr)
     expect(result.events.some((event) => event.kind === 'quantityUp')).toBe(true)
     expect(canCompareSnapshots(prev, curr)).toBe(true)
+  })
+
+  it('detects quantity decrease and subtracts the exit value sold (not the realized gain)', () => {
+    const prev = makeSnapshot('1', '2026-07-01T12:00:00.000Z', [
+      makeHolding({
+        assetId: 1,
+        name: 'GGAL',
+        symbol: 'GGAL',
+        amount: 10,
+        purchasePrice: 100,
+        marketPrice: 110,
+        currentValueARS: 1100,
+        investedARS: 1000,
+      }),
+    ], 1100)
+    const curr = makeSnapshot('2', '2026-07-15T12:00:00.000Z', [
+      makeHolding({
+        assetId: 1,
+        name: 'GGAL',
+        symbol: 'GGAL',
+        amount: 6,
+        purchasePrice: 100,
+        marketPrice: 110,
+        currentValueARS: 660,
+        investedARS: 600,
+      }),
+    ], 660)
+
+    const result = compareSnapshots(prev, curr)
+    const quantityDownEvent = result.events.find((event) => event.kind === 'quantityDown')
+    expect(quantityDownEvent).toBeDefined()
+    // Se vendieron 4 unidades a 110 = 440 de valor de salida; la ganancia realizada
+    // (440 - 4*100 = 40) no debe usarse como impacto.
+    expect(quantityDownEvent?.impactARS).toBeCloseTo(-440, 5)
   })
 })
 

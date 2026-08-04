@@ -225,6 +225,8 @@ export function compareSnapshots(prev: PortfolioSnapshot, curr: PortfolioSnapsho
       const fx = prevHolding.currency === 'USD' ? prev.exchangeRate : 1
       const realizedARS = prevHolding.currency === 'USD' ? realizedNative * fx : realizedNative
       const realizedUSD = prevHolding.currency === 'USD' ? realizedNative : realizedNative / (curr.exchangeRate || 1)
+      const exitValueARS = prevHolding.currency === 'USD' ? exitValueNative * fx : exitValueNative
+      const exitValueUSD = prevHolding.currency === 'USD' ? exitValueNative : exitValueNative / (curr.exchangeRate || 1)
 
       events.push({
         kind: 'quantityDown',
@@ -233,8 +235,8 @@ export function compareSnapshots(prev: PortfolioSnapshot, curr: PortfolioSnapsho
         symbol: prevHolding.symbol,
         type: prevHolding.type,
         detail: `−${formatQty(soldQty)} unidades`,
-        impactARS: -realizedARS,
-        impactUSD: -realizedUSD,
+        impactARS: -exitValueARS,
+        impactUSD: -exitValueUSD,
       })
       realizedGainARS += realizedARS
       realizedGainUSD += realizedUSD
@@ -294,8 +296,8 @@ export function compareSnapshots(prev: PortfolioSnapshot, curr: PortfolioSnapsho
       symbol: prevHolding.symbol,
       type: prevHolding.type,
       detail: 'Posición cerrada',
-      impactARS: exitARS,
-      impactUSD: exitUSD,
+      impactARS: -exitARS,
+      impactUSD: -exitUSD,
     })
 
     realizedGainARS += realizedARS
@@ -316,8 +318,8 @@ export function compareSnapshots(prev: PortfolioSnapshot, curr: PortfolioSnapsho
       symbol: currHolding.symbol,
       type: currHolding.type,
       detail: 'Posición nueva',
-      impactARS: -currHolding.investedARS,
-      impactUSD: -currHolding.investedUSD,
+      impactARS: currHolding.investedARS,
+      impactUSD: currHolding.investedUSD,
     })
     capitalFlowsARS += currHolding.investedARS
     capitalFlowsUSD += currHolding.investedUSD
