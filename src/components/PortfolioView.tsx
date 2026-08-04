@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { ASSET_TYPES, PORTFOLIO_CATEGORY_COLORS } from '../config/constants'
 import { usePortfolioOutletContext } from '../hooks/usePortfolioOutletContext'
 import { usePortfolioFormatters } from '../hooks/usePortfolioFormatters'
+import { useSlidingIndicator } from '../hooks/useSlidingIndicator'
 import type { Asset } from '../types'
 import ChalkHeroNumber from './ChalkHeroNumber'
 import CurrencySelector from './CurrencySelector'
@@ -47,6 +48,7 @@ export default function PortfolioView() {
   } = usePortfolioOutletContext()
   const { formatCurrency, formatPercentage } = usePortfolioFormatters()
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>('all')
+  const categoryIndicator = useSlidingIndicator(categoryFilter)
 
   const getSortKey = (asset: Asset) => {
     const key = asset.symbol || asset.name || ''
@@ -162,14 +164,26 @@ export default function PortfolioView() {
 
       {/* Chips de categoría */}
       {visibleCategories.length > 1 && (
-        <div className="flex items-center gap-2 flex-wrap">
+        <div ref={categoryIndicator.containerRef} className="relative flex items-center gap-2 flex-wrap">
+          {categoryIndicator.rect && (
+            <div
+              className="sliding-indicator rounded-full border border-celeste/30"
+              style={{
+                width: categoryIndicator.rect.width,
+                height: categoryIndicator.rect.height,
+                transform: `translate(${categoryIndicator.rect.left}px, ${categoryIndicator.rect.top}px)`,
+                backgroundColor: categoryFilter === 'all' ? 'rgba(107, 173, 201, 0.15)' : `${CATEGORY_META[categoryFilter as Exclude<CategoryFilter, 'all'>]?.color ?? ''}22`,
+              }}
+            />
+          )}
           <button
+            ref={categoryIndicator.setItemRef('all')}
             type="button"
             onClick={() => setCategoryFilter('all')}
             aria-pressed={categoryFilter === 'all'}
-            className={`px-3 py-1.5 text-xs font-mono-data rounded-full border transition-colors ${
+            className={`relative z-10 px-3 py-1.5 text-xs font-mono-data rounded-full border transition-colors ${
               categoryFilter === 'all'
-                ? 'bg-celeste/15 text-celeste border-celeste/30'
+                ? 'text-celeste border-transparent'
                 : 'text-muted border-border hover:text-paper'
             }`}
           >
@@ -181,13 +195,13 @@ export default function PortfolioView() {
             return (
               <button
                 key={id}
+                ref={categoryIndicator.setItemRef(id)}
                 type="button"
                 onClick={() => setCategoryFilter(id)}
                 aria-pressed={active}
-                className={`px-3 py-1.5 text-xs font-mono-data rounded-full border transition-colors inline-flex items-center gap-1.5 ${
-                  active ? 'border-celeste/30 text-paper' : 'text-muted border-border hover:text-paper'
+                className={`relative z-10 px-3 py-1.5 text-xs font-mono-data rounded-full border transition-colors inline-flex items-center gap-1.5 ${
+                  active ? 'border-transparent text-paper' : 'text-muted border-border hover:text-paper'
                 }`}
-                style={active ? { backgroundColor: `${meta.color}22` } : undefined}
               >
                 <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: meta.color }} />
                 {meta.label}
