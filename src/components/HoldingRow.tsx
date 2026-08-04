@@ -117,8 +117,12 @@ export default function HoldingRow({ asset, currentPrice, conversionRate, catego
         </div>
       </button>
 
-      {expanded && (
-        <div className="px-3 sm:px-4 pb-4 animate-fadeIn space-y-3">
+      <div className={`collapse-region ${expanded ? 'is-expanded' : ''}`}>
+        <div
+          className="collapse-region-inner px-3 sm:px-4 pb-4 space-y-3"
+          aria-hidden={!expanded}
+          inert={!expanded || undefined}
+        >
           <div className="flex sm:hidden gap-2" onClick={(e) => e.stopPropagation()}>
             <button
               type="button"
@@ -172,7 +176,7 @@ export default function HoldingRow({ asset, currentPrice, conversionRate, catego
             </div>
           )}
         </div>
-      )}
+      </div>
     </div>
   )
 }

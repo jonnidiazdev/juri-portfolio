@@ -131,6 +131,29 @@ body {
   animation-play-state: paused;
 }
 
+/* Accordion-style expand/collapse: animates real height via grid track sizing. */
+.collapse-region {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.collapse-region.is-expanded {
+  grid-template-rows: 1fr;
+}
+
+.collapse-region-inner {
+  overflow: hidden;
+  min-height: 0;
+  opacity: 0;
+  transition: opacity 0.16s ease-out;
+}
+
+.collapse-region.is-expanded .collapse-region-inner {
+  opacity: 1;
+  transition: opacity 0.18s ease-out 0.08s;
+}
+
 .chalk-figure {
   stroke-dasharray: var(--chalk-dash-length, 1200);
   animation: chalk-draw 1.1s ease-out forwards;
