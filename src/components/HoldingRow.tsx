@@ -37,12 +37,12 @@ export default function HoldingRow({ asset, currentPrice, conversionRate, catego
   const assetCurrency = asset.currency || (asset.type === ASSET_TYPES.CRYPTO ? 'USD' : 'ARS')
 
   return (
-    <div className="asset-card group border-b border-border/60 last:border-b-0">
+    <div className="asset-card group border-b border-border/60 last:border-b-0 transition-colors hover:bg-surface-raised/40">
       <button
         type="button"
         onClick={() => setExpanded(!expanded)}
         aria-expanded={expanded}
-        className="w-full flex flex-wrap sm:flex-nowrap items-center gap-y-2 gap-x-3 sm:gap-4 px-3 sm:px-4 py-3 transition-colors hover:bg-surface-raised/40 text-left"
+        className="w-full flex flex-wrap sm:flex-nowrap items-center gap-y-2 gap-x-3 sm:gap-4 px-3 sm:px-4 py-3 text-left"
       >
         <span
           className="w-2 h-2 rounded-full shrink-0"
@@ -119,7 +119,7 @@ export default function HoldingRow({ asset, currentPrice, conversionRate, catego
 
       <div className={`collapse-region ${expanded ? 'is-expanded' : ''}`}>
         <div
-          className="collapse-region-inner px-3 sm:px-4 pb-4 space-y-3"
+          className="collapse-region-inner px-3 sm:px-4 pt-3 pb-4 space-y-3"
           aria-hidden={!expanded}
           inert={!expanded || undefined}
         >
