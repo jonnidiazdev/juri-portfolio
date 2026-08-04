@@ -126,6 +126,11 @@ body {
   animation: ticker 40s linear infinite;
 }
 
+.ticker-viewport:hover .animate-ticker,
+.ticker-viewport:focus-within .animate-ticker {
+  animation-play-state: paused;
+}
+
 .chalk-figure {
   stroke-dasharray: var(--chalk-dash-length, 1200);
   animation: chalk-draw 1.1s ease-out forwards;

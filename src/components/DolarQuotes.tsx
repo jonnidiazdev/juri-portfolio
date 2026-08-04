@@ -61,7 +61,7 @@ export default function DolarQuotes({ dolares, isLoading, fetchedAt }: DolarQuot
           <div className="shrink-0 bg-celeste/10 border-r border-border px-3 py-2 flex items-center">
             <span className="text-[10px] font-mono-data uppercase tracking-widest text-celeste">USD</span>
           </div>
-          <div className="flex-1 overflow-hidden py-2">
+          <div className="ticker-viewport flex-1 overflow-hidden py-2">
             <div className="flex animate-ticker whitespace-nowrap">
               {[...tickerItems, ...tickerItems].map(({ key, label, color, venta }, i) => (
                 <span key={`${key}-${i}`} className="inline-flex items-center gap-1.5 px-4 text-sm">

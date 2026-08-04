@@ -8,7 +8,7 @@ import ChalkHeroNumber from './ChalkHeroNumber'
 import CurrencySelector from './CurrencySelector'
 import HoldingRow from './HoldingRow'
 import PortfolioCategoryBreakdown from './PortfolioCategoryBreakdown'
-import LoadingSpinner from './LoadingSpinner'
+import { LoadingCard } from './LoadingSpinner'
 import DolarQuotes from './DolarQuotes'
 
 type CategoryFilter = 'all' | 'crypto' | 'argentine' | 'plazo' | 'efectivo'
@@ -78,8 +78,16 @@ export default function PortfolioView() {
 
   if (isCloudSyncing) {
     return (
-      <div className="text-center py-16">
-        <LoadingSpinner text="Cargando portfolio desde la nube..." />
+      <div className="space-y-6" aria-busy="true" aria-live="polite">
+        <div className="card p-6 sm:p-8 animate-pulse">
+          <div className="h-3 w-28 bg-surface-raised rounded mb-4" />
+          <div className="h-9 w-44 bg-surface-raised rounded" />
+        </div>
+        <div className="space-y-3">
+          {[0, 1, 2, 3].map(i => (
+            <LoadingCard key={i} />
+          ))}
+        </div>
       </div>
     )
   }
