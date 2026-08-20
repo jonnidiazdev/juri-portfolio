@@ -16,8 +16,12 @@ import PortfolioEvolutionPage from './components/PortfolioEvolutionPage'
 import AddAssetModal from './components/AddAssetModal'
 import EditAssetModal from './components/EditAssetModal'
 import SettingsModal from './components/SettingsModal'
+import ConfirmDeleteModal from './components/ConfirmDeleteModal'
+import UndoToast from './components/UndoToast'
 import ErrorMessage from './components/ErrorMessage'
-import NightForestBackground from './components/NightForestBackground'
+import PizarraBackground from './components/PizarraBackground'
+
+const DELETE_UNDO_WINDOW_MS = 6000
 
 interface AppProps {
   user: { uid: string; displayName?: string; photoURL?: string; email?: string }
@@ -34,7 +38,10 @@ function App({ user }: AppProps) {
   const [showFab, setShowFab] = useState(false)
   const [syncError, setSyncError] = useState<string | null>(null)
   const [iolAuthError, setIolAuthError] = useState<string | null>(null)
+  const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null)
+  const [undoDelete, setUndoDelete] = useState<{ asset: Asset; index: number } | null>(null)
   const addButtonRef = useRef<HTMLButtonElement>(null)
+  const undoTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
     const handleSyncError = (event: Event) => {
@@ -95,10 +102,42 @@ function App({ user }: AppProps) {
   }
 
   const handleDeleteAsset = (id: number) => {
-    if (confirm('¿Estás seguro de eliminar este activo?')) {
-      setAssets(assets.filter(a => a.id !== id))
-    }
+    setPendingDeleteId(id)
   }
+
+  const assetPendingDelete = assets.find(a => a.id === pendingDeleteId) ?? null
+
+  const handleConfirmDelete = () => {
+    if (pendingDeleteId == null) return
+    const index = assets.findIndex(a => a.id === pendingDeleteId)
+    if (index === -1) {
+      setPendingDeleteId(null)
+      return
+    }
+
+    const asset = assets[index]
+    setAssets(assets.filter(a => a.id !== pendingDeleteId))
+    setPendingDeleteId(null)
+
+    if (undoTimeoutRef.current) clearTimeout(undoTimeoutRef.current)
+    setUndoDelete({ asset, index })
+    undoTimeoutRef.current = setTimeout(() => setUndoDelete(null), DELETE_UNDO_WINDOW_MS)
+  }
+
+  const handleUndoDelete = () => {
+    if (!undoDelete) return
+    if (undoTimeoutRef.current) clearTimeout(undoTimeoutRef.current)
+    const restored = [...assets]
+    restored.splice(undoDelete.index, 0, undoDelete.asset)
+    setAssets(restored)
+    setUndoDelete(null)
+  }
+
+  useEffect(() => {
+    return () => {
+      if (undoTimeoutRef.current) clearTimeout(undoTimeoutRef.current)
+    }
+  }, [])
 
   const getAssetPrice = (asset: Asset) => getCurrentPrice(asset, priceContext)
 
@@ -148,7 +187,7 @@ function App({ user }: AppProps) {
 
   return (
     <div className="relative min-h-screen text-paper">
-      <NightForestBackground />
+      <PizarraBackground />
       <Routes>
         <Route
           element={
@@ -221,13 +260,28 @@ function App({ user }: AppProps) {
         onClose={() => setIsSettingsOpen(false)}
       />
 
-      <ReactQueryDevtools initialIsOpen={false} />
+      <ConfirmDeleteModal
+        isOpen={pendingDeleteId != null}
+        asset={assetPendingDelete}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setPendingDeleteId(null)}
+      />
+
+      {undoDelete && (
+        <UndoToast
+          message={`"${undoDelete.asset.name}" eliminado`}
+          onUndo={handleUndoDelete}
+        />
+      )}
+
+      {import.meta.env.DEV && <ReactQueryDevtools initialIsOpen={false} />}
 
       {showFab && !isCloudSyncing && (
         <button
           onClick={() => setIsAddModalOpen(true)}
           className="fixed bottom-6 right-6 w-14 h-14 btn-primary rounded-full shadow-lg shadow-celeste/20 flex items-center justify-center transition-all duration-200 z-40 active:scale-95"
           title="Agregar activo"
+          aria-label="Agregar activo"
         >
           <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />

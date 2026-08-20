@@ -1,7 +1,8 @@
 import { useState } from 'react'
-import { ASSET_TYPES, PLAZO_FIJO_CONFIG, EFECTIVO_CONFIG } from '../config/constants'
+import { ASSET_TYPES, PLAZO_FIJO_CONFIG, EFECTIVO_CONFIG, PORTFOLIO_CATEGORY_COLORS } from '../config/constants'
 import { validatePlazoFijo } from '../utils/plazoFijoCalculations'
 import { validateEfectivo } from '../utils/efectivoCalculations'
+import ModalHeader from './ModalHeader'
 import type { Asset } from '../types'
 
 interface AddAssetModalProps {
@@ -10,9 +11,23 @@ interface AddAssetModalProps {
   onAdd: (asset: Asset) => void
 }
 
+type AssetCategory = 'crypto' | 'argentine' | 'plazo' | 'efectivo'
+
+const TYPE_OPTIONS: Array<{ value: string; label: string; category: AssetCategory }> = [
+  { value: ASSET_TYPES.CRYPTO, label: 'Cripto', category: 'crypto' },
+  { value: ASSET_TYPES.STOCK, label: 'Acción AR', category: 'argentine' },
+  { value: ASSET_TYPES.CEDEAR, label: 'CEDEAR', category: 'argentine' },
+  { value: ASSET_TYPES.BOND, label: 'Bono', category: 'argentine' },
+  { value: ASSET_TYPES.LETRA, label: 'Letra', category: 'argentine' },
+  { value: ASSET_TYPES.OBLIGACION_NEGOCIABLE, label: 'Oblig. Neg.', category: 'argentine' },
+  { value: ASSET_TYPES.PLAZO_FIJO, label: 'Plazo Fijo', category: 'plazo' },
+  { value: ASSET_TYPES.EFECTIVO, label: 'Efectivo', category: 'efectivo' },
+]
+
 export default function AddAssetModal({ isOpen, onClose, onAdd }: AddAssetModalProps) {
   const [assetType, setAssetType] = useState(ASSET_TYPES.CRYPTO)
   const [currency, setCurrency] = useState('USD') // USD o ARS
+  const [formErrors, setFormErrors] = useState<string[]>([])
   const [formData, setFormData] = useState({
     symbol: '',
     name: '',
@@ -31,7 +46,8 @@ export default function AddAssetModal({ isOpen, onClose, onAdd }: AddAssetModalP
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    
+    setFormErrors([])
+
     const assetData: Record<string, any> = {
       ...formData,
       type: assetType,
@@ -54,7 +70,7 @@ export default function AddAssetModal({ isOpen, onClose, onAdd }: AddAssetModalP
       
       const validation = validatePlazoFijo(assetData)
       if (!validation.isValid) {
-        alert('Errores en el plazo fijo:\n' + validation.errors.join('\n'))
+        setFormErrors(validation.errors)
         return
       }
     }
@@ -67,7 +83,7 @@ export default function AddAssetModal({ isOpen, onClose, onAdd }: AddAssetModalP
       
       const validation = validateEfectivo(assetData)
       if (!validation.isValid) {
-        alert('Errores en el efectivo:\n' + validation.errors.join('\n'))
+        setFormErrors(validation.errors)
         return
       }
     }
@@ -87,6 +103,7 @@ export default function AddAssetModal({ isOpen, onClose, onAdd }: AddAssetModalP
       descripcion: '',
     })
     setCurrency('USD')
+    setFormErrors([])
     onClose()
   }
 
@@ -94,50 +111,77 @@ export default function AddAssetModal({ isOpen, onClose, onAdd }: AddAssetModalP
     setFormData({ ...formData, [field]: value })
   }
 
+  const handleTypeChange = (value: string) => {
+    setAssetType(value)
+    if (value === ASSET_TYPES.CRYPTO) {
+      setCurrency('USD')
+    } else if (value === ASSET_TYPES.STOCK || value === ASSET_TYPES.LETRA) {
+      setCurrency('ARS')
+    } else if (value === ASSET_TYPES.EFECTIVO) {
+      setCurrency('ARS')
+    }
+  }
+
+  const handleClose = () => {
+    setFormErrors([])
+    onClose()
+  }
+
   if (!isOpen) return null
 
   return (
     <div className="modal-overlay">
       <div className="modal-panel max-h-[90vh] overflow-y-auto">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="font-display text-2xl font-semibold text-paper">Agregar activo</h2>
-          <button
-            onClick={onClose}
-            className="text-subtle hover:text-paper transition-colors"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+        <ModalHeader
+          icon={
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
             </svg>
-          </button>
-        </div>
+          }
+          title="Agregar activo"
+          subtitle="Sumá una nueva posición a tu cartera"
+          onClose={handleClose}
+        />
+
+        {formErrors.length > 0 && (
+          <div className="status-banner bg-loss/10 border border-loss/25 text-loss mb-4 items-start">
+            <svg className="w-5 h-5 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <ul className="space-y-0.5">
+              {formErrors.map((err, i) => (
+                <li key={i}>{err}</li>
+              ))}
+            </ul>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="field-label">Tipo de Activo</label>
-            <select
-              value={assetType}
-              onChange={(e) => {
-                setAssetType(e.target.value)
-                // Auto-ajustar moneda según tipo
-                if (e.target.value === ASSET_TYPES.CRYPTO) {
-                  setCurrency('USD')
-                } else if (e.target.value === ASSET_TYPES.STOCK || e.target.value === ASSET_TYPES.LETRA) {
-                  setCurrency('ARS')
-                } else if (e.target.value === ASSET_TYPES.EFECTIVO) {
-                  setCurrency('ARS') // Por defecto pesos para efectivo
-                }
-              }}
-              className="field-input"
-            >
-              <option value={ASSET_TYPES.CRYPTO}>Criptomoneda</option>
-              <option value={ASSET_TYPES.STOCK}>Acción Argentina</option>
-              <option value={ASSET_TYPES.CEDEAR}>CEDEAR</option>
-              <option value={ASSET_TYPES.BOND}>Bono</option>
-              <option value={ASSET_TYPES.LETRA}>Letra</option>
-              <option value={ASSET_TYPES.OBLIGACION_NEGOCIABLE}>Obligación Negociable</option>
-              <option value={ASSET_TYPES.PLAZO_FIJO}>Plazo Fijo</option>
-              <option value={ASSET_TYPES.EFECTIVO}>Efectivo/Cuenta Bancaria</option>
-            </select>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              {TYPE_OPTIONS.map((option) => {
+                const active = assetType === option.value
+                const color = PORTFOLIO_CATEGORY_COLORS[option.category]
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => handleTypeChange(option.value)}
+                    aria-pressed={active}
+                    className={`px-3 py-2.5 rounded-lg border text-xs font-mono-data flex items-center gap-2 transition-colors ${
+                      active
+                        ? 'border-celeste/40 text-paper'
+                        : 'border-border text-muted hover:text-paper hover:border-border-light'
+                    }`}
+                    style={active ? { backgroundColor: `${color}22` } : undefined}
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: color }} />
+                    {option.label}
+                  </button>
+                )
+              })}
+            </div>
           </div>
 
           {assetType !== ASSET_TYPES.CRYPTO && assetType !== ASSET_TYPES.PLAZO_FIJO && (
@@ -162,6 +206,8 @@ export default function AddAssetModal({ isOpen, onClose, onAdd }: AddAssetModalP
               </p>
             </div>
           )}
+
+          <p className="field-section-label">Identificación</p>
 
           <div>
             <label className="field-label">
@@ -203,6 +249,8 @@ export default function AddAssetModal({ isOpen, onClose, onAdd }: AddAssetModalP
           {/* Campos específicos para plazo fijo */}
           {assetType === ASSET_TYPES.PLAZO_FIJO && (
             <>
+              <p className="field-section-label">Detalles del plazo fijo</p>
+
               <div>
                 <label className="field-label">Banco/Institución</label>
                 <select
@@ -275,6 +323,8 @@ export default function AddAssetModal({ isOpen, onClose, onAdd }: AddAssetModalP
           {/* Campos específicos para efectivo */}
           {assetType === ASSET_TYPES.EFECTIVO && (
             <>
+              <p className="field-section-label">Detalles de la tenencia</p>
+
               <div>
                 <label className="field-label">Tipo de Tenencia</label>
                 <select
@@ -331,6 +381,8 @@ export default function AddAssetModal({ isOpen, onClose, onAdd }: AddAssetModalP
             </>
           )}
 
+          <p className="field-section-label">Monto</p>
+
           <div>
             <label className="field-label">
               {assetType === ASSET_TYPES.PLAZO_FIJO ? `Capital Inicial (${currency})` : 
@@ -368,7 +420,7 @@ export default function AddAssetModal({ isOpen, onClose, onAdd }: AddAssetModalP
           <div className="flex gap-3 pt-4">
             <button
               type="button"
-              onClick={onClose}
+              onClick={handleClose}
               className="btn-ghost flex-1 px-4 py-3"
             >
               Cancelar

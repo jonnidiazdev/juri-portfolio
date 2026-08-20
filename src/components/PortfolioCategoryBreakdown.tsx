@@ -55,19 +55,34 @@ export default function PortfolioCategoryBreakdown({
           ))}
         </div>
       </div>
-      {view === 'list' ? (
-        <PortfolioCategoryBreakdownList
-          categories={categories}
-          totalCurrentARS={totalCurrentARS}
-          exchangeRate={exchangeRate}
-        />
-      ) : (
-        <PortfolioCategoryPieChart
-          categories={categories}
-          totalCurrentARS={totalCurrentARS}
-          exchangeRate={exchangeRate}
-        />
-      )}
+      <div className="grid">
+        <div
+          className={`col-start-1 row-start-1 transition-opacity duration-150 ease-out ${
+            view === 'list' ? 'opacity-100' : 'opacity-0 pointer-events-none'
+          }`}
+          aria-hidden={view !== 'list'}
+          inert={view !== 'list' || undefined}
+        >
+          <PortfolioCategoryBreakdownList
+            categories={categories}
+            totalCurrentARS={totalCurrentARS}
+            exchangeRate={exchangeRate}
+          />
+        </div>
+        <div
+          className={`col-start-1 row-start-1 transition-opacity duration-150 ease-out ${
+            view === 'pie' ? 'opacity-100' : 'opacity-0 pointer-events-none'
+          }`}
+          aria-hidden={view !== 'pie'}
+          inert={view !== 'pie' || undefined}
+        >
+          <PortfolioCategoryPieChart
+            categories={categories}
+            totalCurrentARS={totalCurrentARS}
+            exchangeRate={exchangeRate}
+          />
+        </div>
+      </div>
     </div>
   )
 }

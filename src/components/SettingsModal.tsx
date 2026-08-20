@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { setIOLSession, clearIOLSession } from '../services/iolSession'
+import ModalHeader from './ModalHeader'
 
 interface SettingsModalProps {
   isOpen: boolean
@@ -12,6 +13,8 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const [iolPass, setIolPass] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [isSaved, setIsSaved] = useState(false)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [testMessage, setTestMessage] = useState<string | null>(null)
 
   const queryClient = useQueryClient()
 
@@ -20,11 +23,22 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       setIolUser('')
       setIolPass('')
       setIsSaved(false)
+      setErrorMessage(null)
+      setTestMessage(null)
     }
   }, [isOpen])
 
+  const describeConnectionError = (error: unknown) => {
+    const message = error instanceof Error ? error.message : ''
+    if (/failed to fetch|network/i.test(message)) {
+      return 'No pudimos conectar con el servidor. Revisá tu conexión e intentá de nuevo.'
+    }
+    return 'No pudimos conectar con el servidor. Intentá de nuevo en unos segundos.'
+  }
+
   const handleSave = async () => {
     if (iolUser.trim() && iolPass.trim()) {
+      setErrorMessage(null)
       try {
         const response = await fetch('/api/iol/login', {
           method: 'POST',
@@ -47,10 +61,10 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             onClose()
           }, 1500)
         } else {
-          alert(`Error: ${result.error || 'No se pudo crear la sesión'}`)
+          setErrorMessage(result.error || 'Usuario o contraseña incorrectos. Revisalos e intentá de nuevo.')
         }
       } catch (error) {
-        alert(`Error de conexión: ${(error as Error).message}`)
+        setErrorMessage(describeConnectionError(error))
       }
     }
   }
@@ -65,8 +79,11 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   }
 
   const handleTestConnection = async () => {
+    setErrorMessage(null)
+    setTestMessage(null)
+
     if (!iolUser.trim() || !iolPass.trim()) {
-      alert('Ingresá usuario y contraseña primero')
+      setErrorMessage('Ingresá usuario y contraseña primero.')
       return
     }
 
@@ -83,12 +100,12 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       const result = await response.json()
 
       if (response.ok && result.success) {
-        alert('Conexión exitosa con IOL')
+        setTestMessage('Conexión exitosa con IOL.')
       } else {
-        alert(`Error: ${result.error || 'Credenciales inválidas'}`)
+        setErrorMessage(result.error || 'Credenciales inválidas. Revisalas e intentá de nuevo.')
       }
     } catch (error) {
-      alert(`Error de conexión: ${(error as Error).message}`)
+      setErrorMessage(describeConnectionError(error))
     }
   }
 
@@ -97,23 +114,17 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   return (
     <div className="modal-overlay">
       <div className="modal-panel">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="font-display text-2xl font-semibold text-paper flex items-center gap-2">
-            <svg className="w-5 h-5 text-celeste" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <ModalHeader
+          icon={
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
-            Configuración
-          </h2>
-          <button
-            onClick={onClose}
-            className="text-subtle hover:text-paper transition-colors"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
+          }
+          title="Configuración"
+          subtitle="Credenciales de tu cuenta IOL"
+          onClose={onClose}
+        />
 
         <div className="space-y-4">
           <div className="bg-celeste/10 border border-celeste/25 rounded-lg p-3">
@@ -155,6 +166,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
+                aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-subtle hover:text-paper transition-colors"
               >
                 {showPassword ? (
@@ -180,6 +192,24 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             </svg>
             Probar conexión
           </button>
+
+          {errorMessage && (
+            <div className="status-banner bg-loss/10 border border-loss/25 text-loss">
+              <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              {errorMessage}
+            </div>
+          )}
+
+          {testMessage && (
+            <div className="status-banner bg-profit/10 border border-profit/25 text-profit">
+              <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+              {testMessage}
+            </div>
+          )}
 
           {isSaved && (
             <div className="status-banner bg-profit/10 border border-profit/25 text-profit">

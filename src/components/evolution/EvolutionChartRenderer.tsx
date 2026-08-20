@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import { ResponsiveContainer } from 'recharts'
 import { PORTFOLIO_CATEGORY_COLORS } from '../../config/constants'
 import { getEvolutionView } from '../../config/evolutionViews'
@@ -152,8 +152,55 @@ export default function EvolutionChartRenderer({
     onChange: onBrushChange,
   }
 
+  const containerRef = useRef<HTMLDivElement>(null)
+
+  // Draw the main "Evolución" line like chalk on a pizarra, but only on a fresh mount of
+  // the line view (switching into it), never on data/toolbar updates within the same view -
+  // those must stay instant like every other Recharts animation in this app (see isAnimationActive={false}).
+  useEffect(() => {
+    if (view.chartType !== 'line') return
+
+    const container = containerRef.current
+    if (!container) return
+
+    let cleanupTimeout: ReturnType<typeof setTimeout> | undefined
+
+    const animate = (path: SVGPathElement) => {
+      const length = path.getTotalLength()
+      if (!length) return false
+      path.style.setProperty('--chalk-dash-length', String(length))
+      path.classList.add('chalk-figure')
+      cleanupTimeout = setTimeout(() => {
+        path.classList.remove('chalk-figure')
+        path.style.removeProperty('--chalk-dash-length')
+      }, 1300)
+      return true
+    }
+
+    const tryAnimate = () => {
+      const path = container.querySelector<SVGPathElement>('.recharts-line-curve')
+      return path ? animate(path) : false
+    }
+
+    if (tryAnimate()) {
+      return () => clearTimeout(cleanupTimeout)
+    }
+
+    // ResponsiveContainer measures itself via ResizeObserver before Recharts can render
+    // any child, so the path doesn't exist synchronously on mount - wait for it to appear.
+    const observer = new MutationObserver(() => {
+      if (tryAnimate()) observer.disconnect()
+    })
+    observer.observe(container, { childList: true, subtree: true })
+
+    return () => {
+      observer.disconnect()
+      clearTimeout(cleanupTimeout)
+    }
+  }, [view.chartType])
+
   return (
-    <div className="h-72 sm:h-80 w-full">
+    <div ref={containerRef} className="h-72 sm:h-80 w-full">
       <ResponsiveContainer width="100%" height="100%">
         <RechartsEvolutionView
           view={view}

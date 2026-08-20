@@ -1,7 +1,13 @@
 import { useEffect, useState } from 'react'
-import { isFirebaseConfigured, signInWithGoogle, subscribeToAuthChanges } from '../config/firebase'
+import {
+  completeGoogleRedirectSignIn,
+  isCursorEmbeddedBrowser,
+  isFirebaseConfigured,
+  signInWithGoogle,
+  subscribeToAuthChanges
+} from '../config/firebase'
 import LoadingSpinner from './LoadingSpinner'
-import NightForestBackground from './NightForestBackground'
+import PizarraBackground from './PizarraBackground'
 
 interface GoogleLoginGateProps {
   children: (user: { uid: string; displayName?: string; photoURL?: string; email?: string }) => React.ReactNode
@@ -11,15 +17,25 @@ export default function GoogleLoginGate({ children }: GoogleLoginGateProps) {
   const [user, setUser] = useState<any>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isSigningIn, setIsSigningIn] = useState(false)
+  const [isCopied, setIsCopied] = useState(false)
+  // No cambia durante la vida del componente: no necesita ser estado.
+  const isUnsupportedBrowser = isCursorEmbeddedBrowser()
 
   useEffect(() => {
     let mounted = true
     let unsubscribe = () => {}
 
-    if (!isFirebaseConfigured) {
+    // El login con Google no puede funcionar en el navegador integrado de
+    // Cursor (bloquea popups y descarta el estado del redirect), así que no
+    // tiene sentido validar sesión ni intentar el flujo de OAuth ahí.
+    if (!isFirebaseConfigured || isUnsupportedBrowser) {
       setIsLoading(false)
       return () => {}
     }
+
+    // Completa el login si el usuario volvió de un signInWithRedirect
+    // (flujo usado en navegadores embebidos, ej. webviews de Instagram/Facebook).
+    completeGoogleRedirectSignIn()
 
     subscribeToAuthChanges((nextUser) => {
       if (!mounted) return
@@ -33,7 +49,7 @@ export default function GoogleLoginGate({ children }: GoogleLoginGateProps) {
       mounted = false
       unsubscribe()
     }
-   }, [])
+   }, [isUnsupportedBrowser])
  
    const handleGoogleLogin = async () => {
      setIsSigningIn(true)
@@ -43,22 +59,55 @@ export default function GoogleLoginGate({ children }: GoogleLoginGateProps) {
        setIsSigningIn(false)
      }
    }
- 
+
+   const handleCopyUrl = async () => {
+     try {
+       await navigator.clipboard.writeText(window.location.href)
+       setIsCopied(true)
+       setTimeout(() => setIsCopied(false), 2000)
+     } catch (error) {
+       console.error('No se pudo copiar la URL.', error)
+     }
+   }
+
+   if (isUnsupportedBrowser) {
+     return (
+      <div className="relative min-h-screen flex items-center justify-center px-4">
+        <PizarraBackground />
+        <div className="max-w-lg w-full card p-8 text-center">
+          <h1 className="font-chalk text-2xl mb-3 text-paper">Abrí esta app en un navegador externo</h1>
+          <p className="text-muted mb-6">
+            El login con Google no funciona en el navegador integrado de Cursor: por seguridad, esa herramienta bloquea las ventanas emergentes y el flujo de autenticación de Google. No es un error de la app, es una limitación conocida de Cursor.
+          </p>
+          <p className="text-muted mb-6">
+            Copiá esta URL y abrila en Chrome, Safari o Firefox para iniciar sesión sin problemas.
+          </p>
+          <button
+            onClick={handleCopyUrl}
+            className="btn-primary w-full px-4 py-3 flex items-center justify-center gap-2"
+          >
+            {isCopied ? 'URL copiada ✓' : 'Copiar URL'}
+          </button>
+        </div>
+      </div>
+     )
+   }
+
    if (isLoading) {
      return (
        <div className="relative min-h-screen flex items-center justify-center">
-         <NightForestBackground />
-         <LoadingSpinner text="Validando sesión…" />
+        <PizarraBackground />
+        <LoadingSpinner text="Validando sesión…" />
        </div>
      )
    }
  
    if (!isFirebaseConfigured) {
      return (
-       <div className="relative min-h-screen flex items-center justify-center px-4">
-         <NightForestBackground />
-         <div className="max-w-lg w-full card p-8 text-center">
-           <h1 className="font-display text-2xl font-semibold mb-3 text-paper">Configuración requerida</h1>
+      <div className="relative min-h-screen flex items-center justify-center px-4">
+        <PizarraBackground />
+        <div className="max-w-lg w-full card p-8 text-center">
+          <h1 className="font-chalk text-2xl mb-3 text-paper">Configuración requerida</h1>
            <p className="text-muted">
              Este entorno requiere autenticación con Google. Configura las variables <strong className="text-paper">VITE_FIREBASE_*</strong> para habilitar el acceso.
            </p>
@@ -69,11 +118,11 @@ export default function GoogleLoginGate({ children }: GoogleLoginGateProps) {
  
    if (!user) {
      return (
-       <div className="relative min-h-screen flex items-center justify-center px-4">
-         <NightForestBackground />
-         <div className="max-w-md w-full card p-8">
-           <p className="text-celeste text-xs font-mono-data uppercase tracking-widest mb-3">Portfolio personal</p>
-           <h1 className="font-display text-3xl font-semibold mb-2 text-paper">El Juri-Portfolio</h1>
+      <div className="relative min-h-screen flex items-center justify-center px-4">
+        <PizarraBackground />
+        <div className="max-w-md w-full card p-8">
+          <p className="text-celeste text-xs font-mono-data uppercase tracking-widest mb-3">Portfolio personal</p>
+          <h1 className="font-chalk text-3xl mb-2 text-paper">El Juri-Portfolio</h1>
            <p className="text-muted mb-8">Iniciá sesión con Google para acceder a tu portfolio desde cualquier dispositivo.</p>
  
            <button

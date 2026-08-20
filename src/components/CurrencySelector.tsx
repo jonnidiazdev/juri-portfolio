@@ -1,4 +1,5 @@
 import { CURRENCY_OPTIONS } from '../hooks/useCurrencyPreference'
+import { useSlidingIndicator } from '../hooks/useSlidingIndicator'
 
 import type { DolarPrices } from '../types'
 
@@ -17,12 +18,14 @@ export default function CurrencySelector({
 }: CurrencySelectorProps) {
   const selectedOption = CURRENCY_OPTIONS.find(opt => opt.id === currencyPreference)
   const currentRate = selectedOption ? dolarData?.[selectedOption.apiKey]?.venta : undefined
+  const { containerRef, setItemRef, rect } = useSlidingIndicator(currencyPreference)
 
   return (
     <div className={`flex flex-wrap items-center gap-2 sm:gap-3 text-sm ${className}`}>
       <span className="text-subtle whitespace-nowrap text-xs">Conversión:</span>
 
-      <div className="flex items-center gap-1 flex-wrap">
+      <div ref={containerRef} className="relative flex items-center gap-1 flex-wrap">
+        {rect && <div className="sliding-indicator rounded bg-celeste" style={{ width: rect.width, height: rect.height, transform: `translate(${rect.left}px, ${rect.top}px)` }} />}
         {CURRENCY_OPTIONS.map((option) => {
           const rate = dolarData?.[option.apiKey]
           const isSelected = currencyPreference === option.id
@@ -31,12 +34,13 @@ export default function CurrencySelector({
           return (
             <button
               key={option.id}
+              ref={setItemRef(option.id)}
               onClick={() => onCurrencyChange(option.id)}
               disabled={!isAvailable}
               className={`
-                px-2.5 py-1 rounded text-xs font-mono-data font-medium transition-all
+                relative z-10 px-2.5 py-1 rounded text-xs font-mono-data font-medium transition-colors
                 ${isSelected
-                  ? 'bg-celeste text-ink'
+                  ? 'text-ink'
                   : isAvailable
                     ? 'bg-surface-raised text-muted hover:text-paper border border-border'
                     : 'bg-ink text-subtle cursor-not-allowed border border-border opacity-50'

@@ -109,7 +109,7 @@ export const PORTFOLIO_CATEGORY_COLORS = {
   argentine: '#6badc9',
   plazoFijo: '#c9a227',
   plazo: '#c9a227',
-  efectivo: '#4ade80',
+  efectivo: '#8fd4a8',
 } as const
 
 export const SNAPSHOT_BY_TYPE_SERIES = [

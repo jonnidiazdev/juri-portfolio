@@ -7,6 +7,13 @@ interface SnapshotFlowSummaryProps {
   currency: EvolutionCurrency
 }
 
+function toneFor(value: number, positiveIsGood: boolean): string {
+  if (value === 0) return 'text-paper'
+  const isPositive = value >= 0
+  if (positiveIsGood) return isPositive ? 'text-profit' : 'text-loss'
+  return isPositive ? 'text-loss' : 'text-profit'
+}
+
 function SummaryCard({
   label,
   value,
@@ -18,22 +25,10 @@ function SummaryCard({
   formatted: string
   positiveIsGood?: boolean
 }) {
-  const isPositive = value >= 0
-  const tone =
-    value === 0
-      ? 'text-paper'
-      : positiveIsGood
-        ? isPositive
-          ? 'text-profit'
-          : 'text-loss'
-        : isPositive
-          ? 'text-loss'
-          : 'text-profit'
-
   return (
     <div className="card p-4">
       <p className="text-subtle text-[10px] font-mono-data uppercase tracking-widest mb-2">{label}</p>
-      <p className={`font-mono-data text-lg ${tone}`}>{formatted}</p>
+      <p className={`font-mono-data text-lg ${toneFor(value, positiveIsGood)}`}>{formatted}</p>
     </div>
   )
 }
@@ -47,28 +42,35 @@ export default function SnapshotFlowSummary({ summary, currency }: SnapshotFlowS
   const realizedGain = currency === 'ARS' ? summary.realizedGainARS : summary.realizedGainUSD
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 mb-6">
-      <SummaryCard
-        label="Variación total"
-        value={totalDelta}
-        formatted={formatCurrency(totalDelta, currency)}
-      />
-      <SummaryCard
-        label="Por mercado"
-        value={marketGain}
-        formatted={formatCurrency(marketGain, currency)}
-      />
-      <SummaryCard
-        label="Por flujos"
-        value={capitalFlows}
-        formatted={formatCurrency(capitalFlows, currency)}
-        positiveIsGood={false}
-      />
-      <SummaryCard
-        label="Realizado (aprox.)"
-        value={realizedGain}
-        formatted={formatCurrency(realizedGain, currency)}
-      />
+    <div className="mb-6">
+      {/* Tiza principal: la variación total es el número que importa */}
+      <div className="card p-5 mb-3">
+        <p className="text-subtle text-[10px] font-mono-data uppercase tracking-widest mb-2">
+          Variación total del período
+        </p>
+        <p className={`font-chalk text-3xl sm:text-4xl leading-none ${toneFor(totalDelta, true)}`}>
+          {formatCurrency(totalDelta, currency)}
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <SummaryCard
+          label="Por mercado"
+          value={marketGain}
+          formatted={formatCurrency(marketGain, currency)}
+        />
+        <SummaryCard
+          label="Por flujos"
+          value={capitalFlows}
+          formatted={formatCurrency(capitalFlows, currency)}
+          positiveIsGood={false}
+        />
+        <SummaryCard
+          label="Realizado (aprox.)"
+          value={realizedGain}
+          formatted={formatCurrency(realizedGain, currency)}
+        />
+      </div>
     </div>
   )
 }
