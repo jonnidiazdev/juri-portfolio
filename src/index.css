@@ -176,6 +176,11 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .animate-fade-in,
+  .animate-fadeIn {
+    animation: none;
+  }
+
   .animate-ticker {
     animation: none;
   }

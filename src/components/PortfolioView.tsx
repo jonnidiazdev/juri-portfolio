@@ -5,6 +5,8 @@ import { usePortfolioOutletContext } from '../hooks/usePortfolioOutletContext'
 import { usePortfolioFormatters } from '../hooks/usePortfolioFormatters'
 import { useSlidingIndicator } from '../hooks/useSlidingIndicator'
 import type { Asset } from '../types'
+import { computeAssetPL, type AssetTypeStats } from '../utils/assetCalculations'
+import { nextAssetSort, sortAssets, type AssetSortDir, type AssetSortKey } from '../utils/assetListSort'
 import ChalkHeroNumber from './ChalkHeroNumber'
 import CurrencySelector from './CurrencySelector'
 import HoldingRow from './HoldingRow'
@@ -28,6 +30,45 @@ function getCategory(asset: Asset): Exclude<CategoryFilter, 'all'> {
   return 'argentine'
 }
 
+function SortCriterionButton({
+  label,
+  active,
+  dir,
+  onClick,
+}: {
+  label: string
+  active: boolean
+  dir: AssetSortDir
+  onClick: () => void
+}) {
+  const ariaSort = active ? (dir === 'asc' ? 'ascending' : 'descending') : 'none'
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={active}
+      aria-sort={ariaSort}
+      aria-label={active ? `${label}, ${dir === 'asc' ? 'ascendente' : 'descendente'}` : label}
+      className={`inline-flex items-center gap-1 px-2.5 py-1 text-xs font-mono-data rounded-md border transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-celeste ${
+        active
+          ? 'bg-celeste/15 text-celeste border-celeste/30'
+          : 'text-muted border-border hover:text-paper'
+      }`}
+    >
+      {label}
+      {active && (
+        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+          {dir === 'asc' ? (
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+          ) : (
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          )}
+        </svg>
+      )}
+    </button>
+  )
+}
+
 export default function PortfolioView() {
   const {
     assets,
@@ -48,26 +89,36 @@ export default function PortfolioView() {
   } = usePortfolioOutletContext()
   const { formatCurrency, formatPercentage } = usePortfolioFormatters()
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>('all')
+  const [sortKey, setSortKey] = useState<AssetSortKey>('name')
+  const [sortDir, setSortDir] = useState<AssetSortDir>('asc')
   const categoryIndicator = useSlidingIndicator(categoryFilter)
-
-  const getSortKey = (asset: Asset) => {
-    const key = asset.symbol || asset.name || ''
-    return typeof key === 'string' ? key.toUpperCase() : ''
-  }
-
-  const sortedAssets = useMemo(
-    () => [...assets].sort((a, b) => getSortKey(a).localeCompare(getSortKey(b))),
-    [assets]
-  )
 
   const visibleCategories = useMemo(() => {
     const present = new Set(assets.map(getCategory))
     return (Object.keys(CATEGORY_META) as Exclude<CategoryFilter, 'all'>[]).filter(id => present.has(id))
   }, [assets])
 
-  const filteredAssets = categoryFilter === 'all'
-    ? sortedAssets
-    : sortedAssets.filter(asset => getCategory(asset) === categoryFilter)
+  const filteredAssets = useMemo(() => {
+    const scoped = categoryFilter === 'all'
+      ? assets
+      : assets.filter(asset => getCategory(asset) === categoryFilter)
+    const plPctById: Record<number, number> = {}
+    for (const asset of scoped) {
+      plPctById[asset.id] = computeAssetPL(
+        asset,
+        getAssetPrice(asset),
+        multiCurrencyData.exchangeRate
+      ).plPctARS
+    }
+    return sortAssets(scoped, sortKey, sortDir, plPctById)
+  }, [assets, categoryFilter, sortKey, sortDir, getAssetPrice, multiCurrencyData.exchangeRate])
+
+  const categoryStatsById: Record<Exclude<CategoryFilter, 'all'>, AssetTypeStats> = {
+    crypto: cryptoStats,
+    argentine: argentineStats,
+    plazo: plazoFijoStats,
+    efectivo: efectivoStats,
+  }
 
   const categoryBreakdown = [
     { id: 'crypto', label: 'Criptomonedas', totalValueARS: cryptoStats.totalValue, accentClass: 'section-rule--crypto', visible: assets.some(a => getCategory(a) === 'crypto') },
@@ -115,6 +166,13 @@ export default function PortfolioView() {
   }
 
   const isProfit = multiCurrencyData.totalsARS.profit >= 0
+  const selectedCategory = categoryFilter === 'all' ? null : categoryFilter
+  const selectedCategoryStats = selectedCategory ? categoryStatsById[selectedCategory] : null
+  const selectedCategoryMeta = selectedCategory ? CATEGORY_META[selectedCategory] : null
+  const selectedCategoryProfitUsd =
+    selectedCategoryStats && multiCurrencyData.exchangeRate
+      ? selectedCategoryStats.profit / multiCurrencyData.exchangeRate
+      : null
 
   return (
     <div className="space-y-6">
@@ -162,57 +220,105 @@ export default function PortfolioView() {
         )}
       </div>
 
-      {/* Chips de categoría */}
       {visibleCategories.length > 1 && (
-        <div ref={categoryIndicator.containerRef} className="relative flex items-center gap-2 flex-wrap">
-          {categoryIndicator.rect && (
+        <div className="space-y-2">
+          <div ref={categoryIndicator.containerRef} className="relative flex items-center gap-2 flex-wrap">
+            {categoryIndicator.rect && (
+              <div
+                className="sliding-indicator rounded-full border border-celeste/30"
+                style={{
+                  width: categoryIndicator.rect.width,
+                  height: categoryIndicator.rect.height,
+                  transform: `translate(${categoryIndicator.rect.left}px, ${categoryIndicator.rect.top}px)`,
+                  backgroundColor: categoryFilter === 'all' ? 'rgba(107, 173, 201, 0.15)' : `${CATEGORY_META[categoryFilter as Exclude<CategoryFilter, 'all'>]?.color ?? ''}22`,
+                }}
+              />
+            )}
+            <button
+              ref={categoryIndicator.setItemRef('all')}
+              type="button"
+              onClick={() => setCategoryFilter('all')}
+              aria-pressed={categoryFilter === 'all'}
+              className={`relative z-10 px-3 py-1.5 text-xs font-mono-data rounded-full border transition-colors ${
+                categoryFilter === 'all'
+                  ? 'text-celeste border-transparent'
+                  : 'text-muted border-border hover:text-paper'
+              }`}
+            >
+              Todos
+            </button>
+            {visibleCategories.map(id => {
+              const meta = CATEGORY_META[id]
+              const active = categoryFilter === id
+              return (
+                <button
+                  key={id}
+                  ref={categoryIndicator.setItemRef(id)}
+                  type="button"
+                  onClick={() => setCategoryFilter(id)}
+                  aria-pressed={active}
+                  className={`relative z-10 px-3 py-1.5 text-xs font-mono-data rounded-full border transition-colors inline-flex items-center gap-1.5 ${
+                    active ? 'border-transparent text-paper' : 'text-muted border-border hover:text-paper'
+                  }`}
+                >
+                  <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: meta.color }} />
+                  {meta.label}
+                </button>
+              )
+            })}
+          </div>
+
+          {selectedCategoryMeta && selectedCategoryStats && (
             <div
-              className="sliding-indicator rounded-full border border-celeste/30"
-              style={{
-                width: categoryIndicator.rect.width,
-                height: categoryIndicator.rect.height,
-                transform: `translate(${categoryIndicator.rect.left}px, ${categoryIndicator.rect.top}px)`,
-                backgroundColor: categoryFilter === 'all' ? 'rgba(107, 173, 201, 0.15)' : `${CATEGORY_META[categoryFilter as Exclude<CategoryFilter, 'all'>]?.color ?? ''}22`,
-              }}
-            />
+              key={selectedCategory}
+              className="animate-fadeIn flex items-center justify-between gap-3 px-1 py-1"
+              aria-live="polite"
+            >
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: selectedCategoryMeta.color }} aria-hidden="true" />
+                <span className="text-sm text-paper truncate">{selectedCategoryMeta.label}</span>
+              </div>
+              <div className={`text-right font-mono-data shrink-0 ${selectedCategoryStats.profit >= 0 ? 'text-profit' : 'text-loss'}`}>
+                <p className="text-sm font-semibold">
+                  {formatCurrency(selectedCategoryStats.profit, 'ARS')}
+                  <span className="font-medium"> · {formatPercentage(selectedCategoryStats.profitPercent)}</span>
+                </p>
+                {selectedCategoryProfitUsd !== null && (
+                  <p className="text-[11px]">≈ {formatCurrency(selectedCategoryProfitUsd, 'USD')}</p>
+                )}
+              </div>
+            </div>
           )}
-          <button
-            ref={categoryIndicator.setItemRef('all')}
-            type="button"
-            onClick={() => setCategoryFilter('all')}
-            aria-pressed={categoryFilter === 'all'}
-            className={`relative z-10 px-3 py-1.5 text-xs font-mono-data rounded-full border transition-colors ${
-              categoryFilter === 'all'
-                ? 'text-celeste border-transparent'
-                : 'text-muted border-border hover:text-paper'
-            }`}
-          >
-            Todos
-          </button>
-          {visibleCategories.map(id => {
-            const meta = CATEGORY_META[id]
-            const active = categoryFilter === id
-            return (
-              <button
-                key={id}
-                ref={categoryIndicator.setItemRef(id)}
-                type="button"
-                onClick={() => setCategoryFilter(id)}
-                aria-pressed={active}
-                className={`relative z-10 px-3 py-1.5 text-xs font-mono-data rounded-full border transition-colors inline-flex items-center gap-1.5 ${
-                  active ? 'border-transparent text-paper' : 'text-muted border-border hover:text-paper'
-                }`}
-              >
-                <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: meta.color }} />
-                {meta.label}
-              </button>
-            )
-          })}
         </div>
       )}
 
-      {/* Lista unificada de holdings */}
       <div className="card overflow-hidden">
+        <div
+          role="toolbar"
+          aria-label="Orden de la lista"
+          className="flex items-center justify-end gap-1.5 px-3 sm:px-4 py-2 border-b border-border/60"
+        >
+          <SortCriterionButton
+            label="Nombre"
+            active={sortKey === 'name'}
+            dir={sortDir}
+            onClick={() => {
+              const next = nextAssetSort(sortKey, sortDir, 'name')
+              setSortKey(next.key)
+              setSortDir(next.dir)
+            }}
+          />
+          <SortCriterionButton
+            label="% ganancia"
+            active={sortKey === 'plPct'}
+            dir={sortDir}
+            onClick={() => {
+              const next = nextAssetSort(sortKey, sortDir, 'plPct')
+              setSortKey(next.key)
+              setSortDir(next.dir)
+            }}
+          />
+        </div>
         {filteredAssets.map(asset => (
           <HoldingRow
             key={asset.id}
